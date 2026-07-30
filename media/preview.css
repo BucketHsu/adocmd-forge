@@ -1,0 +1,402 @@
+:root {
+  color-scheme: light dark;
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  font-weight: var(--vscode-font-weight);
+  line-height: 1.6;
+  --preview-border: var(
+    --vscode-panel-border,
+    var(--vscode-contrastBorder, transparent)
+  );
+  --preview-code-background: var(
+    --vscode-textCodeBlock-background,
+    var(--vscode-editor-background)
+  );
+  --preview-muted-foreground: var(
+    --vscode-descriptionForeground,
+    var(--vscode-foreground)
+  );
+}
+
+body.vscode-light,
+body.vscode-high-contrast-light {
+  color-scheme: light;
+}
+
+body.vscode-dark,
+body.vscode-high-contrast {
+  color-scheme: dark;
+}
+
+html {
+  box-sizing: border-box;
+  min-width: 0;
+  scroll-padding-top: 1rem;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
+body {
+  min-width: 0;
+  min-height: 100vh;
+  margin: 0;
+  padding: clamp(1rem, 3vw, 2.5rem);
+  overflow-wrap: anywhere;
+  color: var(--vscode-foreground);
+  background: var(--vscode-editor-background);
+}
+
+#preview-content {
+  width: min(100%, 72rem);
+  margin-inline: auto;
+}
+
+#preview-status {
+  width: min(100%, 72rem);
+  margin: 0 auto 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--vscode-inputValidation-errorBorder);
+  color: var(
+    --vscode-inputValidation-errorForeground,
+    var(--vscode-foreground)
+  );
+  background: var(
+    --vscode-inputValidation-errorBackground,
+    var(--vscode-editor-background)
+  );
+}
+
+#preview-status[hidden] {
+  display: none;
+}
+
+[data-source-line] {
+  scroll-margin-top: 1rem;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin-block: 1.6em 0.6em;
+  color: var(--vscode-foreground);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+h1 {
+  padding-bottom: 0.35em;
+  border-bottom: 1px solid var(--preview-border);
+  font-size: 2em;
+}
+
+h2 {
+  padding-bottom: 0.25em;
+  border-bottom: 1px solid var(--preview-border);
+  font-size: 1.55em;
+}
+
+h3 {
+  font-size: 1.3em;
+}
+
+h4 {
+  font-size: 1.15em;
+}
+
+h5,
+h6 {
+  font-size: 1em;
+}
+
+p,
+ul,
+ol,
+dl,
+blockquote,
+pre,
+table,
+.paragraph,
+.listingblock,
+.literalblock,
+.imageblock,
+.admonitionblock {
+  margin-block: 0 1rem;
+}
+
+ul,
+ol {
+  padding-inline-start: 2rem;
+}
+
+li + li {
+  margin-top: 0.25rem;
+}
+
+dt {
+  font-weight: 600;
+}
+
+dd {
+  margin-inline-start: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+a {
+  color: var(--vscode-textLink-foreground);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(
+    --vscode-textLink-activeForeground,
+    var(--vscode-textLink-foreground)
+  );
+  text-decoration: underline;
+}
+
+a:focus-visible,
+summary:focus-visible {
+  border-radius: 2px;
+  outline: 2px solid var(--vscode-focusBorder);
+  outline-offset: 2px;
+}
+
+hr {
+  height: 0;
+  margin-block: 1.5rem;
+  border: 0;
+  border-top: 1px solid var(--preview-border);
+}
+
+blockquote {
+  margin-inline: 0;
+  padding: 0.25rem 1rem;
+  border-left: 0.25rem solid var(--vscode-textBlockQuote-border);
+  color: var(--preview-muted-foreground);
+  background: var(--vscode-textBlockQuote-background);
+}
+
+blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+code,
+kbd,
+samp {
+  border-radius: 3px;
+  font-family: var(--vscode-editor-font-family);
+  font-size: 0.9em;
+}
+
+:not(pre) > code,
+kbd,
+samp {
+  padding: 0.15em 0.35em;
+  color: var(--vscode-textPreformat-foreground);
+  background: var(--preview-code-background);
+}
+
+kbd {
+  border: 1px solid var(--preview-border);
+  box-shadow: 0 1px 0 var(--preview-border);
+}
+
+pre {
+  max-width: 100%;
+  padding: 1rem;
+  overflow: auto;
+  border: 1px solid var(--preview-border);
+  border-radius: 4px;
+  background: var(--preview-code-background);
+  tab-size: 4;
+  white-space: pre;
+}
+
+pre code {
+  display: block;
+  min-width: max-content;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+}
+
+table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+  border-spacing: 0;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--preview-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  font-weight: 600;
+  background: var(
+    --vscode-keybindingTable-headerBackground,
+    var(--preview-code-background)
+  );
+}
+
+tbody tr:nth-child(even) {
+  background: var(--vscode-keybindingTable-rowsBackground);
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+figure,
+.imageblock {
+  margin-inline: 0;
+  text-align: center;
+}
+
+figcaption,
+.imageblock .title,
+.listingblock .title,
+.literalblock .title {
+  margin-top: 0.4rem;
+  color: var(--preview-muted-foreground);
+  font-size: 0.9em;
+}
+
+.admonitionblock > table {
+  display: table;
+  width: 100%;
+}
+
+.admonitionblock td.icon {
+  width: 1%;
+  color: var(--vscode-symbolIcon-keywordForeground);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.admonitionblock td.content {
+  width: 99%;
+}
+
+.sect1 + .sect1 {
+  margin-top: 2rem;
+}
+
+details {
+  margin-bottom: 1rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--preview-border);
+  border-radius: 4px;
+}
+
+summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+input[type='checkbox'] {
+  accent-color: var(--vscode-checkbox-selectBackground);
+}
+
+body.vscode-high-contrast #preview-status,
+body.vscode-high-contrast-light #preview-status,
+body.vscode-high-contrast pre,
+body.vscode-high-contrast-light pre,
+body.vscode-high-contrast table,
+body.vscode-high-contrast-light table,
+body.vscode-high-contrast th,
+body.vscode-high-contrast-light th,
+body.vscode-high-contrast td,
+body.vscode-high-contrast-light td {
+  border-color: var(--vscode-contrastBorder);
+}
+
+@media print {
+  :root {
+    color-scheme: light;
+    --preview-border: #888;
+    --preview-code-background: #f3f3f3;
+    --preview-muted-foreground: #333;
+  }
+
+  body {
+    padding: 0;
+    color: #000;
+    background: #fff;
+    font-size: 11pt;
+  }
+
+  #preview-content {
+    width: 100%;
+    max-width: none;
+  }
+
+  #preview-status {
+    display: none;
+  }
+
+  a,
+  a:visited {
+    color: #000;
+    text-decoration: underline;
+  }
+
+  code,
+  kbd,
+  samp,
+  pre {
+    color: #000;
+  }
+
+  blockquote,
+  tbody tr:nth-child(even) {
+    color: #222;
+    background: transparent;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  figure,
+  img,
+  table,
+  pre,
+  blockquote {
+    break-inside: avoid;
+  }
+
+  pre {
+    overflow: visible;
+    border-color: #888;
+    white-space: pre-wrap;
+  }
+
+  table {
+    display: table;
+    width: 100%;
+    overflow: visible;
+  }
+
+  th,
+  td {
+    border-color: #888;
+  }
+}

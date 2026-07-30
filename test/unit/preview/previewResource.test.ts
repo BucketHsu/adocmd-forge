@@ -1,0 +1,78 @@
+import path from 'node:path';
+
+import { describe, expect, it } from 'vitest';
+
+import {
+  createAllowedRootPaths,
+  isPathWithinRoot,
+  resolvePreviewImage,
+} from '../../../src/preview/previewResource';
+
+describe('resolvePreviewImage', () => {
+  const workspaceRoot = path.resolve('workspace');
+  const sourcePath = path.join(workspaceRoot, 'docs', 'guide.md');
+
+  it('resolves an encoded relative image inside the workspace', () => {
+    expect(resolvePreviewImage(
+      sourcePath,
+      [workspaceRoot],
+      '../images/my%20image.png',
+    )).toEqual({
+      kind: 'local',
+      path: path.join(workspaceRoot, 'images', 'my image.png'),
+    });
+  });
+
+  it('keeps HTTPS images external', () => {
+    expect(resolvePreviewImage(
+      undefined,
+      [],
+      'HTTPS://example.com/image.png',
+    )).toEqual({
+      kind: 'external',
+    });
+  });
+
+  it.each([
+    '../../outside.png',
+    '//example.com/image.png',
+    'file:///secret.png',
+    'javascript:alert(1)',
+    '%00.png',
+    '#fragment',
+  ])('rejects unsafe image source %s', (imageSource) => {
+    expect(resolvePreviewImage(
+      sourcePath,
+      [path.join(workspaceRoot, 'docs')],
+      imageSource,
+    )).toEqual({
+      kind: 'rejected',
+    });
+  });
+});
+
+describe('createAllowedRootPaths', () => {
+  it('combines workspace roots with the source directory without duplicates', () => {
+    const workspaceRoot = path.resolve('workspace');
+    expect(createAllowedRootPaths(
+      path.join(workspaceRoot, 'guide.md'),
+      [workspaceRoot],
+    )).toEqual([
+      workspaceRoot,
+    ]);
+  });
+});
+
+describe('isPathWithinRoot', () => {
+  it('does not confuse a sibling with a shared name prefix', () => {
+    const parent = path.resolve('project');
+    expect(isPathWithinRoot(
+      path.join(parent, 'docs', 'image.png'),
+      path.join(parent, 'docs'),
+    )).toBe(true);
+    expect(isPathWithinRoot(
+      path.join(parent, 'docs-private', 'image.png'),
+      path.join(parent, 'docs'),
+    )).toBe(false);
+  });
+});
