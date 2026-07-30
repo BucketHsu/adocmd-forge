@@ -1,0 +1,181 @@
+= AdocMD Forge
+:toc: left
+:toclevels: 3
+:sectanchors:
+:source-highlighter: highlight.js
+:imagesdir: images
+
+image::icon.png[AdocMD Forge,128,128]
+
+AdocMD Forge 是提供 AsciiDoc 與 Markdown 撰寫體驗的 VS Code 擴充套件。
+`0.0.1` 是可安裝的預覽功能開發版，支援安全的即時預覽、雙向同步捲動與 VS Code 佈景主題。
+
+== 支援格式
+
+* AsciiDoc：`.adoc`、`.asciidoc`
+* Markdown：`.md`
+
+== 0.0.1 功能
+
+=== 即時預覽
+
+* 使用 Asciidoctor.js 產生 AsciiDoc 預覽。
+* 使用 markdown-it 產生 Markdown 預覽。
+* 編輯文件後自動更新，不需要重新開啟預覽。
+* 同一份來源文件只會開啟一個 Preview Panel。
+* 支援來源編輯器與預覽畫面的雙向同步捲動。
+* 自動套用 VS Code 深色、淺色與高對比佈景主題。
+* 支援預覽中的本機圖片與相對連結。
+* 在受信任工作區中支援安全範圍內的 AsciiDoc `include::`。
+
+=== 安全性
+
+* AsciiDoc 與 Markdown 產出的 HTML 均會經過消毒。
+* Webview 使用 Content Security Policy 與具型別訊息。
+* 未受信任工作區不讀取本機 include、本機圖片或本機連結。
+* 遠端圖片預設停用，且只允許 HTTPS。
+* 本機資源與連結不得逸出允許的工作區範圍。
+
+== 指令
+
+[cols="2,3",options="header"]
+|===
+|指令
+|用途
+
+|`AdocMD Forge: Open Preview`
+|開啟目前 AsciiDoc 或 Markdown 文件的預覽。
+
+|`AdocMD Forge: Refresh Preview`
+|立即重新產生目前文件的預覽。
+|===
+
+也可以使用編輯器標題列上的預覽按鈕。
+
+== 設定
+
+[cols="3,1,4",options="header"]
+|===
+|設定
+|預設值
+|說明
+
+|`adocmdForge.preview.allowRemoteImages`
+|`false`
+|允許預覽載入 HTTPS 遠端圖片；未受信任工作區一律停用。
+
+|`adocmdForge.preview.openToSide`
+|`true`
+|在目前編輯器旁開啟預覽。
+
+|`adocmdForge.preview.scrollSync`
+|`true`
+|同步來源編輯器與預覽畫面的捲動位置。
+
+|`adocmdForge.preview.updateDelay`
+|`200`
+|編輯後更新預覽的延遲毫秒數，可設定為 50 至 2000。
+|===
+
+設定可套用於 User、Workspace 或 Workspace Folder 層級。
+
+== 安裝
+
+=== 使用命令列
+
+[source,bash]
+----
+code --install-extension artifacts/adocmd-forge-0.0.1.vsix
+----
+
+=== 使用 VS Code
+
+. 開啟 Extensions 檢視。
+. 選擇右上角的 `...`。
+. 選擇 `Install from VSIX...`。
+. 選取 `adocmd-forge-0.0.1.vsix`。
+
+== 使用方式
+
+. 開啟 `.adoc`、`.asciidoc` 或 `.md` 文件。
+. 開啟 Command Palette。
+. 執行 `AdocMD Forge: Open Preview`。
+. 編輯文件並確認預覽自動更新。
+
+如需查看執行紀錄，請開啟 `Output` 面板並選擇 `AdocMD Forge`。
+
+== 開發
+
+建議使用 Node.js 22 以上與 VS Code 1.96 以上。
+
+[source,bash]
+----
+npm ci
+npm run verify
+----
+
+使用 VS Code 開啟專案後按 `F5`，即可啟動 Extension Development Host。
+
+常用指令：
+
+[cols="2,3",options="header"]
+|===
+|指令
+|用途
+
+|`npm run build`
+|建立 production bundle。
+
+|`npm run watch`
+|持續監看並重建。
+
+|`npm run typecheck`
+|執行 TypeScript 嚴格型別檢查。
+
+|`npm run lint`
+|執行 ESLint。
+
+|`npm run test:unit`
+|執行單元測試。
+
+|`npm run test:integration`
+|在隔離的 VS Code Extension Host 執行整合測試。
+
+|`npm run verify`
+|執行完整發行前檢查。
+
+|`npm run package:vsix`
+|驗證並建立 VSIX。
+|===
+
+完整開發說明請參閱 link:DeveloperGuide.md[DeveloperGuide.md]，架構決策請參閱 link:Architecture.md[Architecture.md]。
+
+== 0.0.1 已知限制
+
+本版本以可安裝的預覽核心為範圍，下列原規劃功能尚未包含：
+
+* Outline Tree View
+* Link Checker 與 Problems Diagnostic
+* 圖片拖放、貼上、複製與自動插入語法
+* HTML、Standalone HTML 與 Embedded HTML 匯出
+* AsciiDoc 語法完成、Hover 與語法說明
+
+這些功能會在完成實作、測試與文件後才列為可用功能。
+
+== 疑難排解
+
+預覽沒有更新::
+執行 `AdocMD Forge: Refresh Preview`，並確認 `adocmdForge.preview.updateDelay` 設定有效。
+
+本機圖片沒有顯示::
+確認工作區已受信任、圖片位於文件或工作區允許範圍內，且路徑大小寫正確。
+
+遠端圖片沒有顯示::
+確認工作區已受信任，並將 `adocmdForge.preview.allowRemoteImages` 設為 `true`。只支援 HTTPS 圖片。
+
+include 沒有載入::
+確認來源文件已儲存於本機檔案系統、工作區已受信任，且 include 目標位於允許範圍內。
+
+== 授權
+
+AdocMD Forge 使用 MIT License，詳見 link:LICENSE[LICENSE]。

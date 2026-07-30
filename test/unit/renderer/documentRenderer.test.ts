@@ -9,10 +9,13 @@ import {
   vi,
 } from 'vitest';
 
+import type { LoggerMessage } from '@asciidoctor/core';
+
 import {
   render,
   type RenderResult,
 } from '../../../src/renderer/documentRenderer';
+import createAsciidoctorRuntime from '../../../src/renderer/asciidoctorRuntime.cjs';
 
 describe('document renderer', (): void => {
   it('renders Markdown with a plain-text title and 0-based block source lines', async (): Promise<void> => {
@@ -162,6 +165,80 @@ describe('document renderer', (): void => {
     } finally {
       consoleError.mockRestore();
       consoleWarn.mockRestore();
+    }
+  });
+
+  it('renders logger messages that do not provide a source location', async (): Promise<void> => {
+    const asciidoctor = createAsciidoctorRuntime();
+    const memoryLogger = asciidoctor.MemoryLogger.create();
+    const createLogger = vi.spyOn(
+      asciidoctor.MemoryLogger,
+      'create',
+    ).mockReturnValue(memoryLogger);
+    const getMessages = vi.spyOn(
+      memoryLogger,
+      'getMessages',
+    ).mockReturnValue([
+      {
+        getSeverity: (): string => 'WARN',
+        getSourceLocation: (): undefined => undefined,
+        getText: (): string => 'Warning without a source location.',
+      } as unknown as LoggerMessage,
+    ]);
+
+    try {
+      const result = await render({
+        kind: 'asciidoc',
+        source: 'Content.',
+      });
+
+      expect(result.html).toContain('Content.');
+      expect(result.messages).toEqual([
+        {
+          message: 'Warning without a source location.',
+          severity: 'warning',
+        },
+      ]);
+    } finally {
+      getMessages.mockRestore();
+      createLogger.mockRestore();
+    }
+  });
+
+  it('renders AST blocks that do not provide a source location', async (): Promise<void> => {
+    const asciidoctor = createAsciidoctorRuntime();
+    const parsed = asciidoctor.load('Probe.', {
+      sourcemap: true,
+    });
+    const probeBlock = parsed.findBy({
+      context: 'paragraph',
+    })[0];
+    if (probeBlock === undefined) {
+      throw new Error('Expected an Asciidoctor paragraph probe block.');
+    }
+
+    const abstractBlockPrototype = Object.getPrototypeOf(
+      Object.getPrototypeOf(probeBlock) as object,
+    ) as {
+      getSourceLocation(): unknown;
+    };
+    const getSourceLocation = vi.spyOn(
+      abstractBlockPrototype,
+      'getSourceLocation',
+    ).mockReturnValue(undefined);
+
+    try {
+      const result = await render({
+        kind: 'asciidoc',
+        source: '= Title\n\nContent.',
+      });
+
+      expect(result.title).toBe('Title');
+      expect(result.html).toContain('<h1>Title</h1>');
+      expect(result.html).toContain('Content.');
+      expect(result.html).not.toContain('data-source-line');
+    } finally {
+      getSourceLocation.mockRestore();
     }
   });
 

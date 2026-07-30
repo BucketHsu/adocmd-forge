@@ -76,8 +76,7 @@ export function isRendererWorkerRequestMessage(
       'request',
       'type',
     ]);
-    return properties !== undefined
-      && properties.type === 'render'
+    return properties?.type === 'render'
       && isRequestId(properties.id)
       && isRenderRequestValue(properties.request);
   } catch {

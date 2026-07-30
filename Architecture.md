@@ -2,22 +2,27 @@
 
 ## 1. 文件目的
 
-本文件定義 AdocMD Forge 0.1.0 的架構邊界、技術決策、資料流程、安全基準與測試策略。實作若調整公開命令、設定、資料模型或模組責任，必須同步更新本文件與使用者文件。
+本文件定義 AdocMD Forge 的架構邊界、技術決策、資料流程、安全基準與測試策略。實作若調整公開命令、設定、資料模型或模組責任，必須同步更新本文件與使用者文件。
 
 ## 2. 產品範圍
 
-AdocMD Forge 是 VS Code 文件工作台，0.1.0 支援：
+AdocMD Forge 是 VS Code 文件工作台。0.0.1 可安裝版支援：
 
 - AsciiDoc：`.adoc`、`.asciidoc`
 - Markdown：`.md`
 - Webview 即時預覽、雙向同步捲動與 VS Code 深色、淺色、高對比佈景主題
+- 預覽相關的工作區與使用者層級設定
+- 受信任工作區內的安全本機圖片、連結與 AsciiDoc include
+
+下列功能屬於後續版本的目標架構，0.0.1 尚未宣稱支援：
+
 - 文件標題 Outline 與點擊跳轉
 - xref、anchor、Markdown 連結、圖片與 include 檢查
-- 圖片拖放、圖片複製與文件語法插入
+- 圖片拖放、貼上、複製與文件語法插入
 - 一般 HTML、Standalone HTML 與 Embedded HTML 匯出
-- 工作區與使用者層級設定
+- AsciiDoc 語法完成、Hover 與語法說明
 
-PDF、DOCX、多人協作、雲端儲存與自訂 Asciidoctor extension 不屬於 0.1.0 範圍。
+PDF、DOCX、多人協作、雲端儲存與自訂 Asciidoctor extension 不屬於目前規劃範圍。
 
 ## 3. 設計原則
 
@@ -319,7 +324,7 @@ interface DocumentAnalysis {
 
 ## 19. 發行與版本
 
-- 0.1.0 採 MIT License，Publisher 依目前 Git origin 與既有參考專案使用 `BucketHsu`。
+- 0.0.1 採 MIT License，Publisher 依目前 Git origin 與既有參考專案使用 `BucketHsu`。
 - `package.json`、lockfile、README、CHANGELOG、Git tag 與 VSIX 檔名必須使用相同版本。
 - CI 使用 `npm ci`，不得以未鎖定依賴產出正式 VSIX。
 - VSIX 必須保留必要第三方授權資訊，不以 `.vscodeignore` 排除授權檔。

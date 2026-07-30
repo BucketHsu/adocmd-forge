@@ -5,3 +5,8 @@ artifacts/
 .vscode-test/
 *.vsix
 *.log
+*.tsbuildinfo
+.eslintcache
+.DS_Store
+Thumbs.db
+npm-debug.log*

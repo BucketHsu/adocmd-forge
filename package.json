@@ -1,11 +1,11 @@
 {
   "name": "adocmd-forge",
   "displayName": "AdocMD Forge",
-  "description": "A professional AsciiDoc and Markdown authoring, preview, validation, export, and document management workbench.",
-  "version": "0.1.0",
+  "description": "Secure live preview for AsciiDoc and Markdown with synchronized scrolling and VS Code theme support.",
+  "version": "0.0.1",
   "publisher": "BucketHsu",
   "license": "MIT",
-  "icon": "logo.png",
+  "icon": "images/icon.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/BucketHsu/adocmd-forge.git"
@@ -19,15 +19,13 @@
   },
   "categories": [
     "Other",
-    "Visualization",
-    "Linters"
+    "Visualization"
   ],
   "keywords": [
     "asciidoc",
     "markdown",
     "preview",
-    "documentation",
-    "link checker"
+    "documentation"
   ],
   "extensionKind": [
     "workspace"

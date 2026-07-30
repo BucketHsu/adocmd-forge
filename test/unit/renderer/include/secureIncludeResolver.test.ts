@@ -121,9 +121,8 @@ describe('secure include resolver', (): void => {
 
   it('does not index an open document outside the lexical root', (): void => {
     const fixture = createPosixFixture();
-    fixture.fileSystem.addFile(
+    fixture.fileSystem.addAlias(
       '/outside/chapter.adoc',
-      'Outside content.',
       '/workspace/docs/chapter.adoc',
     );
     const resolver = createResolver(fixture, {
@@ -354,4 +353,3 @@ describe('secure include resolver', (): void => {
     }
   });
 });
-

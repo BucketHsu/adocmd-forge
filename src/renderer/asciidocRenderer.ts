@@ -17,6 +17,11 @@ interface RenderedFragment {
   readonly title?: string;
 }
 
+interface AsciiDocSourceLocation {
+  getFile(): unknown;
+  getLineNumber(): unknown;
+}
+
 const SOURCE_LINE_ATTRIBUTE = 'data-source-line';
 const SOURCE_LINE_ROLE_PREFIX = 'adocmd-forge-source-line-';
 const SOURCE_LINE_ROLE_PATTERN = /^adocmd-forge-source-line-(\d+)$/u;
@@ -59,9 +64,10 @@ export function renderAsciiDoc(request: RenderRequest): RenderedFragment {
 }
 
 function toRenderMessage(loggerMessage: LoggerMessage): RenderMessage {
-  const sourceLocation = loggerMessage.getSourceLocation();
-  const lineNumber = readPositiveInteger(sourceLocation.getLineNumber());
-  const sourceFile = readNonEmptyString(sourceLocation.getFile());
+  const sourceLocation = loggerMessage.getSourceLocation() as
+    AsciiDocSourceLocation | undefined;
+  const lineNumber = readPositiveInteger(sourceLocation?.getLineNumber());
+  const sourceFile = readNonEmptyString(sourceLocation?.getFile());
   const loggerSeverity = loggerMessage.getSeverity().toUpperCase();
   const severity = loggerSeverity === 'ERROR' || loggerSeverity === 'FATAL'
     ? 'error'
@@ -128,11 +134,12 @@ function addSourceLineRoles(document: Document): void {
 }
 
 function getMainDocumentSourceLine(block: AbstractBlock): number | undefined {
-  const sourceLocation = block.getSourceLocation();
-  const lineNumber = sourceLocation.getLineNumber();
-  const sourceFile = sourceLocation.getFile();
+  const sourceLocation = block.getSourceLocation() as
+    AsciiDocSourceLocation | undefined;
+  const lineNumber = readPositiveInteger(sourceLocation?.getLineNumber());
+  const sourceFile = readNonEmptyString(sourceLocation?.getFile());
 
-  if (lineNumber === undefined || lineNumber < 1 || sourceFile !== undefined) {
+  if (lineNumber === undefined || sourceFile !== undefined) {
     return undefined;
   }
 
