@@ -194,7 +194,7 @@ describe('RendererWorkerService', (): void => {
 
     const recoveryRender = service.render(MARKDOWN_REQUEST);
     const replacementWorker = harness.createdWorkers[1];
-    replacementWorker?.respondWithResult(0, MARKDOWN_RESULT);
+    replacementWorker?.respondWithResult(1, MARKDOWN_RESULT);
     await expect(recoveryRender).resolves.toEqual(MARKDOWN_RESULT);
     await service.shutdown();
   });

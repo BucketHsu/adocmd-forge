@@ -238,7 +238,7 @@ describe('isRenderResult', () => {
   });
 
   it('拒絕帶有多餘欄位的 messages 陣列', () => {
-    const messages: Array<Record<string, unknown>> & {
+    const messages: Record<string, unknown>[] & {
       injected?: boolean;
     } = [
       {

@@ -14,5 +14,5 @@ test/**
 eslint.config.mjs
 tsconfig*.json
 vitest.config.ts
-logo.ico
+images/icon.ico
 media/**

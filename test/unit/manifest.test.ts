@@ -4,15 +4,18 @@ import { describe, expect, it } from 'vitest';
 
 interface PackageManifest {
   readonly activationEvents?: readonly string[];
+  readonly categories?: readonly string[];
   readonly contributes?: {
     readonly commands?: readonly {
       readonly command?: string;
     }[];
   };
+  readonly description?: string;
   readonly displayName?: string;
   readonly engines?: {
     readonly vscode?: string;
   };
+  readonly keywords?: readonly string[];
   readonly main?: string;
   readonly name?: string;
   readonly publisher?: string;
@@ -31,7 +34,21 @@ describe('extension manifest', (): void => {
     expect(manifest.name).toBe('adocmd-forge');
     expect(manifest.displayName).toBe('AdocMD Forge');
     expect(manifest.publisher).toBe('BucketHsu');
-    expect(manifest.version).toBe('0.1.0');
+    expect(manifest.version).toBe('0.0.1');
+    expect(manifest.description).toBe(
+      'Secure live preview for AsciiDoc and Markdown with synchronized '
+      + 'scrolling and VS Code theme support.',
+    );
+    expect(manifest.categories).toEqual([
+      'Other',
+      'Visualization',
+    ]);
+    expect(manifest.keywords).toEqual([
+      'asciidoc',
+      'markdown',
+      'preview',
+      'documentation',
+    ]);
     expect(manifest.engines?.vscode).toBe('^1.96.0');
     expect(manifest.main).toBe('./dist/extension.js');
   });

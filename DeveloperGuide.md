@@ -169,7 +169,7 @@ npm run package:vsix
 安裝測試使用隔離目錄，避免變更開發者日常 VS Code：
 
 ```powershell
-code --extensions-dir .vscode-test/installed-extensions --install-extension artifacts/adocmd-forge.vsix --force
+code --extensions-dir .vscode-test/installed-extensions --install-extension artifacts/adocmd-forge-0.0.1.vsix --force
 ```
 
 ## 13. 發行

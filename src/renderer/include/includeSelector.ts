@@ -7,6 +7,7 @@ const TAG_DIRECTIVE_PATTERN = /\b(?:tag|(e)nd)::(\S+?)\[\](?=$|[ \r])/u;
 
 interface TagFrame {
   readonly line: number;
+  readonly reportUnclosed: boolean;
   readonly select: boolean;
   readonly tag: string;
 }
@@ -183,7 +184,10 @@ function selectTags(
         if (activeFrame?.tag === tag) {
           stack.pop();
           select = stack.at(-1)?.select ?? configuration.baseSelect;
-        } else if (configuration.requestedTags.has(tag)) {
+        } else if (
+          activeFrame?.reportUnclosed === true
+          || configuration.requestedTags.has(tag)
+        ) {
           const expectedTag = activeFrame?.tag;
           issues.push({
             code: expectedTag === undefined
@@ -206,6 +210,7 @@ function selectTags(
         }
         stack.push({
           line: lineNumber,
+          reportUnclosed: true,
           select,
           tag,
         });
@@ -215,6 +220,14 @@ function selectTags(
           : configuration.wildcard;
         stack.push({
           line: lineNumber,
+          reportUnclosed: true,
+          select,
+          tag,
+        });
+      } else {
+        stack.push({
+          line: lineNumber,
+          reportUnclosed: false,
           select,
           tag,
         });
@@ -229,11 +242,13 @@ function selectTags(
   }
 
   for (const frame of stack) {
-    issues.push({
-      code: 'unclosed-tag',
-      line: frame.line,
-      tag: frame.tag,
-    });
+    if (frame.reportUnclosed) {
+      issues.push({
+        code: 'unclosed-tag',
+        line: frame.line,
+        tag: frame.tag,
+      });
+    }
   }
   for (const [tag, requested] of configuration.requestedTags) {
     if (requested && !selectedTags.has(tag)) {
@@ -359,9 +374,17 @@ function rubyInteger(value: string): number {
 }
 
 function toAttributeValue(value: unknown): string {
-  return typeof value === 'string'
-    ? value
-    : String(value ?? '');
+  if (typeof value === 'string') {
+    return value;
+  }
+  if (
+    typeof value === 'boolean'
+    || typeof value === 'bigint'
+    || typeof value === 'number'
+  ) {
+    return String(value);
+  }
+  return '';
 }
 
 function hasOwn(
