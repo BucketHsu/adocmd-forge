@@ -21,6 +21,7 @@ describe('isExtensionToWebviewMessage', () => {
       stylesheets: [
         'vscode-webview://workspace/stylesheets/colony.css',
         'https://file+.vscode-resource.vscode-cdn.net/workspace/stylesheets/colony.css',
+        'https://file%2B.vscode-resource.vscode-cdn.net/workspace/stylesheets/colony.css',
       ],
     },
     {

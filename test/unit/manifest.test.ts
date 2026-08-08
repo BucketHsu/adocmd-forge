@@ -44,7 +44,7 @@ describe('extension manifest', (): void => {
     expect(manifest.name).toBe('adocmd-forge');
     expect(manifest.displayName).toBe('AdocMD Forge');
     expect(manifest.publisher).toBe('BucketHsu');
-    expect(manifest.version).toBe('1.2.1');
+    expect(manifest.version).toBe('1.2.2');
     expect(manifest.description).toBe(
       'Secure live preview for AsciiDoc and Markdown with synchronized '
       + 'scrolling and VS Code theme support.',
@@ -205,6 +205,23 @@ describe('extension manifest', (): void => {
         command,
         when: selectionWhen,
       })),
+    );
+
+    expect(editorTitle?.map(({ command }) => command)).toEqual(
+      expect.arrayContaining([
+        'adocmdForge.openPreview',
+        'adocmdForge.refreshPreview',
+        'adocmdForge.previewSource',
+        'adocmdForge.previewSplit',
+        'adocmdForge.previewOnly',
+        'adocmdForge.openSyntaxGuide',
+        'adocmdForge.validateLinks',
+        'adocmdForge.copyImage',
+        'adocmdForge.exportHtml',
+        'adocmdForge.exportStandaloneHtml',
+        'adocmdForge.exportEmbeddedHtml',
+        'adocmdForge.exportPdf',
+      ]),
     );
   });
 });

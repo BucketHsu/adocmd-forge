@@ -150,8 +150,8 @@ describe('PreviewRuntime', (): void => {
       html: '<p data-source-line="0">Styled</p>',
       lineCount: 1,
       stylesheets: [
-        'https://file+.vscode-resource.vscode-cdn.net/workspace/stylesheets/colony.css',
-        'https://file+.vscode-resource.vscode-cdn.net/workspace/stylesheets/colony.css',
+        'https://file%2B.vscode-resource.vscode-cdn.net/workspace/stylesheets/colony.css',
+        'https://file%2B.vscode-resource.vscode-cdn.net/workspace/stylesheets/colony.css',
       ],
     });
 
@@ -161,7 +161,7 @@ describe('PreviewRuntime', (): void => {
     expect(stylesheetLinks).toHaveLength(1);
     expect(stylesheetLinks[0]?.getAttribute('rel')).toBe('stylesheet');
     expect(stylesheetLinks[0]?.getAttribute('href')).toBe(
-      'https://file+.vscode-resource.vscode-cdn.net/workspace/stylesheets/colony.css',
+      'https://file%2B.vscode-resource.vscode-cdn.net/workspace/stylesheets/colony.css',
     );
 
     sendExtensionMessage({

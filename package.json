@@ -2,7 +2,7 @@
   "name": "adocmd-forge",
   "displayName": "AdocMD Forge",
   "description": "Secure live preview for AsciiDoc and Markdown with synchronized scrolling and VS Code theme support.",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "publisher": "BucketHsu",
   "license": "MIT",
   "icon": "images/icon.png",
@@ -337,6 +337,16 @@
           "command": "adocmdForge.previewOnly",
           "when": "editorLangId == markdown || editorLangId == asciidoc",
           "group": "navigation@14"
+        },
+        {
+          "command": "adocmdForge.openSyntaxGuide",
+          "when": "editorLangId == asciidoc",
+          "group": "navigation@25"
+        },
+        {
+          "command": "adocmdForge.validateLinks",
+          "when": "editorLangId == markdown || editorLangId == asciidoc",
+          "group": "navigation@26"
         },
         {
           "command": "adocmdForge.copyImage",

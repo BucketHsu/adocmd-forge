@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
 import os from 'node:os';
 
 import * as vscode from 'vscode';
@@ -200,7 +201,7 @@ async function verifyFormattingCommands(): Promise<void> {
 async function verifyHtmlExports(): Promise<void> {
   const root = vscode.Uri.joinPath(
     vscode.Uri.file(os.tmpdir()),
-    `adocmd-forge-export-${String(Date.now())}`,
+    `adocmd-forge-export-${String(process.pid)}-${String(Date.now())}-${randomUUID()}`,
   );
   await vscode.workspace.fs.createDirectory(root);
   const added = vscode.workspace.updateWorkspaceFolders(0, 0, {

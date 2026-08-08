@@ -161,8 +161,9 @@ function isSafeStylesheetUri(value: unknown): value is string {
 
   try {
     const uri = new URL(value);
+    const hostname = decodeURIComponent(uri.hostname);
     return uri.protocol === 'https:'
-      && WEBVIEW_RESOURCE_HOST_PATTERN.test(uri.hostname)
+      && WEBVIEW_RESOURCE_HOST_PATTERN.test(hostname)
       && uri.username.length === 0
       && uri.password.length === 0
       && uri.port.length === 0

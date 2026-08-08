@@ -6,6 +6,13 @@
 
 目前沒有尚未歸入版本的變更。
 
+## 1.2.2 - 2026-08-08
+
+### Fixed
+
+- 強化 VS Code 1.97+ Webview stylesheet URI 驗證，兼容 `file%2B.vscode-resource.vscode-cdn.net` 這類百分比編碼 authority，避免安全驗證誤略過文件的 `:stylesheet:`。
+- 格式化命令固定放在來源編輯器標題列與右鍵選單；Preview Webview 僅保留預覽操作，避免在不可編輯的預覽區選取文字後失去來源選取範圍。
+
 ## 1.2.1 - 2026-08-08
 
 ### Fixed

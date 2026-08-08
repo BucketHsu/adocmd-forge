@@ -6,7 +6,7 @@
 
 ## 2. 產品範圍
 
-AdocMD Forge 是 VS Code 文件工作台。1.2.0 正式版支援：
+AdocMD Forge 是 VS Code 文件工作台。1.2.2 正式版支援：
 
 - AsciiDoc：`.adoc`、`.asciidoc`
 - Markdown：`.md`
@@ -20,7 +20,7 @@ AdocMD Forge 是 VS Code 文件工作台。1.2.0 正式版支援：
 - HTML、Standalone HTML 與 Embedded HTML 匯出；三種模式共用 Renderer 與 Sanitizer
 - AsciiDoc 的本機 `asciidoctor-pdf` PDF 匯出命令整合
 
-1.2.0 發行關卡已由自動化測試、Extension Host 整合測試、VSIX 檢查與隔離安裝驗證完成；實際上架 Marketplace 仍需 Publisher 憑證與上架操作。
+1.2.2 發行關卡已由自動化測試、Extension Host 整合測試、VSIX 檢查與隔離安裝驗證完成；實際上架 Marketplace 仍需 Publisher 憑證與上架操作。
 
 DOCX、多人協作、雲端儲存與自訂 Asciidoctor extension 不屬於目前規劃範圍。
 
@@ -308,7 +308,7 @@ VS Code 1.97 以上另註冊 `DocumentPasteEditProvider`，接收 `image/*`、`f
 - 涉及路徑的值在使用時再次驗證，不信任 manifest schema 即已足夠。
 - 無法在執行期間真正生效的選項不得公開。
 
-1.2.0 目前公開設定：
+1.2.2 目前公開設定：
 
 - `adocmdForge.outline.updateDelay`：預設 150 毫秒，範圍 50 至 2000 毫秒。
 - `adocmdForge.diagnostics.updateDelay`：預設 150 毫秒，範圍 50 至 2000 毫秒；Diagnostics 會在設定的延遲後重新檢查目前文件。
