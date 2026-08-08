@@ -49,29 +49,12 @@ export interface PreviewOpenLinkMessage {
   readonly href: string;
 }
 
-export type PreviewToolbarAction =
-  | 'exportEmbeddedHtml'
-  | 'exportHtml'
-  | 'exportPdf'
-  | 'exportStandaloneHtml'
-  | 'openSyntaxGuide'
-  | 'previewOnly'
-  | 'previewSource'
-  | 'previewSplit'
-  | 'refreshPreview';
-
-export interface PreviewToolbarActionMessage {
-  readonly type: 'toolbarAction';
-  readonly action: PreviewToolbarAction;
-}
-
 export type WebviewToExtensionMessage =
   | PreviewReadyMessage
   | PreviewRenderedMessage
   | PreviewStylesheetStatusMessage
   | PreviewScrollMessage
-  | PreviewOpenLinkMessage
-  | PreviewToolbarActionMessage;
+  | PreviewOpenLinkMessage;
 
 type MessageRecord = Readonly<Record<PropertyKey, unknown>>;
 
@@ -89,24 +72,6 @@ const WEBVIEW_STYLESHEET_SCHEMES = new Set([
   'vscode-webview-resource',
 ]);
 const WEBVIEW_RESOURCE_HOST_PATTERN = /^[a-z][a-z\d+.-]*\.vscode-resource\.vscode-cdn\.net$/iu;
-const PREVIEW_TOOLBAR_ACTIONS: ReadonlySet<string> = new Set([
-  'exportEmbeddedHtml',
-  'exportHtml',
-  'exportPdf',
-  'exportStandaloneHtml',
-  'openSyntaxGuide',
-  'previewOnly',
-  'previewSource',
-  'previewSplit',
-  'refreshPreview',
-]);
-
-export function isPreviewToolbarAction(
-  value: unknown,
-): value is PreviewToolbarAction {
-  return typeof value === 'string' && PREVIEW_TOOLBAR_ACTIONS.has(value);
-}
-
 function isMessageRecord(value: unknown): value is MessageRecord {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     return false;
@@ -343,13 +308,6 @@ export function isWebviewToExtensionMessage(
           'href',
         ])
           && isSafeLinkHref(value.href);
-
-      case 'toolbarAction':
-        return hasExactKeys(value, [
-          'type',
-          'action',
-        ])
-          && isPreviewToolbarAction(value.action);
 
       default:
         return false;

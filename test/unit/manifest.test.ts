@@ -44,7 +44,7 @@ describe('extension manifest', (): void => {
     expect(manifest.name).toBe('adocmd-forge');
     expect(manifest.displayName).toBe('AdocMD Forge');
     expect(manifest.publisher).toBe('BucketHsu');
-    expect(manifest.version).toBe('1.2.3');
+    expect(manifest.version).toBe('1.2.4');
     expect(manifest.description).toBe(
       'Secure live preview for AsciiDoc and Markdown with synchronized '
       + 'scrolling and VS Code theme support.',
@@ -162,7 +162,7 @@ describe('extension manifest', (): void => {
     });
   });
 
-  it('exposes formatting beside the source editor only when text is selected', async (): Promise<void> => {
+  it('exposes formatting beside the source editor and in its selection menu', async (): Promise<void> => {
     const manifest = await readManifest();
     const formattingCommands = [
       'adocmdForge.formatBold',
@@ -173,6 +173,7 @@ describe('extension manifest', (): void => {
       'adocmdForge.formatSuperscript',
       'adocmdForge.formatSubscript',
     ];
+    const editorWhen = 'editorLangId == markdown || editorLangId == asciidoc';
     const selectionWhen = (
       'editorHasSelection && '
       + '(editorLangId == markdown || editorLangId == asciidoc)'
@@ -195,7 +196,7 @@ describe('extension manifest', (): void => {
     )).map(({ command, when }) => ({ command, when }))).toEqual(
       formattingCommands.map((command) => ({
         command,
-        when: selectionWhen,
+        when: editorWhen,
       })),
     );
     expect(editorContext?.filter(({ command }) => (

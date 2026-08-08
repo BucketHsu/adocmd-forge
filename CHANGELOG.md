@@ -6,6 +6,14 @@
 
 目前沒有尚未歸入版本的變更。
 
+## 1.2.4 - 2026-08-08
+
+### Fixed
+
+- 修正 Windows `D:\...` stylesheet 絕對路徑被誤判為 `D:` URI scheme，導致已存在且位於工作區內的 CSS 顯示 `Preview stylesheet skipped`。
+- 新增 Windows drive path 回歸測試，確認 `:stylesheet: ../stylesheets/colony.css` 可通過副檔名、工作區與路徑邊界檢查。
+- 移除 Preview Webview 工具列；格式、預覽版面、重新整理、語法說明與匯出操作統一放在來源編輯器標題列，格式按鈕在 AsciiDoc／Markdown 編輯器中持續顯示。
+
 ## 1.2.3 - 2026-08-08
 
 ### Fixed

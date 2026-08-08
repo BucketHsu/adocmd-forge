@@ -2,7 +2,7 @@
   "name": "adocmd-forge",
   "displayName": "AdocMD Forge",
   "description": "Secure live preview for AsciiDoc and Markdown with synchronized scrolling and VS Code theme support.",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "publisher": "BucketHsu",
   "license": "MIT",
   "icon": "images/icon.png",
@@ -280,37 +280,37 @@
       "editor/title": [
         {
           "command": "adocmdForge.formatBold",
-          "when": "editorHasSelection && (editorLangId == markdown || editorLangId == asciidoc)",
+          "when": "editorLangId == markdown || editorLangId == asciidoc",
           "group": "navigation@1"
         },
         {
           "command": "adocmdForge.formatItalic",
-          "when": "editorHasSelection && (editorLangId == markdown || editorLangId == asciidoc)",
+          "when": "editorLangId == markdown || editorLangId == asciidoc",
           "group": "navigation@2"
         },
         {
           "command": "adocmdForge.formatHighlight",
-          "when": "editorHasSelection && (editorLangId == markdown || editorLangId == asciidoc)",
+          "when": "editorLangId == markdown || editorLangId == asciidoc",
           "group": "navigation@3"
         },
         {
           "command": "adocmdForge.formatCode",
-          "when": "editorHasSelection && (editorLangId == markdown || editorLangId == asciidoc)",
+          "when": "editorLangId == markdown || editorLangId == asciidoc",
           "group": "navigation@4"
         },
         {
           "command": "adocmdForge.formatStrike",
-          "when": "editorHasSelection && (editorLangId == markdown || editorLangId == asciidoc)",
+          "when": "editorLangId == markdown || editorLangId == asciidoc",
           "group": "navigation@5"
         },
         {
           "command": "adocmdForge.formatSuperscript",
-          "when": "editorHasSelection && (editorLangId == markdown || editorLangId == asciidoc)",
+          "when": "editorLangId == markdown || editorLangId == asciidoc",
           "group": "navigation@6"
         },
         {
           "command": "adocmdForge.formatSubscript",
-          "when": "editorHasSelection && (editorLangId == markdown || editorLangId == asciidoc)",
+          "when": "editorLangId == markdown || editorLangId == asciidoc",
           "group": "navigation@7"
         },
         {

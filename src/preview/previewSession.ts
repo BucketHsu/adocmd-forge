@@ -19,7 +19,6 @@ import {
   isWebviewToExtensionMessage,
   type ExtensionToWebviewMessage,
   type PreviewScrollMessage,
-  type PreviewToolbarAction,
 } from './previewMessage';
 import {
   isPathWithinRoot,
@@ -41,7 +40,6 @@ export interface PreviewSessionOptions {
   readonly extensionUri: vscode.Uri;
   readonly onActivate: (session: PreviewSession) => void;
   readonly onDispose: (session: PreviewSession) => void;
-  readonly onToolbarAction: (action: PreviewToolbarAction) => Promise<void>;
   readonly openLink: (
     documentUri: vscode.Uri,
     href: string,
@@ -539,9 +537,6 @@ export class PreviewSession implements vscode.Disposable {
         await this.options.openLink(this.documentUri, message.href);
         break;
 
-      case 'toolbarAction':
-        await this.options.onToolbarAction(message.action);
-        break;
     }
   }
 

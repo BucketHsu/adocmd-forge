@@ -2,7 +2,6 @@
 
 import {
   isExtensionToWebviewMessage,
-  isPreviewToolbarAction,
   isWebviewToExtensionMessage,
   type ExtensionToWebviewMessage,
   type WebviewToExtensionMessage,
@@ -30,7 +29,6 @@ declare function acquireVsCodeApi<State = unknown>(): VsCodeApi<State>;
 
 const CONTENT_ELEMENT_ID = 'preview-content';
 const STATUS_ELEMENT_ID = 'preview-status';
-const TOOLBAR_ELEMENT_ID = 'preview-toolbar';
 const SOURCE_LINE_ATTRIBUTE = 'data-source-line';
 const SOURCE_LINE_PATTERN = /^(?:0|[1-9]\d*)$/u;
 const DOCUMENT_STYLESHEET_ATTRIBUTE = 'data-adocmd-forge-document-stylesheet';
@@ -119,7 +117,6 @@ export class PreviewRuntime {
     private readonly contentElement: HTMLElement,
     private readonly statusElement: HTMLElement,
     state: PreviewState,
-    private readonly toolbarElement?: HTMLElement,
   ) {
     this.currentSourceLine = state.scrollSourceLine;
     this.nextSequence = Math.max(state.sequence, Date.now());
@@ -146,7 +143,6 @@ export class PreviewRuntime {
     });
     window.addEventListener('keydown', this.handleKeyDown);
     this.contentElement.addEventListener('click', this.handleLinkClick);
-    this.toolbarElement?.addEventListener('click', this.handleToolbarClick);
 
     this.postMessage({
       type: 'ready',
@@ -167,7 +163,6 @@ export class PreviewRuntime {
     window.removeEventListener('pointerdown', this.handleUserScrollIntent);
     window.removeEventListener('keydown', this.handleKeyDown);
     this.contentElement.removeEventListener('click', this.handleLinkClick);
-    this.toolbarElement?.removeEventListener('click', this.handleToolbarClick);
     this.removeDocumentStylesheets();
     if (this.scrollThrottleTimer !== undefined) {
       window.clearTimeout(this.scrollThrottleTimer);
@@ -246,35 +241,6 @@ export class PreviewRuntime {
     if (isWebviewToExtensionMessage(message)) {
       this.postMessage(message);
     }
-  };
-
-  private readonly handleToolbarClick = (event: MouseEvent): void => {
-    const target = event.target;
-    if (!(target instanceof Element) || this.toolbarElement === undefined) {
-      return;
-    }
-
-    const button = target.closest<HTMLButtonElement>(
-      '[data-toolbar-action]',
-    );
-    if (
-      button === null
-      || !this.toolbarElement.contains(button)
-      || button.disabled
-    ) {
-      return;
-    }
-
-    const action = button.getAttribute('data-toolbar-action');
-    if (!isPreviewToolbarAction(action)) {
-      return;
-    }
-
-    event.preventDefault();
-    this.postMessage({
-      type: 'toolbarAction',
-      action,
-    });
   };
 
   private handleMessage(message: ExtensionToWebviewMessage): void {
@@ -575,7 +541,6 @@ export class PreviewRuntime {
 export function initializePreview(): PreviewRuntime | undefined {
   const contentElement = document.getElementById(CONTENT_ELEMENT_ID);
   const statusElement = document.getElementById(STATUS_ELEMENT_ID);
-  const toolbarElement = document.getElementById(TOOLBAR_ELEMENT_ID);
   if (
     !(contentElement instanceof HTMLElement)
     || !(statusElement instanceof HTMLElement)
@@ -590,7 +555,6 @@ export function initializePreview(): PreviewRuntime | undefined {
     contentElement,
     statusElement,
     state,
-    toolbarElement instanceof HTMLElement ? toolbarElement : undefined,
   );
   runtime.start();
   return runtime;

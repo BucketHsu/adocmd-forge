@@ -198,10 +198,6 @@ describe('isWebviewToExtensionMessage', () => {
       type: 'openLink',
       href: 'https://example.com/guide',
     },
-    {
-      type: 'toolbarAction',
-      action: 'previewSplit',
-    },
   ])('接受有效訊息：$type', (message) => {
     expect(isWebviewToExtensionMessage(message)).toBe(true);
   });
@@ -262,14 +258,6 @@ describe('isWebviewToExtensionMessage', () => {
     {
       type: 'openLink',
       href: 'guide\u0000.adoc',
-    },
-    {
-      type: 'toolbarAction',
-      action: 'runArbitraryCommand',
-    },
-    {
-      type: 'toolbarAction',
-      action: 'formatBold',
     },
   ])('拒絕無效或危險訊息', (message) => {
     expect(isWebviewToExtensionMessage(message)).toBe(false);

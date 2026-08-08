@@ -8,7 +8,7 @@
 image::images/icon.png[AdocMD Forge,128,128]
 
 AdocMD Forge 是提供 AsciiDoc 與 Markdown 撰寫體驗的 VS Code 擴充套件。
-`1.2.3` 是可安裝的文件工作台版本，除了安全的即時預覽、雙向同步捲動、AsciiDoc 語法輔助與圖片工作流，也提供目前文件的 Outline 標題樹、點擊跳轉、本機引用診斷、HTML／PDF 匯出與編輯器快速工具列。
+`1.2.4` 是可安裝的文件工作台版本，除了安全的即時預覽、雙向同步捲動、AsciiDoc 語法輔助與圖片工作流，也提供目前文件的 Outline 標題樹、點擊跳轉、本機引用診斷、HTML／PDF 匯出與編輯器快速工具列。
 
 圖片貼上使用 VS Code 1.97 以上的 `DocumentPasteEditProvider`。只有在 VS Code 與作業系統將剪貼簿圖片以 `image/*` 或 `files` DataTransfer 提供給擴充套件時，才會攔截並處理圖片；若平台未提供二進位剪貼簿資料，請改用拖曳或 `Copy Image` 指令。
 
@@ -17,7 +17,7 @@ AdocMD Forge 是提供 AsciiDoc 與 Markdown 撰寫體驗的 VS Code 擴充套�
 * AsciiDoc：`.adoc`、`.asciidoc`
 * Markdown：`.md`
 
-== 1.2.3 功能
+== 1.2.4 功能
 
 === 即時預覽
 
@@ -30,8 +30,8 @@ AdocMD Forge 是提供 AsciiDoc 與 Markdown 撰寫體驗的 VS Code 擴充套�
 * 支援預覽中的本機圖片與相對連結。
 * 在受信任工作區中支援安全範圍內的 AsciiDoc `include::`。
 * Open Preview 會依來源文件位置套用已儲存文件的 `:stylesheet:` 與 `:stylesdir:` 宣告的本機 `.css`；例如 `:stylesheet: ../stylesheets/colony.css`。未受信任工作區仍可套用位於工作區範圍內的 CSS，但 include、圖片與連結等其他本機資源仍受信任狀態限制。
-* 粗體、斜體、注目、等寬、刪除線、上標與下標快速工具位於來源編輯器標題列與右鍵選單，不在不可編輯的 Preview Webview；選取文字後才會顯示格式操作。
-* 預覽面板工具列只負責版面切換、重新整理、語法說明、HTML 與 PDF 匯出；格式化請在來源編輯器選取文字後操作。
+* 粗體、斜體、注目、等寬、刪除線、上標與下標快速工具固定顯示於來源編輯器標題列，並提供選取文字時的右鍵選單；有選取文字時包覆內容，沒有選取文字時插入成對標記並將游標放在中間。
+* Preview Webview 不顯示工具列；版面切換、重新整理、語法說明、HTML 與 PDF 匯出也統一從來源編輯器標題列操作。
 * 可切換僅文字、文字／預覽分割與僅預覽版面。
 
 === 安全性
@@ -136,7 +136,7 @@ AdocMD Forge 是提供 AsciiDoc 與 Markdown 撰寫體驗的 VS Code 擴充套�
 |使用本機 `asciidoctor-pdf` 匯出 PDF。
 |===
 
-也可以使用編輯器標題列上的格式／預覽按鈕，或在來源編輯器選取文字後按右鍵使用格式選單；預覽面板工具列則提供預覽相關操作。
+所有格式、預覽版面、重新整理、語法說明與匯出按鈕都位於來源編輯器標題列；選取文字後也可按右鍵使用格式選單。Preview Webview 只顯示產生後的文件內容。
 
 == 設定
 
@@ -199,7 +199,7 @@ AdocMD Forge 是提供 AsciiDoc 與 Markdown 撰寫體驗的 VS Code 擴充套�
 
 [source,bash]
 ----
-code --install-extension artifacts/adocmd-forge-1.2.3.vsix
+code --install-extension artifacts/adocmd-forge-1.2.4.vsix
 ----
 
 === 使用 VS Code
@@ -207,7 +207,7 @@ code --install-extension artifacts/adocmd-forge-1.2.3.vsix
 . 開啟 Extensions 檢視。
 . 選擇右上角的 `...`。
 . 選擇 `Install from VSIX...`。
-. 選取 `adocmd-forge-1.2.3.vsix`。
+. 選取 `adocmd-forge-1.2.4.vsix`。
 
 == 使用方式
 
@@ -272,7 +272,7 @@ npm run verify
 
 完整開發說明請參閱 link:DeveloperGuide.md[DeveloperGuide.md]，架構決策請參閱 link:Architecture.md[Architecture.md]。
 
-== 1.2.3 已知限制
+== 1.2.4 已知限制
 
 HTML 匯出只讀取位於目前受信任 workspace 內的本機圖片；遠端圖片不會由匯出流程發出網路請求，無法讀取的圖片會移除 `src`，保留其替代文字。輸出檔案不可覆蓋來源文件，且使用者取消儲存或覆寫確認時不會寫入檔案。
 

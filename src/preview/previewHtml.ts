@@ -32,7 +32,6 @@ export function buildPreviewHtml(resources: PreviewHtmlResources): string {
   <title>AdocMD Forge Preview</title>
 </head>
 <body>
-  ${buildPreviewToolbar()}
   <div id="preview-status" role="status" aria-live="polite" hidden></div>
   <main id="preview-content" aria-label="Document preview"></main>
   <script
@@ -43,31 +42,6 @@ export function buildPreviewHtml(resources: PreviewHtmlResources): string {
   ></script>
 </body>
 </html>`;
-}
-
-function buildPreviewToolbar(): string {
-  return `<header id="preview-toolbar" role="toolbar" aria-label="AdocMD Forge 預覽工具列">
-  <div class="preview-toolbar-group" role="group" aria-label="預覽版面">
-    ${buildToolbarButton('previewSource', '文字', '只顯示來源文字')}
-    ${buildToolbarButton('previewSplit', '分割', '顯示來源文字與預覽')}
-    ${buildToolbarButton('previewOnly', '預覽', '只顯示預覽')}
-  </div>
-  <div class="preview-toolbar-divider" aria-hidden="true"></div>
-  <div class="preview-toolbar-group" role="group" aria-label="文件操作">
-    ${buildToolbarButton('refreshPreview', '重新整理', '重新產生預覽')}
-    ${buildToolbarButton('openSyntaxGuide', '語法', '開啟 AsciiDoc 語法說明')}
-    ${buildToolbarButton('exportHtml', 'HTML', '匯出 HTML')}
-    ${buildToolbarButton('exportPdf', 'PDF', '匯出 PDF')}
-  </div>
-</header>`;
-}
-
-function buildToolbarButton(
-  action: string,
-  label: string,
-  accessibleLabel: string,
-): string {
-  return `<button type="button" class="preview-toolbar-button" data-toolbar-action="${action}" aria-label="${accessibleLabel}" title="${accessibleLabel}">${label}</button>`;
 }
 
 function escapeAttribute(value: string): string {

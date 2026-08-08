@@ -78,6 +78,17 @@ describe('resolvePreviewStylesheet', () => {
       .toBe(stylesheetPath);
   });
 
+  it('accepts a Windows drive path without treating the drive as a URI scheme', () => {
+    const windowsRoot = String.raw`D:\Project\NTPCLandFx\ntpclandfx`;
+    const stylesheetPath = String.raw`D:\Project\NTPCLandFx\ntpclandfx\docs\stylesheets\colony.css`;
+
+    expect(resolvePreviewStylesheet([windowsRoot], stylesheetPath))
+      .toBe(stylesheetPath);
+    expect(resolvePreviewStylesheet([
+      String.raw`D:\Project\OtherWorkspace`,
+    ], stylesheetPath)).toBeUndefined();
+  });
+
   it.each([
     path.join(workspaceRoot, 'stylesheets', 'colony.scss'),
     path.join(path.dirname(workspaceRoot), 'stylesheets', 'colony.css'),

@@ -70,21 +70,12 @@ export function activate(context: vscode.ExtensionContext): {
   );
   const previewManager = new PreviewManager({
     extensionUri: context.extensionUri,
-    exportDocument: async (documentUri, format): Promise<void> => {
-      await exportRegistration.provider.exportDocument(documentUri, format);
-    },
-    exportPdf: async (documentUri): Promise<void> => {
-      await exportRegistration.pdfProvider.exportDocument(documentUri);
-    },
     openLink: async (documentUri, href): Promise<void> => {
       await linkOpener.open(documentUri, href);
     },
     outputChannel,
     renderer: (request, signal): Promise<RenderResult> => (
       rendererWorkerService.render(request, signal)
-    ),
-    runToolbarAction: (title, action): Promise<void> => (
-      commandExecutor.run(title, action)
     ),
   });
 

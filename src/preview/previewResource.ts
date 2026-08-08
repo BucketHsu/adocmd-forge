@@ -102,20 +102,22 @@ export function resolvePreviewStylesheet(
   allowedRootPaths: readonly string[],
   stylesheetPath: string,
 ): string | undefined {
+  const pathApi = getAbsolutePathApi(stylesheetPath);
   if (
     stylesheetPath.length === 0
     || stylesheetPath !== stylesheetPath.trim()
     || CONTROL_CHARACTER_PATTERN.test(stylesheetPath)
-    || URI_SCHEME_PATTERN.test(stylesheetPath)
-    || !path.isAbsolute(stylesheetPath)
-    || path.extname(stylesheetPath).toLowerCase() !== '.css'
+    || pathApi?.extname(stylesheetPath).toLowerCase() !== '.css'
   ) {
     return undefined;
   }
 
-  const candidatePath = path.resolve(stylesheetPath);
+  const candidatePath = pathApi.resolve(stylesheetPath);
   return allowedRootPaths.some(
-    (rootPath) => isPathWithinRoot(candidatePath, rootPath),
+    (rootPath) => (
+      pathApi.isAbsolute(rootPath)
+      && isPathWithinRootWith(candidatePath, rootPath, pathApi)
+    ),
   )
     ? candidatePath
     : undefined;
@@ -125,15 +127,30 @@ export function isPathWithinRoot(
   candidatePath: string,
   rootPath: string,
 ): boolean {
-  const relativePath = path.relative(
-    path.resolve(rootPath),
-    path.resolve(candidatePath),
+  return isPathWithinRootWith(candidatePath, rootPath, path);
+}
+
+function getAbsolutePathApi(value: string): path.PlatformPath | undefined {
+  if (path.isAbsolute(value)) {
+    return path;
+  }
+  return path.win32.isAbsolute(value) ? path.win32 : undefined;
+}
+
+function isPathWithinRootWith(
+  candidatePath: string,
+  rootPath: string,
+  pathApi: path.PlatformPath,
+): boolean {
+  const relativePath = pathApi.relative(
+    pathApi.resolve(rootPath),
+    pathApi.resolve(candidatePath),
   );
 
   return relativePath === ''
     || (
       relativePath !== '..'
-      && !relativePath.startsWith(`..${path.sep}`)
-      && !path.isAbsolute(relativePath)
+      && !relativePath.startsWith(`..${pathApi.sep}`)
+      && !pathApi.isAbsolute(relativePath)
     );
 }
