@@ -180,6 +180,7 @@ describe('isRenderResult', () => {
           sourceLine: 2,
         },
       ],
+      stylesheets: ['/workspace/stylesheets/colony.css'],
       title: '文件',
     },
   ])('接受有效 RenderResult', (result) => {
@@ -218,6 +219,16 @@ describe('isRenderResult', () => {
       html: '',
       lineCount: 1,
       title: undefined,
+    },
+    {
+      html: '',
+      lineCount: 1,
+      stylesheets: [''],
+    },
+    {
+      html: '',
+      lineCount: 1,
+      stylesheets: {},
     },
     {
       html: '',
@@ -269,6 +280,15 @@ describe('isRenderResult', () => {
     expect(isRenderResult({
       ...MINIMAL_RENDER_RESULT,
       messages,
+    })).toBe(false);
+  });
+
+  it('拒絕稀疏的 stylesheets 陣列', () => {
+    const stylesheets = new Array(1);
+
+    expect(isRenderResult({
+      ...MINIMAL_RENDER_RESULT,
+      stylesheets,
     })).toBe(false);
   });
 });

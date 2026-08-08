@@ -4,6 +4,8 @@ import { fileURLToPath } from 'node:url';
 
 import { createVSIX } from '@vscode/vsce';
 
+import { withPackagedReadme } from './package-readme.mjs';
+
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const projectDirectory = path.resolve(scriptDirectory, '..');
 const manifestPath = path.join(projectDirectory, 'package.json');
@@ -26,8 +28,11 @@ await mkdir(artifactDirectory, {
   recursive: true,
 });
 
-await createVSIX({
-  cwd: projectDirectory,
-  dependencies: false,
-  packagePath,
-});
+await withPackagedReadme(projectDirectory, (readmePath) =>
+  createVSIX({
+    cwd: projectDirectory,
+    dependencies: false,
+    packagePath,
+    readmePath,
+  }),
+);

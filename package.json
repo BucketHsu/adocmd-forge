@@ -2,7 +2,7 @@
   "name": "adocmd-forge",
   "displayName": "AdocMD Forge",
   "description": "Secure live preview for AsciiDoc and Markdown with synchronized scrolling and VS Code theme support.",
-  "version": "0.0.1",
+  "version": "1.1.0",
   "publisher": "BucketHsu",
   "license": "MIT",
   "icon": "images/icon.png",
@@ -15,7 +15,7 @@
   },
   "homepage": "https://github.com/BucketHsu/adocmd-forge#readme",
   "engines": {
-    "vscode": "^1.96.0"
+    "vscode": "^1.97.0"
   },
   "categories": [
     "Other",
@@ -39,7 +39,26 @@
   "main": "./dist/extension.js",
   "activationEvents": [
     "onLanguage:asciidoc",
-    "onLanguage:markdown"
+    "onLanguage:markdown",
+    "onCommand:adocmdForge.openSyntaxGuide",
+    "onCommand:adocmdForge.formatBold",
+    "onCommand:adocmdForge.formatItalic",
+    "onCommand:adocmdForge.formatHighlight",
+    "onCommand:adocmdForge.formatCode",
+    "onCommand:adocmdForge.formatStrike",
+    "onCommand:adocmdForge.formatSuperscript",
+    "onCommand:adocmdForge.formatSubscript",
+    "onCommand:adocmdForge.copyImage",
+    "onCommand:adocmdForge.validateLinks",
+    "onView:adocmdForge.outline",
+    "onCommand:adocmdForge.refreshOutline",
+    "onCommand:adocmdForge.exportHtml",
+    "onCommand:adocmdForge.exportStandaloneHtml",
+    "onCommand:adocmdForge.exportEmbeddedHtml",
+    "onCommand:adocmdForge.exportPdf",
+    "onCommand:adocmdForge.previewSource",
+    "onCommand:adocmdForge.previewSplit",
+    "onCommand:adocmdForge.previewOnly"
   ],
   "contributes": {
     "commands": [
@@ -53,6 +72,114 @@
         "command": "adocmdForge.refreshPreview",
         "title": "Refresh Preview",
         "category": "AdocMD Forge"
+      },
+      {
+        "command": "adocmdForge.previewSource",
+        "title": "Source Only",
+        "category": "AdocMD Forge",
+        "icon": "$(file-text)"
+      },
+      {
+        "command": "adocmdForge.previewSplit",
+        "title": "Source and Preview",
+        "category": "AdocMD Forge",
+        "icon": "$(split-horizontal)"
+      },
+      {
+        "command": "adocmdForge.previewOnly",
+        "title": "Preview Only",
+        "category": "AdocMD Forge",
+        "icon": "$(preview)"
+      },
+      {
+        "command": "adocmdForge.formatBold",
+        "title": "Bold",
+        "category": "AdocMD Forge",
+        "icon": "$(bold)"
+      },
+      {
+        "command": "adocmdForge.formatItalic",
+        "title": "Italic",
+        "category": "AdocMD Forge",
+        "icon": "$(italic)"
+      },
+      {
+        "command": "adocmdForge.formatHighlight",
+        "title": "Highlight",
+        "category": "AdocMD Forge",
+        "icon": "$(symbol-color)"
+      },
+      {
+        "command": "adocmdForge.formatCode",
+        "title": "Inline Code",
+        "category": "AdocMD Forge",
+        "icon": "$(code)"
+      },
+      {
+        "command": "adocmdForge.formatStrike",
+        "title": "Strike Through",
+        "category": "AdocMD Forge",
+        "icon": "$(remove)"
+      },
+      {
+        "command": "adocmdForge.formatSuperscript",
+        "title": "Superscript",
+        "category": "AdocMD Forge",
+        "icon": "$(symbol-number)"
+      },
+      {
+        "command": "adocmdForge.formatSubscript",
+        "title": "Subscript",
+        "category": "AdocMD Forge",
+        "icon": "$(symbol-number)"
+      },
+      {
+        "command": "adocmdForge.openSyntaxGuide",
+        "title": "Open AsciiDoc Syntax Guide",
+        "category": "AdocMD Forge",
+        "enablement": "editorLangId == asciidoc"
+      },
+      {
+        "command": "adocmdForge.copyImage",
+        "title": "Copy Image",
+        "category": "AdocMD Forge",
+        "enablement": "editorLangId == markdown || editorLangId == asciidoc"
+      },
+      {
+        "command": "adocmdForge.refreshOutline",
+        "title": "Refresh Outline",
+        "category": "AdocMD Forge"
+      },
+      {
+        "command": "adocmdForge.validateLinks",
+        "title": "Validate Links",
+        "category": "AdocMD Forge",
+        "enablement": "editorLangId == markdown || editorLangId == asciidoc"
+      },
+      {
+        "command": "adocmdForge.exportHtml",
+        "title": "Export HTML",
+        "category": "AdocMD Forge",
+        "enablement": "editorLangId == markdown || editorLangId == asciidoc"
+      },
+      {
+        "command": "adocmdForge.exportStandaloneHtml",
+        "title": "Export Standalone HTML",
+        "category": "AdocMD Forge",
+        "enablement": "editorLangId == markdown || editorLangId == asciidoc"
+      },
+      {
+        "command": "adocmdForge.exportEmbeddedHtml",
+        "title": "Export Embedded HTML",
+        "category": "AdocMD Forge",
+        "enablement": "editorLangId == markdown || editorLangId == asciidoc"
+      },
+      {
+        "command": "adocmdForge.exportPdf",
+        "title": "Export PDF",
+        "category": "AdocMD Forge",
+        "enablement": "editorLangId == asciidoc",
+        "icon": "$(file-pdf)"
       }
     ],
     "configuration": {
@@ -83,6 +210,55 @@
           "maximum": 2000,
           "scope": "resource",
           "description": "Delay in milliseconds before updating a preview after editing."
+        },
+        "adocmdForge.images.directory": {
+          "type": "string",
+          "default": "images",
+          "scope": "resource",
+          "description": "Relative image directory beside the current document. Path traversal and absolute paths are rejected."
+        },
+        "adocmdForge.images.promptForPath": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "description": "Ask for the image destination before inserting an image."
+        },
+        "adocmdForge.images.defaultAltText": {
+          "type": "string",
+          "default": "filename",
+          "scope": "resource",
+          "description": "Default image alt text. Use filename to derive it from the saved image name."
+        },
+        "adocmdForge.outline.updateDelay": {
+          "type": "number",
+          "default": 150,
+          "minimum": 50,
+          "maximum": 2000,
+          "scope": "resource",
+          "description": "Delay in milliseconds before updating the Outline after editing."
+        },
+        "adocmdForge.diagnostics.updateDelay": {
+          "type": "number",
+          "default": 150,
+          "minimum": 50,
+          "maximum": 2000,
+          "scope": "resource",
+          "description": "Delay in milliseconds before validating local links after editing."
+        },
+        "adocmdForge.export.asciidoctorPdfCommand": {
+          "type": "string",
+          "default": "asciidoctor-pdf",
+          "scope": "resource",
+          "description": "Executable used by Export PDF. The command must be installed on the local machine."
+        },
+        "adocmdForge.export.asciidoctorPdfArguments": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "scope": "resource",
+          "description": "Additional asciidoctor-pdf arguments. Use {source}, {destination}, and {workspace} placeholders; omitted paths are appended automatically."
         }
       }
     },
@@ -111,6 +287,96 @@
           "command": "adocmdForge.refreshPreview",
           "when": "resourceLangId == markdown || resourceLangId == asciidoc",
           "group": "navigation@11"
+        },
+        {
+          "command": "adocmdForge.previewSource",
+          "when": "resourceLangId == markdown || resourceLangId == asciidoc",
+          "group": "navigation@12"
+        },
+        {
+          "command": "adocmdForge.previewSplit",
+          "when": "resourceLangId == markdown || resourceLangId == asciidoc",
+          "group": "navigation@13"
+        },
+        {
+          "command": "adocmdForge.previewOnly",
+          "when": "resourceLangId == markdown || resourceLangId == asciidoc",
+          "group": "navigation@14"
+        },
+        {
+          "command": "adocmdForge.formatBold",
+          "when": "resourceLangId == markdown || resourceLangId == asciidoc",
+          "group": "navigation@20"
+        },
+        {
+          "command": "adocmdForge.formatItalic",
+          "when": "resourceLangId == markdown || resourceLangId == asciidoc",
+          "group": "navigation@21"
+        },
+        {
+          "command": "adocmdForge.formatHighlight",
+          "when": "resourceLangId == markdown || resourceLangId == asciidoc",
+          "group": "navigation@22"
+        },
+        {
+          "command": "adocmdForge.formatCode",
+          "when": "resourceLangId == markdown || resourceLangId == asciidoc",
+          "group": "navigation@23"
+        },
+        {
+          "command": "adocmdForge.formatStrike",
+          "when": "resourceLangId == markdown || resourceLangId == asciidoc",
+          "group": "navigation@24"
+        },
+        {
+          "command": "adocmdForge.formatSuperscript",
+          "when": "resourceLangId == markdown || resourceLangId == asciidoc",
+          "group": "navigation@25"
+        },
+        {
+          "command": "adocmdForge.formatSubscript",
+          "when": "resourceLangId == markdown || resourceLangId == asciidoc",
+          "group": "navigation@26"
+        },
+        {
+          "command": "adocmdForge.copyImage",
+          "when": "resourceLangId == markdown || resourceLangId == asciidoc",
+          "group": "navigation@27"
+        },
+        {
+          "command": "adocmdForge.exportHtml",
+          "when": "resourceLangId == markdown || resourceLangId == asciidoc",
+          "group": "navigation@28"
+        },
+        {
+          "command": "adocmdForge.exportStandaloneHtml",
+          "when": "resourceLangId == markdown || resourceLangId == asciidoc",
+          "group": "navigation@29"
+        },
+        {
+          "command": "adocmdForge.exportEmbeddedHtml",
+          "when": "resourceLangId == markdown || resourceLangId == asciidoc",
+          "group": "navigation@30"
+        },
+        {
+          "command": "adocmdForge.exportPdf",
+          "when": "resourceLangId == asciidoc",
+          "group": "navigation@31"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "adocmdForge.refreshOutline",
+          "when": "view == adocmdForge.outline",
+          "group": "navigation"
+        }
+      ]
+    },
+    "views": {
+      "explorer": [
+        {
+          "id": "adocmdForge.outline",
+          "name": "Outline"
         }
       ]
     }
@@ -127,7 +393,7 @@
     "test": "npm run test:unit && npm run test:integration",
     "check": "npm run typecheck && npm run lint && npm run test:unit:coverage && npm run build",
     "verify": "npm run check && npm run test:integration",
-    "package:list": "vsce ls --no-dependencies",
+    "package:list": "node scripts/package-list.mjs",
     "package:vsix": "node scripts/package-vsix.mjs",
     "vscode:prepublish": "npm run verify"
   },
@@ -136,7 +402,7 @@
     "@types/markdown-it": "14.1.2",
     "@types/node": "20.19.43",
     "@types/sanitize-html": "2.16.1",
-    "@types/vscode": "1.96.0",
+    "@types/vscode": "1.97.0",
     "@vitest/coverage-v8": "4.1.10",
     "@vscode/test-electron": "3.1.0",
     "@vscode/vsce": "3.9.2",

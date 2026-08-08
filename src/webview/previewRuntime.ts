@@ -31,6 +31,7 @@ const CONTENT_ELEMENT_ID = 'preview-content';
 const STATUS_ELEMENT_ID = 'preview-status';
 const SOURCE_LINE_ATTRIBUTE = 'data-source-line';
 const SOURCE_LINE_PATTERN = /^(?:0|[1-9]\d*)$/u;
+const DOCUMENT_STYLESHEET_ATTRIBUTE = 'data-adocmd-forge-document-stylesheet';
 const SCROLL_THROTTLE_MILLISECONDS = 80;
 const PROGRAMMATIC_SCROLL_IDLE_MILLISECONDS = 180;
 const MAX_TRACKED_OUTBOUND_SEQUENCES = 16;
@@ -108,6 +109,7 @@ export class PreviewRuntime {
   private nextSequence: number;
   private programmaticScrollTimer: number | undefined;
   private readonly recentOutboundSequences: number[] = [];
+  private documentStylesheetElements: readonly HTMLLinkElement[] = [];
   private scrollThrottleTimer: number | undefined;
 
   public constructor(
@@ -161,6 +163,7 @@ export class PreviewRuntime {
     window.removeEventListener('pointerdown', this.handleUserScrollIntent);
     window.removeEventListener('keydown', this.handleKeyDown);
     this.contentElement.removeEventListener('click', this.handleLinkClick);
+    this.removeDocumentStylesheets();
     if (this.scrollThrottleTimer !== undefined) {
       window.clearTimeout(this.scrollThrottleTimer);
       this.scrollThrottleTimer = undefined;
@@ -243,7 +246,12 @@ export class PreviewRuntime {
   private handleMessage(message: ExtensionToWebviewMessage): void {
     switch (message.type) {
       case 'render':
-        this.render(message.revision, message.html, message.lineCount);
+        this.render(
+          message.revision,
+          message.html,
+          message.lineCount,
+          message.stylesheets ?? [],
+        );
         break;
 
       case 'scrollToSourceLine':
@@ -256,7 +264,12 @@ export class PreviewRuntime {
     }
   }
 
-  private render(revision: number, html: string, lineCount: number): void {
+  private render(
+    revision: number,
+    html: string,
+    lineCount: number,
+    stylesheets: readonly string[],
+  ): void {
     if (revision < this.currentRevision) {
       return;
     }
@@ -267,6 +280,7 @@ export class PreviewRuntime {
     this.currentRevision = revision;
     this.currentLineCount = lineCount;
     this.contentElement.innerHTML = html;
+    this.updateDocumentStylesheets(stylesheets);
     this.contentElement.removeAttribute('aria-busy');
     this.statusElement.hidden = true;
     this.statusElement.textContent = '';
@@ -277,6 +291,34 @@ export class PreviewRuntime {
       type: 'rendered',
       revision,
     });
+  }
+
+  private updateDocumentStylesheets(stylesheets: readonly string[]): void {
+    this.removeDocumentStylesheets();
+
+    const elements: HTMLLinkElement[] = [];
+    const seenStylesheets = new Set<string>();
+    for (const stylesheet of stylesheets) {
+      if (seenStylesheets.has(stylesheet)) {
+        continue;
+      }
+      seenStylesheets.add(stylesheet);
+
+      const element = document.createElement('link');
+      element.setAttribute('rel', 'stylesheet');
+      element.setAttribute(DOCUMENT_STYLESHEET_ATTRIBUTE, 'true');
+      element.href = stylesheet;
+      document.head.append(element);
+      elements.push(element);
+    }
+    this.documentStylesheetElements = elements;
+  }
+
+  private removeDocumentStylesheets(): void {
+    for (const element of this.documentStylesheetElements) {
+      element.remove();
+    }
+    this.documentStylesheetElements = [];
   }
 
   private showError(revision: number, message: string): void {

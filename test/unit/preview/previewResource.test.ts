@@ -6,6 +6,7 @@ import {
   createAllowedRootPaths,
   isPathWithinRoot,
   resolvePreviewImage,
+  resolvePreviewStylesheet,
 } from '../../../src/preview/previewResource';
 
 describe('resolvePreviewImage', () => {
@@ -60,6 +61,32 @@ describe('createAllowedRootPaths', () => {
     )).toEqual([
       workspaceRoot,
     ]);
+  });
+});
+
+describe('resolvePreviewStylesheet', () => {
+  const workspaceRoot = path.resolve('workspace');
+
+  it('accepts an absolute CSS path inside an allowed root', () => {
+    const stylesheetPath = path.join(
+      workspaceRoot,
+      'stylesheets',
+      'colony.css',
+    );
+
+    expect(resolvePreviewStylesheet([workspaceRoot], stylesheetPath))
+      .toBe(stylesheetPath);
+  });
+
+  it.each([
+    path.join(workspaceRoot, 'stylesheets', 'colony.scss'),
+    path.join(path.dirname(workspaceRoot), 'stylesheets', 'colony.css'),
+    'stylesheets/colony.css',
+    'https://example.com/colony.css',
+    `${path.join(workspaceRoot, 'stylesheets', 'colony.css')}\u0000`,
+  ])('rejects an unsafe stylesheet path %s', (stylesheetPath) => {
+    expect(resolvePreviewStylesheet([workspaceRoot], stylesheetPath))
+      .toBeUndefined();
   });
 });
 

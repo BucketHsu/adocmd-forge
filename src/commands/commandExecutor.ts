@@ -20,7 +20,10 @@ export class CommandExecutor {
       this.outputChannel.appendLine(
         `[${new Date().toISOString()}] ${commandTitle}: ${message}`,
       );
-      await vscode.window.showErrorMessage(`${commandTitle} failed: ${message}`);
+      // Do not make command completion depend on the notification UI.  This
+      // keeps automation/headless Extension Hosts from waiting forever while
+      // still surfacing the actionable error to users.
+      void vscode.window.showErrorMessage(`${commandTitle} failed: ${message}`);
     }
   }
 }

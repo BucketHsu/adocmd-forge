@@ -91,6 +91,36 @@ export function resolvePreviewImage(
     : { kind: 'rejected' };
 }
 
+/**
+ * 將 renderer 提供的 stylesheet 候選路徑限制在允許的本機根目錄內。
+ *
+ * 實體檔案與 symlink 邊界由 PreviewSession 以 realpath 再驗證；此函式
+ * 先拒絕相對路徑、URI、控制字元及非 CSS 副檔名，避免把任意值交給 URI
+ * 轉換或 Webview。
+ */
+export function resolvePreviewStylesheet(
+  allowedRootPaths: readonly string[],
+  stylesheetPath: string,
+): string | undefined {
+  if (
+    stylesheetPath.length === 0
+    || stylesheetPath !== stylesheetPath.trim()
+    || CONTROL_CHARACTER_PATTERN.test(stylesheetPath)
+    || URI_SCHEME_PATTERN.test(stylesheetPath)
+    || !path.isAbsolute(stylesheetPath)
+    || path.extname(stylesheetPath).toLowerCase() !== '.css'
+  ) {
+    return undefined;
+  }
+
+  const candidatePath = path.resolve(stylesheetPath);
+  return allowedRootPaths.some(
+    (rootPath) => isPathWithinRoot(candidatePath, rootPath),
+  )
+    ? candidatePath
+    : undefined;
+}
+
 export function isPathWithinRoot(
   candidatePath: string,
   rootPath: string,

@@ -9,6 +9,16 @@ interface PackageManifest {
     readonly commands?: readonly {
       readonly command?: string;
     }[];
+    readonly configuration?: {
+      readonly properties?: Record<string, unknown>;
+    };
+    readonly menus?: Record<string, unknown>;
+    readonly views?: {
+      readonly explorer?: readonly {
+        readonly id?: string;
+        readonly name?: string;
+      }[];
+    };
   };
   readonly description?: string;
   readonly displayName?: string;
@@ -34,7 +44,7 @@ describe('extension manifest', (): void => {
     expect(manifest.name).toBe('adocmd-forge');
     expect(manifest.displayName).toBe('AdocMD Forge');
     expect(manifest.publisher).toBe('BucketHsu');
-    expect(manifest.version).toBe('0.0.1');
+    expect(manifest.version).toBe('1.1.0');
     expect(manifest.description).toBe(
       'Secure live preview for AsciiDoc and Markdown with synchronized '
       + 'scrolling and VS Code theme support.',
@@ -49,7 +59,7 @@ describe('extension manifest', (): void => {
       'preview',
       'documentation',
     ]);
-    expect(manifest.engines?.vscode).toBe('^1.96.0');
+    expect(manifest.engines?.vscode).toBe('^1.97.0');
     expect(manifest.main).toBe('./dist/extension.js');
   });
 
@@ -59,6 +69,25 @@ describe('extension manifest', (): void => {
     expect(manifest.activationEvents).toEqual([
       'onLanguage:asciidoc',
       'onLanguage:markdown',
+      'onCommand:adocmdForge.openSyntaxGuide',
+      'onCommand:adocmdForge.formatBold',
+      'onCommand:adocmdForge.formatItalic',
+      'onCommand:adocmdForge.formatHighlight',
+      'onCommand:adocmdForge.formatCode',
+      'onCommand:adocmdForge.formatStrike',
+      'onCommand:adocmdForge.formatSuperscript',
+      'onCommand:adocmdForge.formatSubscript',
+      'onCommand:adocmdForge.copyImage',
+      'onCommand:adocmdForge.validateLinks',
+      'onView:adocmdForge.outline',
+      'onCommand:adocmdForge.refreshOutline',
+      'onCommand:adocmdForge.exportHtml',
+      'onCommand:adocmdForge.exportStandaloneHtml',
+      'onCommand:adocmdForge.exportEmbeddedHtml',
+      'onCommand:adocmdForge.exportPdf',
+      'onCommand:adocmdForge.previewSource',
+      'onCommand:adocmdForge.previewSplit',
+      'onCommand:adocmdForge.previewOnly',
     ]);
   });
 
@@ -71,6 +100,65 @@ describe('extension manifest', (): void => {
     expect(commandIdentifiers).toEqual([
       'adocmdForge.openPreview',
       'adocmdForge.refreshPreview',
+      'adocmdForge.previewSource',
+      'adocmdForge.previewSplit',
+      'adocmdForge.previewOnly',
+      'adocmdForge.formatBold',
+      'adocmdForge.formatItalic',
+      'adocmdForge.formatHighlight',
+      'adocmdForge.formatCode',
+      'adocmdForge.formatStrike',
+      'adocmdForge.formatSuperscript',
+      'adocmdForge.formatSubscript',
+      'adocmdForge.openSyntaxGuide',
+      'adocmdForge.copyImage',
+      'adocmdForge.refreshOutline',
+      'adocmdForge.validateLinks',
+      'adocmdForge.exportHtml',
+      'adocmdForge.exportStandaloneHtml',
+      'adocmdForge.exportEmbeddedHtml',
+      'adocmdForge.exportPdf',
     ]);
+  });
+
+  it('contributes the Outline view, refresh command and debounce setting', async (): Promise<void> => {
+    const manifest = await readManifest();
+    expect(manifest.contributes?.views?.explorer).toEqual([
+      {
+        id: 'adocmdForge.outline',
+        name: 'Outline',
+      },
+    ]);
+    expect(manifest.contributes?.menus?.['view/title']).toEqual([
+      {
+        command: 'adocmdForge.refreshOutline',
+        when: 'view == adocmdForge.outline',
+        group: 'navigation',
+      },
+    ]);
+    expect(
+      manifest.contributes?.configuration?.properties?.['adocmdForge.outline.updateDelay'],
+    ).toMatchObject({
+      type: 'number',
+      default: 150,
+    });
+    expect(
+      manifest.contributes?.configuration?.properties?.['adocmdForge.diagnostics.updateDelay'],
+    ).toMatchObject({
+      type: 'number',
+      default: 150,
+    });
+    expect(
+      manifest.contributes?.configuration?.properties?.['adocmdForge.export.asciidoctorPdfCommand'],
+    ).toMatchObject({
+      type: 'string',
+      default: 'asciidoctor-pdf',
+    });
+    expect(
+      manifest.contributes?.configuration?.properties?.['adocmdForge.export.asciidoctorPdfArguments'],
+    ).toMatchObject({
+      type: 'array',
+      default: [],
+    });
   });
 });

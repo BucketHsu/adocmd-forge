@@ -11,6 +11,7 @@ import {
   PreviewSession,
   type PreviewRenderer,
 } from './previewSession';
+import type { PreviewLayout } from './previewLayout';
 
 const PREVIEW_VIEW_TYPE = 'adocmdForge.preview';
 
@@ -127,6 +128,31 @@ export class PreviewManager implements vscode.Disposable {
     }
 
     session.refresh();
+  }
+
+  public async setLayout(layout: PreviewLayout): Promise<void> {
+    this.ensureNotDisposed();
+    const session = this.activeSession;
+    if (layout === 'source') {
+      if (session === undefined) {
+        return;
+      }
+
+      const documentUri = session.documentUri;
+      session.dispose();
+      await vscode.window.showTextDocument(documentUri, {
+        preview: false,
+      });
+      return;
+    }
+
+    if (session === undefined) {
+      await this.openPreview();
+      this.activeSession?.revealLayout(layout);
+      return;
+    }
+
+    session.revealLayout(layout);
   }
 
   public dispose(): void {

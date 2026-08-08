@@ -14,12 +14,8 @@ import createAsciidoctorRuntime from './asciidoctorRuntime.cjs';
 interface RenderedFragment {
   readonly html: string;
   readonly messages?: readonly RenderMessage[];
+  readonly stylesheets?: readonly string[];
   readonly title?: string;
-}
-
-interface AsciiDocSourceLocation {
-  getFile(): unknown;
-  getLineNumber(): unknown;
 }
 
 const SOURCE_LINE_ATTRIBUTE = 'data-source-line';
@@ -43,6 +39,7 @@ export function renderAsciiDoc(request: RenderRequest): RenderedFragment {
       createProcessorOptions(request),
     );
     const title = getPlainDocumentTitle(document);
+    const stylesheets = resolveAsciiDocStylesheets(document, request);
 
     addSourceLineRoles(document);
 
@@ -56,6 +53,7 @@ export function renderAsciiDoc(request: RenderRequest): RenderedFragment {
     return {
       html,
       ...(messages.length > 0 ? { messages } : {}),
+      ...(stylesheets.length > 0 ? { stylesheets } : {}),
       ...(title === undefined ? {} : { title }),
     };
   } finally {
@@ -64,10 +62,14 @@ export function renderAsciiDoc(request: RenderRequest): RenderedFragment {
 }
 
 function toRenderMessage(loggerMessage: LoggerMessage): RenderMessage {
-  const sourceLocation = loggerMessage.getSourceLocation() as
-    AsciiDocSourceLocation | undefined;
-  const lineNumber = readPositiveInteger(sourceLocation?.getLineNumber());
-  const sourceFile = readNonEmptyString(sourceLocation?.getFile());
+  let sourceLocation: unknown;
+  try {
+    sourceLocation = loggerMessage.getSourceLocation();
+  } catch {
+    sourceLocation = undefined;
+  }
+
+  const { lineNumber, sourceFile } = readSourceLocation(sourceLocation);
   const loggerSeverity = loggerMessage.getSeverity().toUpperCase();
   const severity = loggerSeverity === 'ERROR' || loggerSeverity === 'FATAL'
     ? 'error'
@@ -101,6 +103,49 @@ function readNonEmptyString(value: unknown): string | undefined {
     : undefined;
 }
 
+interface SourceLocationValues {
+  readonly lineNumber: number | undefined;
+  readonly sourceFile: string | undefined;
+}
+
+/**
+ * Asciidoctor 的來源位置不是所有 AST 節點都保證提供完整方法。
+ * 只從可安全呼叫的 getter 讀取資料，缺少位置時保留可用的 HTML 預覽。
+ */
+function readSourceLocation(value: unknown): SourceLocationValues {
+  return {
+    lineNumber: readPositiveInteger(
+      readSourceLocationGetter(value, 'getLineNumber'),
+    ),
+    sourceFile: readNonEmptyString(
+      readSourceLocationGetter(value, 'getFile'),
+    ),
+  };
+}
+
+function readSourceLocationGetter(
+  value: unknown,
+  getterName: 'getFile' | 'getLineNumber',
+): unknown {
+  if (!isObjectLike(value)) {
+    return undefined;
+  }
+
+  try {
+    const getter = (value as Record<string, unknown>)[getterName];
+    return typeof getter === 'function'
+      ? Reflect.apply(getter, value, [])
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function isObjectLike(value: unknown): value is object {
+  return value !== null
+    && (typeof value === 'object' || typeof value === 'function');
+}
+
 function createProcessorOptions(request: RenderRequest): ProcessorOptions {
   const options: ProcessorOptions = {
     attributes: {
@@ -120,24 +165,99 @@ function createProcessorOptions(request: RenderRequest): ProcessorOptions {
   return options;
 }
 
+const ATTRIBUTE_CONTROL_CHARACTER_PATTERN = /[\u0000-\u001F\u007F]/u;
+const ATTRIBUTE_URI_SCHEME_PATTERN = /^[a-z][a-z\d+.-]*:/iu;
+
+/**
+ * 讀取文件層級的 AsciiDoc stylesheet 宣告，供受信任的本機預覽載入。
+ *
+ * Asciidoctor 的 embedded output 不會自行產生 stylesheet link，因此必須
+ * 將 `stylesdir` 與 `stylesheet` 解析成候選檔案路徑，再由 PreviewSession
+ * 依 workspace root、實體檔案與 Webview resource policy 做第二次檢查。
+ */
+function resolveAsciiDocStylesheets(
+  document: Document,
+  request: RenderRequest,
+): readonly string[] {
+  if (
+    request.allowLocalIncludes !== true
+    || request.sourcePath === undefined
+    || request.sourcePath.length === 0
+  ) {
+    return [];
+  }
+
+  const stylesheet = readDocumentAttribute(document, 'stylesheet');
+  if (stylesheet === undefined || !isSafeStylesheetAttribute(stylesheet)) {
+    return [];
+  }
+
+  const stylesdir = readDocumentAttribute(document, 'stylesdir') ?? '.';
+  if (!isSafeStylesheetAttribute(stylesdir)) {
+    return [];
+  }
+
+  const sourceDirectory = path.dirname(path.resolve(request.sourcePath));
+  return [path.resolve(sourceDirectory, stylesdir, stylesheet)];
+}
+
+function readDocumentAttribute(
+  document: Document,
+  attributeName: string,
+): string | undefined {
+  try {
+    const getAttribute = Reflect.get(document, 'getAttribute') as unknown;
+    if (typeof getAttribute !== 'function') {
+      return undefined;
+    }
+    const value = Reflect.apply(
+      getAttribute,
+      document,
+      [attributeName],
+    ) as unknown;
+    return typeof value === 'string' && value.trim().length > 0
+      ? value.trim()
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function isSafeStylesheetAttribute(value: string): boolean {
+  return value.length > 0
+    && !ATTRIBUTE_CONTROL_CHARACTER_PATTERN.test(value)
+    && !value.startsWith('//')
+    && !ATTRIBUTE_URI_SCHEME_PATTERN.test(value)
+    && !path.isAbsolute(value)
+    && !path.win32.isAbsolute(value);
+}
+
 function addSourceLineRoles(document: Document): void {
   for (const block of document.findBy({})) {
-    if (block.getContext() === 'document') {
-      continue;
-    }
+    try {
+      if (block.getContext() === 'document') {
+        continue;
+      }
 
-    const sourceLine = getMainDocumentSourceLine(block);
-    if (sourceLine !== undefined) {
-      block.addRole(`${SOURCE_LINE_ROLE_PREFIX}${String(sourceLine)}`);
+      const sourceLine = getMainDocumentSourceLine(block);
+      if (sourceLine !== undefined) {
+        block.addRole(`${SOURCE_LINE_ROLE_PREFIX}${String(sourceLine)}`);
+      }
+    } catch {
+      // 單一 AST 節點的 metadata 失效時，仍保留其他內容的預覽。
     }
   }
 }
 
 function getMainDocumentSourceLine(block: AbstractBlock): number | undefined {
-  const sourceLocation = block.getSourceLocation() as
-    AsciiDocSourceLocation | undefined;
-  const lineNumber = readPositiveInteger(sourceLocation?.getLineNumber());
-  const sourceFile = readNonEmptyString(sourceLocation?.getFile());
+  let sourceLocation: unknown;
+  try {
+    sourceLocation = block.getSourceLocation();
+  } catch {
+    return undefined;
+  }
+
+  const { lineNumber, sourceFile } = readSourceLocation(sourceLocation);
 
   if (lineNumber === undefined || sourceFile !== undefined) {
     return undefined;
