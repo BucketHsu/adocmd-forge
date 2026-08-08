@@ -44,7 +44,7 @@ describe('extension manifest', (): void => {
     expect(manifest.name).toBe('adocmd-forge');
     expect(manifest.displayName).toBe('AdocMD Forge');
     expect(manifest.publisher).toBe('BucketHsu');
-    expect(manifest.version).toBe('1.2.0');
+    expect(manifest.version).toBe('1.2.1');
     expect(manifest.description).toBe(
       'Secure live preview for AsciiDoc and Markdown with synchronized '
       + 'scrolling and VS Code theme support.',
@@ -160,5 +160,51 @@ describe('extension manifest', (): void => {
       type: 'array',
       default: [],
     });
+  });
+
+  it('exposes formatting beside the source editor only when text is selected', async (): Promise<void> => {
+    const manifest = await readManifest();
+    const formattingCommands = [
+      'adocmdForge.formatBold',
+      'adocmdForge.formatItalic',
+      'adocmdForge.formatHighlight',
+      'adocmdForge.formatCode',
+      'adocmdForge.formatStrike',
+      'adocmdForge.formatSuperscript',
+      'adocmdForge.formatSubscript',
+    ];
+    const selectionWhen = (
+      'editorHasSelection && '
+      + '(editorLangId == markdown || editorLangId == asciidoc)'
+    );
+    const editorTitle = manifest.contributes?.menus?.['editor/title'] as
+      | readonly {
+          readonly command?: string;
+          readonly when?: string;
+        }[]
+      | undefined;
+    const editorContext = manifest.contributes?.menus?.['editor/context'] as
+      | readonly {
+          readonly command?: string;
+          readonly when?: string;
+        }[]
+      | undefined;
+
+    expect(editorTitle?.filter(({ command }) => (
+      command !== undefined && formattingCommands.includes(command)
+    )).map(({ command, when }) => ({ command, when }))).toEqual(
+      formattingCommands.map((command) => ({
+        command,
+        when: selectionWhen,
+      })),
+    );
+    expect(editorContext?.filter(({ command }) => (
+      command !== undefined && formattingCommands.includes(command)
+    )).map(({ command, when }) => ({ command, when }))).toEqual(
+      formattingCommands.map((command) => ({
+        command,
+        when: selectionWhen,
+      })),
+    );
   });
 });

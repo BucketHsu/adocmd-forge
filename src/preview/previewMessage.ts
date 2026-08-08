@@ -48,13 +48,6 @@ export type PreviewToolbarAction =
   | 'exportHtml'
   | 'exportPdf'
   | 'exportStandaloneHtml'
-  | 'formatBold'
-  | 'formatCode'
-  | 'formatHighlight'
-  | 'formatItalic'
-  | 'formatStrike'
-  | 'formatSubscript'
-  | 'formatSuperscript'
   | 'openSyntaxGuide'
   | 'previewOnly'
   | 'previewSource'
@@ -88,18 +81,12 @@ const WEBVIEW_STYLESHEET_SCHEMES = new Set([
   'vscode-webview',
   'vscode-webview-resource',
 ]);
+const WEBVIEW_RESOURCE_HOST_PATTERN = /^[a-z][a-z\d+.-]*\.vscode-resource\.vscode-cdn\.net$/iu;
 const PREVIEW_TOOLBAR_ACTIONS: ReadonlySet<string> = new Set([
   'exportEmbeddedHtml',
   'exportHtml',
   'exportPdf',
   'exportStandaloneHtml',
-  'formatBold',
-  'formatCode',
-  'formatHighlight',
-  'formatItalic',
-  'formatStrike',
-  'formatSubscript',
-  'formatSuperscript',
   'openSyntaxGuide',
   'previewOnly',
   'previewSource',
@@ -162,7 +149,29 @@ function isSafeStylesheetUri(value: unknown): value is string {
   }
 
   const scheme = LINK_SCHEME_PATTERN.exec(value)?.[1]?.toLowerCase();
-  return scheme !== undefined && WEBVIEW_STYLESHEET_SCHEMES.has(scheme);
+  if (scheme === undefined) {
+    return false;
+  }
+  if (WEBVIEW_STYLESHEET_SCHEMES.has(scheme)) {
+    return true;
+  }
+  if (scheme !== 'https') {
+    return false;
+  }
+
+  try {
+    const uri = new URL(value);
+    return uri.protocol === 'https:'
+      && WEBVIEW_RESOURCE_HOST_PATTERN.test(uri.hostname)
+      && uri.username.length === 0
+      && uri.password.length === 0
+      && uri.port.length === 0
+      && uri.search.length === 0
+      && uri.hash.length === 0
+      && uri.pathname.startsWith('/');
+  } catch {
+    return false;
+  }
 }
 
 function isStylesheetUriArray(value: unknown): value is readonly string[] {

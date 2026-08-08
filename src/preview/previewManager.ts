@@ -1,9 +1,5 @@
 import * as vscode from 'vscode';
 
-import {
-  applyFormatToEditor,
-  type FormatKind,
-} from '../commands/registerFormattingCommands';
 import type { ExportFormat } from '../export/exportTypes';
 import { getPreviewSettings } from '../settings/extensionSettings';
 import { createPreviewTitle, resolveDocumentKind } from './previewDocument';
@@ -268,16 +264,6 @@ export class PreviewManager implements vscode.Disposable {
     await this.options.runToolbarAction(
       getToolbarActionTitle(action),
       async (): Promise<void> => {
-        const formatKind = getFormatKind(action);
-        if (formatKind !== undefined) {
-          const editor = await vscode.window.showTextDocument(documentUri, {
-            preserveFocus: true,
-            preview: false,
-          });
-          await applyFormatToEditor(editor, formatKind);
-          return;
-        }
-
         switch (action) {
           case 'refreshPreview':
             session.refresh();
@@ -326,43 +312,8 @@ export class PreviewManager implements vscode.Disposable {
   }
 }
 
-function getFormatKind(action: PreviewToolbarAction): FormatKind | undefined {
-  switch (action) {
-    case 'formatBold':
-      return 'bold';
-    case 'formatItalic':
-      return 'italic';
-    case 'formatHighlight':
-      return 'highlight';
-    case 'formatCode':
-      return 'code';
-    case 'formatStrike':
-      return 'strike';
-    case 'formatSuperscript':
-      return 'superscript';
-    case 'formatSubscript':
-      return 'subscript';
-    default:
-      return undefined;
-  }
-}
-
 function getToolbarActionTitle(action: PreviewToolbarAction): string {
   switch (action) {
-    case 'formatBold':
-      return 'Bold';
-    case 'formatItalic':
-      return 'Italic';
-    case 'formatHighlight':
-      return 'Highlight';
-    case 'formatCode':
-      return 'Inline Code';
-    case 'formatStrike':
-      return 'Strike Through';
-    case 'formatSuperscript':
-      return 'Superscript';
-    case 'formatSubscript':
-      return 'Subscript';
     case 'previewSource':
       return 'Show Source Only';
     case 'previewSplit':

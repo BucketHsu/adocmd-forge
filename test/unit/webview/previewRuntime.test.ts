@@ -107,7 +107,7 @@ describe('PreviewRuntime', (): void => {
     harness.runtime.dispose();
   });
 
-  it('posts toolbar actions and ignores unknown controls', (): void => {
+  it('posts preview actions and ignores editor formatting or unknown controls', (): void => {
     const harness = createRuntimeHarness();
     harness.runtime.start();
     harness.postedMessages.splice(0);
@@ -134,10 +134,6 @@ describe('PreviewRuntime', (): void => {
     expect(harness.postedMessages).toEqual([
       {
         type: 'toolbarAction',
-        action: 'formatBold',
-      },
-      {
-        type: 'toolbarAction',
         action: 'exportPdf',
       },
     ]);
@@ -154,8 +150,8 @@ describe('PreviewRuntime', (): void => {
       html: '<p data-source-line="0">Styled</p>',
       lineCount: 1,
       stylesheets: [
-        'vscode-webview://workspace/stylesheets/colony.css',
-        'vscode-webview://workspace/stylesheets/colony.css',
+        'https://file+.vscode-resource.vscode-cdn.net/workspace/stylesheets/colony.css',
+        'https://file+.vscode-resource.vscode-cdn.net/workspace/stylesheets/colony.css',
       ],
     });
 
@@ -165,7 +161,7 @@ describe('PreviewRuntime', (): void => {
     expect(stylesheetLinks).toHaveLength(1);
     expect(stylesheetLinks[0]?.getAttribute('rel')).toBe('stylesheet');
     expect(stylesheetLinks[0]?.getAttribute('href')).toBe(
-      'vscode-webview://workspace/stylesheets/colony.css',
+      'https://file+.vscode-resource.vscode-cdn.net/workspace/stylesheets/colony.css',
     );
 
     sendExtensionMessage({

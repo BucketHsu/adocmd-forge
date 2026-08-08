@@ -171,13 +171,13 @@ Webview runtime 與 Extension Host 是不同信任邊界。
 - Webview 送出的 URI、行號、revision 與 command 不可直接信任。
 - 本機資源只透過 `webview.asWebviewUri()`。
 - AsciiDoc `:stylesheet:`／`:stylesdir:` 只在受信任且已儲存的本機文件啟用；候選路徑必須通過 workspace root、realpath、`.css` 檔案與 `localResourceRoots` 檢查。
-- 文件 stylesheet 由 Webview runtime 建立與清理 `<link>`，不把 CSS 內容內嵌到訊息或 inline script。
+- 文件 stylesheet 由 Webview runtime 建立與清理 `<link>`，不把 CSS 內容內嵌到訊息或 inline script；訊息驗證同時支援舊式 Webview scheme 與 VS Code 1.97+ 的 `https://*.vscode-resource.vscode-cdn.net` URI，仍拒絕一般外部 HTTPS。
 - 樣式使用 VS Code theme token，並驗證高對比模式。
-- 預覽面板工具列只使用靜態 `data-toolbar-action` 按鈕；Webview runtime 會把動作轉成白名單訊息，Extension Host 再以來源文件 URI 執行實際命令。
+- 預覽面板工具列只使用靜態 `data-toolbar-action` 按鈕，負責版面、重新整理、語法說明與匯出；Webview runtime 會把動作轉成白名單訊息，Extension Host 再以來源文件 URI 執行實際命令。
 
 ## 13.1 快速工具列與 PDF
 
-編輯器標題列與預覽面板工具列的格式命令不直接拼接游標文字；先由 `textFormattingCore` 以 offset 計算結果，再由 adapter 套用單一 edit，避免多游標造成行號與選取位置漂移。預覽面板操作會以 `showTextDocument(documentUri, { preserveFocus: true })` 取得來源編輯器，維持 Preview Only 模式仍可編輯來源文件。
+編輯器標題列與右鍵選單的格式命令只在來源編輯器有選取文字時顯示；命令不直接拼接游標文字，先由 `textFormattingCore` 以 offset 計算結果，再由 adapter 套用單一 edit，避免多游標造成行號與選取位置漂移。預覽面板只負責預覽相關操作，避免使用者在預覽內容與來源文件之間切換焦點後失去選取範圍。
 
 `Export PDF` 只適用已儲存、受信任本機工作區的 AsciiDoc。執行前驗證來源／目的地 workspace 邊界與覆寫確認，並使用不經 shell 的外部程序；使用者需在設定中提供本機 `asciidoctor-pdf` 與必要的 `asciidoctor-diagram` 等元件。
 

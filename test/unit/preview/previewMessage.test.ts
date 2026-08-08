@@ -20,6 +20,7 @@ describe('isExtensionToWebviewMessage', () => {
       lineCount: Number.MAX_SAFE_INTEGER,
       stylesheets: [
         'vscode-webview://workspace/stylesheets/colony.css',
+        'https://file+.vscode-resource.vscode-cdn.net/workspace/stylesheets/colony.css',
       ],
     },
     {
@@ -74,6 +75,24 @@ describe('isExtensionToWebviewMessage', () => {
       html: '',
       lineCount: 1,
       stylesheets: ['https://example.com/colony.css'],
+    },
+    {
+      type: 'render',
+      revision: 1,
+      html: '',
+      lineCount: 1,
+      stylesheets: [
+        'https://vscode-resource.vscode-cdn.net/workspace/stylesheets/colony.css',
+      ],
+    },
+    {
+      type: 'render',
+      revision: 1,
+      html: '',
+      lineCount: 1,
+      stylesheets: [
+        'https://file+.vscode-resource.vscode-cdn.net.evil.example/colony.css',
+      ],
     },
     {
       type: 'render',
@@ -175,7 +194,7 @@ describe('isWebviewToExtensionMessage', () => {
     },
     {
       type: 'toolbarAction',
-      action: 'formatBold',
+      action: 'previewSplit',
     },
   ])('接受有效訊息：$type', (message) => {
     expect(isWebviewToExtensionMessage(message)).toBe(true);
@@ -235,7 +254,6 @@ describe('isWebviewToExtensionMessage', () => {
     {
       type: 'toolbarAction',
       action: 'formatBold',
-      extra: true,
     },
   ])('拒絕無效或危險訊息', (message) => {
     expect(isWebviewToExtensionMessage(message)).toBe(false);

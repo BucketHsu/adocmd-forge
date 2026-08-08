@@ -19,7 +19,8 @@ describe('buildPreviewHtml', (): void => {
     expect(html).toContain('id="preview-content"');
     expect(html).toContain('id="preview-status"');
     expect(html).toContain('id="preview-toolbar"');
-    expect(html).toContain('data-toolbar-action="formatBold"');
+    expect(html).toContain('aria-label="AdocMD Forge 預覽工具列"');
+    expect(html).not.toContain('data-toolbar-action="formatBold"');
     expect(html).toContain('data-toolbar-action="previewSplit"');
     expect(html).toContain('data-toolbar-action="exportPdf"');
     expect(html).not.toContain('<style>');

@@ -113,13 +113,6 @@ body {
   background: var(--vscode-toolbar-activeBackground, var(--preview-code-background));
 }
 
-.preview-toolbar-button[data-toolbar-action='formatBold'],
-.preview-toolbar-button[data-toolbar-action='formatItalic'],
-.preview-toolbar-button[data-toolbar-action='formatStrike'] {
-  min-width: 2rem;
-  font-weight: 600;
-}
-
 @media (max-width: 42rem) {
   #preview-toolbar {
     position: static;

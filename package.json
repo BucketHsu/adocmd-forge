@@ -2,7 +2,7 @@
   "name": "adocmd-forge",
   "displayName": "AdocMD Forge",
   "description": "Secure live preview for AsciiDoc and Markdown with synchronized scrolling and VS Code theme support.",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "publisher": "BucketHsu",
   "license": "MIT",
   "icon": "images/icon.png",
@@ -279,89 +279,126 @@
     "menus": {
       "editor/title": [
         {
+          "command": "adocmdForge.formatBold",
+          "when": "editorHasSelection && (editorLangId == markdown || editorLangId == asciidoc)",
+          "group": "navigation@1"
+        },
+        {
+          "command": "adocmdForge.formatItalic",
+          "when": "editorHasSelection && (editorLangId == markdown || editorLangId == asciidoc)",
+          "group": "navigation@2"
+        },
+        {
+          "command": "adocmdForge.formatHighlight",
+          "when": "editorHasSelection && (editorLangId == markdown || editorLangId == asciidoc)",
+          "group": "navigation@3"
+        },
+        {
+          "command": "adocmdForge.formatCode",
+          "when": "editorHasSelection && (editorLangId == markdown || editorLangId == asciidoc)",
+          "group": "navigation@4"
+        },
+        {
+          "command": "adocmdForge.formatStrike",
+          "when": "editorHasSelection && (editorLangId == markdown || editorLangId == asciidoc)",
+          "group": "navigation@5"
+        },
+        {
+          "command": "adocmdForge.formatSuperscript",
+          "when": "editorHasSelection && (editorLangId == markdown || editorLangId == asciidoc)",
+          "group": "navigation@6"
+        },
+        {
+          "command": "adocmdForge.formatSubscript",
+          "when": "editorHasSelection && (editorLangId == markdown || editorLangId == asciidoc)",
+          "group": "navigation@7"
+        },
+        {
           "command": "adocmdForge.openPreview",
-          "when": "resourceLangId == markdown || resourceLangId == asciidoc",
+          "when": "editorLangId == markdown || editorLangId == asciidoc",
           "group": "navigation@10"
         },
         {
           "command": "adocmdForge.refreshPreview",
-          "when": "resourceLangId == markdown || resourceLangId == asciidoc",
+          "when": "editorLangId == markdown || editorLangId == asciidoc",
           "group": "navigation@11"
         },
         {
           "command": "adocmdForge.previewSource",
-          "when": "resourceLangId == markdown || resourceLangId == asciidoc",
+          "when": "editorLangId == markdown || editorLangId == asciidoc",
           "group": "navigation@12"
         },
         {
           "command": "adocmdForge.previewSplit",
-          "when": "resourceLangId == markdown || resourceLangId == asciidoc",
+          "when": "editorLangId == markdown || editorLangId == asciidoc",
           "group": "navigation@13"
         },
         {
           "command": "adocmdForge.previewOnly",
-          "when": "resourceLangId == markdown || resourceLangId == asciidoc",
+          "when": "editorLangId == markdown || editorLangId == asciidoc",
           "group": "navigation@14"
         },
         {
-          "command": "adocmdForge.formatBold",
-          "when": "resourceLangId == markdown || resourceLangId == asciidoc",
-          "group": "navigation@20"
-        },
-        {
-          "command": "adocmdForge.formatItalic",
-          "when": "resourceLangId == markdown || resourceLangId == asciidoc",
-          "group": "navigation@21"
-        },
-        {
-          "command": "adocmdForge.formatHighlight",
-          "when": "resourceLangId == markdown || resourceLangId == asciidoc",
-          "group": "navigation@22"
-        },
-        {
-          "command": "adocmdForge.formatCode",
-          "when": "resourceLangId == markdown || resourceLangId == asciidoc",
-          "group": "navigation@23"
-        },
-        {
-          "command": "adocmdForge.formatStrike",
-          "when": "resourceLangId == markdown || resourceLangId == asciidoc",
-          "group": "navigation@24"
-        },
-        {
-          "command": "adocmdForge.formatSuperscript",
-          "when": "resourceLangId == markdown || resourceLangId == asciidoc",
-          "group": "navigation@25"
-        },
-        {
-          "command": "adocmdForge.formatSubscript",
-          "when": "resourceLangId == markdown || resourceLangId == asciidoc",
-          "group": "navigation@26"
-        },
-        {
           "command": "adocmdForge.copyImage",
-          "when": "resourceLangId == markdown || resourceLangId == asciidoc",
+          "when": "editorLangId == markdown || editorLangId == asciidoc",
           "group": "navigation@27"
         },
         {
           "command": "adocmdForge.exportHtml",
-          "when": "resourceLangId == markdown || resourceLangId == asciidoc",
+          "when": "editorLangId == markdown || editorLangId == asciidoc",
           "group": "navigation@28"
         },
         {
           "command": "adocmdForge.exportStandaloneHtml",
-          "when": "resourceLangId == markdown || resourceLangId == asciidoc",
+          "when": "editorLangId == markdown || editorLangId == asciidoc",
           "group": "navigation@29"
         },
         {
           "command": "adocmdForge.exportEmbeddedHtml",
-          "when": "resourceLangId == markdown || resourceLangId == asciidoc",
+          "when": "editorLangId == markdown || editorLangId == asciidoc",
           "group": "navigation@30"
         },
         {
           "command": "adocmdForge.exportPdf",
-          "when": "resourceLangId == asciidoc",
+          "when": "editorLangId == asciidoc",
           "group": "navigation@31"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "adocmdForge.formatBold",
+          "when": "editorHasSelection && (editorLangId == markdown || editorLangId == asciidoc)",
+          "group": "2_modification@1"
+        },
+        {
+          "command": "adocmdForge.formatItalic",
+          "when": "editorHasSelection && (editorLangId == markdown || editorLangId == asciidoc)",
+          "group": "2_modification@2"
+        },
+        {
+          "command": "adocmdForge.formatHighlight",
+          "when": "editorHasSelection && (editorLangId == markdown || editorLangId == asciidoc)",
+          "group": "2_modification@3"
+        },
+        {
+          "command": "adocmdForge.formatCode",
+          "when": "editorHasSelection && (editorLangId == markdown || editorLangId == asciidoc)",
+          "group": "2_modification@4"
+        },
+        {
+          "command": "adocmdForge.formatStrike",
+          "when": "editorHasSelection && (editorLangId == markdown || editorLangId == asciidoc)",
+          "group": "2_modification@5"
+        },
+        {
+          "command": "adocmdForge.formatSuperscript",
+          "when": "editorHasSelection && (editorLangId == markdown || editorLangId == asciidoc)",
+          "group": "2_modification@6"
+        },
+        {
+          "command": "adocmdForge.formatSubscript",
+          "when": "editorHasSelection && (editorLangId == markdown || editorLangId == asciidoc)",
+          "group": "2_modification@7"
         }
       ],
       "view/title": [

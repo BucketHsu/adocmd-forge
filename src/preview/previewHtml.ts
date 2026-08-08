@@ -46,17 +46,7 @@ export function buildPreviewHtml(resources: PreviewHtmlResources): string {
 }
 
 function buildPreviewToolbar(): string {
-  return `<header id="preview-toolbar" role="toolbar" aria-label="AdocMD Forge 文件工具列">
-  <div class="preview-toolbar-group" role="group" aria-label="文字格式">
-    ${buildToolbarButton('formatBold', 'B', '粗體')}
-    ${buildToolbarButton('formatItalic', 'I', '斜體')}
-    ${buildToolbarButton('formatHighlight', 'H', '注目')}
-    ${buildToolbarButton('formatCode', '&lt;&gt;', '等寬文字')}
-    ${buildToolbarButton('formatStrike', 'S', '刪除線')}
-    ${buildToolbarButton('formatSuperscript', 'x²', '上標')}
-    ${buildToolbarButton('formatSubscript', 'x₂', '下標')}
-  </div>
-  <div class="preview-toolbar-divider" aria-hidden="true"></div>
+  return `<header id="preview-toolbar" role="toolbar" aria-label="AdocMD Forge 預覽工具列">
   <div class="preview-toolbar-group" role="group" aria-label="預覽版面">
     ${buildToolbarButton('previewSource', '文字', '只顯示來源文字')}
     ${buildToolbarButton('previewSplit', '分割', '顯示來源文字與預覽')}
