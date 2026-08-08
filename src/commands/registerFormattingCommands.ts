@@ -11,6 +11,8 @@ export const FORMAT_ITALIC_COMMAND = 'adocmdForge.formatItalic';
 export const FORMAT_STRIKE_COMMAND = 'adocmdForge.formatStrike';
 export const FORMAT_SUBSCRIPT_COMMAND = 'adocmdForge.formatSubscript';
 export const FORMAT_SUPERSCRIPT_COMMAND = 'adocmdForge.formatSuperscript';
+export const SHOW_FORMATTING_PALETTE_COMMAND =
+  'adocmdForge.showFormattingPalette';
 
 export type FormatKind =
   | 'bold'
@@ -20,6 +22,20 @@ export type FormatKind =
   | 'strike'
   | 'subscript'
   | 'superscript';
+
+interface FormattingPaletteItem extends vscode.QuickPickItem {
+  readonly formatKind: FormatKind;
+}
+
+const FORMATTING_PALETTE_ITEMS: readonly FormattingPaletteItem[] = [
+  { formatKind: 'bold', label: '$(bold) 粗體' },
+  { formatKind: 'italic', label: '$(italic) 斜體' },
+  { formatKind: 'highlight', label: '$(symbol-color) 注目' },
+  { formatKind: 'code', label: '$(code) 等寬文字' },
+  { formatKind: 'strike', label: '$(remove) 刪除線' },
+  { formatKind: 'superscript', label: '$(symbol-number) 上標' },
+  { formatKind: 'subscript', label: '$(symbol-number) 下標' },
+];
 
 const MARKUP_BY_KIND: Readonly<Record<FormatKind, Readonly<{
   asciidoc: InlineMarkup;
@@ -68,13 +84,24 @@ export function registerFormattingCommands(
     [FORMAT_SUBSCRIPT_COMMAND, 'Subscript', 'subscript'],
   ];
 
-  return commands.map(([command, title, kind]) => (
-    vscode.commands.registerCommand(command, async (): Promise<void> => {
-      await commandExecutor.run(title, async (): Promise<void> => {
-        await applyFormat(kind);
-      });
-    })
-  ));
+  return [
+    ...commands.map(([command, title, kind]) => (
+      vscode.commands.registerCommand(command, async (): Promise<void> => {
+        await commandExecutor.run(title, async (): Promise<void> => {
+          await applyFormat(kind);
+        });
+      })
+    )),
+    vscode.commands.registerCommand(
+      SHOW_FORMATTING_PALETTE_COMMAND,
+      async (): Promise<void> => {
+        await commandExecutor.run(
+          'Formatting Palette',
+          showFormattingPalette,
+        );
+      },
+    ),
+  ];
 }
 
 export async function applyFormatToEditor(
@@ -99,4 +126,30 @@ async function applyFormat(kind: FormatKind): Promise<void> {
   }
 
   await applyFormatToEditor(editor, kind);
+}
+
+async function showFormattingPalette(): Promise<void> {
+  const editor = vscode.window.activeTextEditor;
+  if (editor === undefined) {
+    throw new Error('請先開啟要套用格式的文件。');
+  }
+  if (
+    resolveDocumentKind(
+      editor.document.languageId,
+      editor.document.fileName,
+    ) === undefined
+  ) {
+    throw new Error('浮動格式面板只支援 AsciiDoc 與 Markdown 文件。');
+  }
+
+  const selection = await vscode.window.showQuickPick(
+    FORMATTING_PALETTE_ITEMS,
+    {
+      placeHolder: '選擇要套用的文字格式',
+      title: 'AdocMD Forge 格式',
+    },
+  );
+  if (selection !== undefined) {
+    await applyFormatToEditor(editor, selection.formatKind);
+  }
 }

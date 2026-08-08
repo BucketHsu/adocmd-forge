@@ -6,6 +6,13 @@
 
 目前沒有尚未歸入版本的變更。
 
+## 1.2.5 - 2026-08-09
+
+### Changed
+
+- 將七個常駐於編輯器右上角的格式按鈕改為 `Show Formatting Palette` 浮動選單，使用 VS Code Quick Pick 顯示粗體、斜體、注目、等寬、刪除線、上標與下標；原有選取文字右鍵操作仍保留。
+- Preview 新增不受文件 `body` stylesheet 覆寫的外層 viewport padding，避免 `body { padding: 0 }` 讓文件內容貼齊面板邊緣。
+
 ## 1.2.4 - 2026-08-08
 
 ### Fixed

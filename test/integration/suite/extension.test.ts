@@ -14,6 +14,7 @@ const EXPORT_HTML_COMMAND = 'adocmdForge.exportHtml';
 const EXPORT_STANDALONE_HTML_COMMAND = 'adocmdForge.exportStandaloneHtml';
 const EXPORT_EMBEDDED_HTML_COMMAND = 'adocmdForge.exportEmbeddedHtml';
 const EXPORT_PDF_COMMAND = 'adocmdForge.exportPdf';
+const SHOW_FORMATTING_PALETTE_COMMAND = 'adocmdForge.showFormattingPalette';
 
 interface ExtensionExports {
   readonly imageProviders: {
@@ -92,6 +93,7 @@ export async function activateExtensionTest(): Promise<void> {
   assert.ok(registeredCommands.includes('adocmdForge.formatStrike'));
   assert.ok(registeredCommands.includes('adocmdForge.formatSuperscript'));
   assert.ok(registeredCommands.includes('adocmdForge.formatSubscript'));
+  assert.ok(registeredCommands.includes(SHOW_FORMATTING_PALETTE_COMMAND));
   assert.ok(registeredCommands.includes(OPEN_SYNTAX_GUIDE_COMMAND));
   assert.ok(registeredCommands.includes(COPY_IMAGE_COMMAND));
   assert.ok(registeredCommands.includes('adocmdForge.refreshOutline'));

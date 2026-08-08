@@ -44,7 +44,7 @@ describe('extension manifest', (): void => {
     expect(manifest.name).toBe('adocmd-forge');
     expect(manifest.displayName).toBe('AdocMD Forge');
     expect(manifest.publisher).toBe('BucketHsu');
-    expect(manifest.version).toBe('1.2.4');
+    expect(manifest.version).toBe('1.2.5');
     expect(manifest.description).toBe(
       'Secure live preview for AsciiDoc and Markdown with synchronized '
       + 'scrolling and VS Code theme support.',
@@ -70,6 +70,7 @@ describe('extension manifest', (): void => {
       'onLanguage:asciidoc',
       'onLanguage:markdown',
       'onCommand:adocmdForge.openSyntaxGuide',
+      'onCommand:adocmdForge.showFormattingPalette',
       'onCommand:adocmdForge.formatBold',
       'onCommand:adocmdForge.formatItalic',
       'onCommand:adocmdForge.formatHighlight',
@@ -103,6 +104,7 @@ describe('extension manifest', (): void => {
       'adocmdForge.previewSource',
       'adocmdForge.previewSplit',
       'adocmdForge.previewOnly',
+      'adocmdForge.showFormattingPalette',
       'adocmdForge.formatBold',
       'adocmdForge.formatItalic',
       'adocmdForge.formatHighlight',
@@ -162,7 +164,7 @@ describe('extension manifest', (): void => {
     });
   });
 
-  it('exposes formatting beside the source editor and in its selection menu', async (): Promise<void> => {
+  it('exposes a floating formatting palette and selection context actions', async (): Promise<void> => {
     const manifest = await readManifest();
     const formattingCommands = [
       'adocmdForge.formatBold',
@@ -173,7 +175,6 @@ describe('extension manifest', (): void => {
       'adocmdForge.formatSuperscript',
       'adocmdForge.formatSubscript',
     ];
-    const editorWhen = 'editorLangId == markdown || editorLangId == asciidoc';
     const selectionWhen = (
       'editorHasSelection && '
       + '(editorLangId == markdown || editorLangId == asciidoc)'
@@ -181,24 +182,21 @@ describe('extension manifest', (): void => {
     const editorTitle = manifest.contributes?.menus?.['editor/title'] as
       | readonly {
           readonly command?: string;
+          readonly group?: string;
           readonly when?: string;
         }[]
       | undefined;
     const editorContext = manifest.contributes?.menus?.['editor/context'] as
       | readonly {
           readonly command?: string;
+          readonly group?: string;
           readonly when?: string;
         }[]
       | undefined;
 
     expect(editorTitle?.filter(({ command }) => (
       command !== undefined && formattingCommands.includes(command)
-    )).map(({ command, when }) => ({ command, when }))).toEqual(
-      formattingCommands.map((command) => ({
-        command,
-        when: editorWhen,
-      })),
-    );
+    ))).toEqual([]);
     expect(editorContext?.filter(({ command }) => (
       command !== undefined && formattingCommands.includes(command)
     )).map(({ command, when }) => ({ command, when }))).toEqual(
@@ -224,5 +222,10 @@ describe('extension manifest', (): void => {
         'adocmdForge.exportPdf',
       ]),
     );
+    expect(editorContext).toContainEqual({
+      command: 'adocmdForge.showFormattingPalette',
+      group: '2_modification@0',
+      when: 'editorLangId == markdown || editorLangId == asciidoc',
+    });
   });
 });

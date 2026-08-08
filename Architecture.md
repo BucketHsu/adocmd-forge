@@ -6,7 +6,7 @@
 
 ## 2. 產品範圍
 
-AdocMD Forge 是 VS Code 文件工作台。1.2.4 正式版支援：
+AdocMD Forge 是 VS Code 文件工作台。1.2.5 正式版支援：
 
 - AsciiDoc：`.adoc`、`.asciidoc`
 - Markdown：`.md`
@@ -20,7 +20,7 @@ AdocMD Forge 是 VS Code 文件工作台。1.2.4 正式版支援：
 - HTML、Standalone HTML 與 Embedded HTML 匯出；三種模式共用 Renderer 與 Sanitizer
 - AsciiDoc 的本機 `asciidoctor-pdf` PDF 匯出命令整合
 
-1.2.4 發行關卡已由自動化測試、Extension Host 整合測試、VSIX 檢查與隔離安裝驗證完成；實際上架 Marketplace 仍需 Publisher 憑證與上架操作。
+1.2.5 發行關卡已由自動化測試、Extension Host 整合測試、VSIX 檢查與隔離安裝驗證完成；實際上架 Marketplace 仍需 Publisher 憑證與上架操作。
 
 DOCX、多人協作、雲端儲存與自訂 Asciidoctor extension 不屬於目前規劃範圍。
 
@@ -220,12 +220,12 @@ interface DocumentAnalysis {
 
 Provider 不負責解析完整文件或執行檔案操作；語法目錄與核心函式可在純 Node 單元測試，VS Code adapter 則由 Extension Host 整合測試驗證。
 
-## 10.1 編輯器快速工具列與版面
+## 10.1 編輯器浮動格式面板與版面
 
 - `registerFormattingCommands` 將粗體、斜體、注目、等寬、刪除線、上標與下標映射至 AsciiDoc／Markdown 對應標記。
 - 純函式 `textFormattingCore` 先以文件 offset 計算多游標結果，再由 VS Code adapter 一次套用編輯並恢復選取範圍。
 - `PreviewManager.setLayout` 管理 source、split、preview 三種版面；source 模式釋放 Preview Panel，split／preview 模式只改變 Panel 所在欄位。
-- 編輯器格式命令透過 `menus.editor/title` 與 `menus.editor/context` 提供；標題列按鈕在 AsciiDoc／Markdown 編輯器中持續顯示，選取文字時包覆內容，沒有選取文字時插入成對標記。
+- 編輯器格式命令透過 Quick Pick 浮動格式面板與 `menus.editor/context` 提供；不在 `menus.editor/title` 常駐七個格式按鈕，選取文字時包覆內容，沒有選取文字時插入成對標記。
 - Preview Webview 只負責呈現文件與同步捲動，不建立操作工具列；預覽版面、重新整理、語法說明與 HTML／PDF 操作也由來源編輯器的 `menus.editor/title` 提供。
 - 格式命令由來源編輯器執行，不再依賴 Preview Panel 取得或恢復文字選取範圍。
 - 所有工具列命令仍走 `CommandExecutor`，錯誤寫入 Output Channel 並顯示可理解的通知。
@@ -308,7 +308,7 @@ VS Code 1.97 以上另註冊 `DocumentPasteEditProvider`，接收 `image/*`、`f
 - 涉及路徑的值在使用時再次驗證，不信任 manifest schema 即已足夠。
 - 無法在執行期間真正生效的選項不得公開。
 
-1.2.4 目前公開設定：
+1.2.5 目前公開設定：
 
 - `adocmdForge.outline.updateDelay`：預設 150 毫秒，範圍 50 至 2000 毫秒。
 - `adocmdForge.diagnostics.updateDelay`：預設 150 毫秒，範圍 50 至 2000 毫秒；Diagnostics 會在設定的延遲後重新檢查目前文件。

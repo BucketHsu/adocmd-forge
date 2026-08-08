@@ -2,7 +2,7 @@
   "name": "adocmd-forge",
   "displayName": "AdocMD Forge",
   "description": "Secure live preview for AsciiDoc and Markdown with synchronized scrolling and VS Code theme support.",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "publisher": "BucketHsu",
   "license": "MIT",
   "icon": "images/icon.png",
@@ -41,6 +41,7 @@
     "onLanguage:asciidoc",
     "onLanguage:markdown",
     "onCommand:adocmdForge.openSyntaxGuide",
+    "onCommand:adocmdForge.showFormattingPalette",
     "onCommand:adocmdForge.formatBold",
     "onCommand:adocmdForge.formatItalic",
     "onCommand:adocmdForge.formatHighlight",
@@ -90,6 +91,13 @@
         "title": "Preview Only",
         "category": "AdocMD Forge",
         "icon": "$(preview)"
+      },
+      {
+        "command": "adocmdForge.showFormattingPalette",
+        "title": "Show Formatting Palette",
+        "category": "AdocMD Forge",
+        "enablement": "editorLangId == markdown || editorLangId == asciidoc",
+        "icon": "$(symbol-color)"
       },
       {
         "command": "adocmdForge.formatBold",
@@ -279,41 +287,6 @@
     "menus": {
       "editor/title": [
         {
-          "command": "adocmdForge.formatBold",
-          "when": "editorLangId == markdown || editorLangId == asciidoc",
-          "group": "navigation@1"
-        },
-        {
-          "command": "adocmdForge.formatItalic",
-          "when": "editorLangId == markdown || editorLangId == asciidoc",
-          "group": "navigation@2"
-        },
-        {
-          "command": "adocmdForge.formatHighlight",
-          "when": "editorLangId == markdown || editorLangId == asciidoc",
-          "group": "navigation@3"
-        },
-        {
-          "command": "adocmdForge.formatCode",
-          "when": "editorLangId == markdown || editorLangId == asciidoc",
-          "group": "navigation@4"
-        },
-        {
-          "command": "adocmdForge.formatStrike",
-          "when": "editorLangId == markdown || editorLangId == asciidoc",
-          "group": "navigation@5"
-        },
-        {
-          "command": "adocmdForge.formatSuperscript",
-          "when": "editorLangId == markdown || editorLangId == asciidoc",
-          "group": "navigation@6"
-        },
-        {
-          "command": "adocmdForge.formatSubscript",
-          "when": "editorLangId == markdown || editorLangId == asciidoc",
-          "group": "navigation@7"
-        },
-        {
           "command": "adocmdForge.openPreview",
           "when": "editorLangId == markdown || editorLangId == asciidoc",
           "group": "navigation@10"
@@ -375,6 +348,11 @@
         }
       ],
       "editor/context": [
+        {
+          "command": "adocmdForge.showFormattingPalette",
+          "when": "editorLangId == markdown || editorLangId == asciidoc",
+          "group": "2_modification@0"
+        },
         {
           "command": "adocmdForge.formatBold",
           "when": "editorHasSelection && (editorLangId == markdown || editorLangId == asciidoc)",
