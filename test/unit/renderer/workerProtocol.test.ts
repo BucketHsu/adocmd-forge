@@ -26,6 +26,7 @@ describe('isRenderRequest', () => {
       kind: 'asciidoc',
       source: '= 標題',
       sourcePath: 'D:\\docs\\guide.adoc',
+      allowedIncludeRootPaths: ['D:\\docs'],
     },
     {
       allowLocalIncludes: false,
@@ -67,6 +68,11 @@ describe('isRenderRequest', () => {
       kind: 'markdown',
       source: '內容',
       sourcePath: null,
+    },
+    {
+      kind: 'asciidoc',
+      source: '= 標題',
+      allowedIncludeRootPaths: ['D:\\docs', 42],
     },
     {
       injected: true,

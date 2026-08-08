@@ -102,11 +102,12 @@ describe('LinkCheckerService', (): void => {
     expect(fileSystem.stats).not.toContain('/workspace/docs/ignored.md');
   });
 
-  it('檢查 AsciiDoc xref、include、image 與 shorthand anchor', async (): Promise<void> => {
+  it('檢查 AsciiDoc link、xref、include、image 與 shorthand anchor', async (): Promise<void> => {
     const fileSystem = new MemoryFileSystem();
     fileSystem.files.set('/workspace/docs/guide.adoc', '= Guide\n\n== Intro\n');
     fileSystem.files.set('/workspace/docs/parts.adoc', '= Part\n');
     fileSystem.files.set('/workspace/docs/images/logo.png', 'binary');
+    fileSystem.files.set('/workspace/docs/images/inline-logo.png', 'binary');
     const service = new LinkCheckerService(fileSystem);
     const diagnostics = await service.check({
       ...workspaceInput,
@@ -116,15 +117,21 @@ describe('LinkCheckerService', (): void => {
       source: [
         '= Main',
         '',
+        'link:guide.adoc#missing-link[Broken link]',
         'xref:guide.adoc#_intro[Guide]',
         'xref:guide.adoc#missing[Broken]',
         'include::parts.adoc[]',
         'image::images/logo.png[Logo]',
+        'image:images/inline-logo.png[Inline logo]',
         '<<#no-main,Main>>',
       ].join('\n'),
     });
 
     expect(diagnostics.map(({ code, message }) => ({ code, message }))).toEqual([
+      {
+        code: 'missing-anchor',
+        message: '找不到文件內 anchor：#missing-link',
+      },
       {
         code: 'missing-anchor',
         message: '找不到文件內 anchor：#missing',

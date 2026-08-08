@@ -6,7 +6,7 @@
 
 ## 2. 產品範圍
 
-AdocMD Forge 是 VS Code 文件工作台。1.0.0 正式版支援：
+AdocMD Forge 是 VS Code 文件工作台。1.2.0 正式版支援：
 
 - AsciiDoc：`.adoc`、`.asciidoc`
 - Markdown：`.md`
@@ -18,10 +18,11 @@ AdocMD Forge 是 VS Code 文件工作台。1.0.0 正式版支援：
 - 目前 active editor 的 AsciiDoc／Markdown Outline、標題階層與點擊跳轉
 - 目前 active editor 的 AsciiDoc／Markdown 本機引用檢查與 Problems Diagnostic
 - HTML、Standalone HTML 與 Embedded HTML 匯出；三種模式共用 Renderer 與 Sanitizer
+- AsciiDoc 的本機 `asciidoctor-pdf` PDF 匯出命令整合
 
-1.0.0 發行關卡已由自動化測試、Extension Host 整合測試、VSIX 檢查與隔離安裝驗證完成；實際上架 Marketplace 仍需 Publisher 憑證與上架操作。
+1.2.0 發行關卡已由自動化測試、Extension Host 整合測試、VSIX 檢查與隔離安裝驗證完成；實際上架 Marketplace 仍需 Publisher 憑證與上架操作。
 
-PDF、DOCX、多人協作、雲端儲存與自訂 Asciidoctor extension 不屬於目前規劃範圍。
+DOCX、多人協作、雲端儲存與自訂 Asciidoctor extension 不屬於目前規劃範圍。
 
 ## 3. 設計原則
 
@@ -175,10 +176,12 @@ interface DocumentAnalysis {
 1. 文件變更事件進入可取消的 debounce。
 2. 產生遞增 revision，Renderer 非同步產生已消毒內容。
 3. 完成時比對文件版本與 revision。
-4. AsciiDoc renderer 解析受信任文件的 `:stylesheet:`／`:stylesdir:`，只傳遞候選本機 CSS 路徑。
-5. Extension Host 以 workspace root、realpath、檔案類型與 Webview URI 邊界再次驗證 stylesheet，再透過具型別訊息更新 Webview 內容。
-6. Webview 以文件專用 `<link rel="stylesheet">` 管理樣式生命週期，不重設整份 `webview.html`，並在下一次 revision 或 dispose 時移除舊連結。
-7. Webview 回報已套用 revision，供測試與錯誤追蹤使用。
+4. 受信任 AsciiDoc 使用單次 render 的 IncludeProcessor registry；`SecureIncludeResolver` 以 workspace root、source directory 與 realpath 邊界解析 `include::`，不讓 Asciidoctor 預設檔案讀取繞過安全政策。
+5. Include Processor 對巢狀 include 維持 canonical ancestor 與最大深度，並套用 `lines`、`tag`／`tags` 選取；缺檔、循環、路徑拒絕與 tag 問題轉成 renderer message。
+6. AsciiDoc renderer 解析受信任文件的 `:stylesheet:`／`:stylesdir:`，只傳遞候選本機 CSS 路徑。
+7. Extension Host 以 workspace root、realpath、檔案類型與 Webview URI 邊界再次驗證 stylesheet，再透過具型別訊息更新 Webview 內容。
+8. Webview 以文件專用 `<link rel="stylesheet">` 管理樣式生命週期，不重設整份 `webview.html`，並在下一次 revision 或 dispose 時移除舊連結。
+9. Webview 回報已套用 revision，供測試與錯誤追蹤使用。
 
 ### 8.3 同步捲動
 
@@ -250,10 +253,10 @@ Provider 不負責解析完整文件或執行檔案操作；語法目錄與核�
 
 檢查範圍：
 
-- AsciiDoc `xref:` 與 `<<...>>`
+- AsciiDoc `link:`、`xref:` 與 `<<...>>`
 - AsciiDoc explicit anchor 與自動標題 anchor
-- Markdown inline link、reference link 與 fragment
-- Markdown 與 AsciiDoc 圖片
+- Markdown inline link 與 fragment
+- Markdown 與 AsciiDoc `image:`／`image::` 圖片
 - AsciiDoc include
 
 驗證規則：
@@ -304,7 +307,7 @@ VS Code 1.97 以上另註冊 `DocumentPasteEditProvider`，接收 `image/*`、`f
 - 涉及路徑的值在使用時再次驗證，不信任 manifest schema 即已足夠。
 - 無法在執行期間真正生效的選項不得公開。
 
-1.0.0 目前公開設定：
+1.2.0 目前公開設定：
 
 - `adocmdForge.outline.updateDelay`：預設 150 毫秒，範圍 50 至 2000 毫秒。
 - `adocmdForge.diagnostics.updateDelay`：預設 150 毫秒，範圍 50 至 2000 毫秒；Diagnostics 會在設定的延遲後重新檢查目前文件。

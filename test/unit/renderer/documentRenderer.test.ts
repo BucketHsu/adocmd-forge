@@ -176,6 +176,154 @@ describe('document renderer', (): void => {
     }
   });
 
+  it('supports nested include selection while keeping the workspace boundary', async (): Promise<void> => {
+    const temporaryDirectory = await mkdtemp(path.join(tmpdir(), 'adocmd-forge-nested-'));
+
+    try {
+      const chapterDirectory = path.join(temporaryDirectory, 'chapters');
+      await mkdir(chapterDirectory);
+      await writeFile(
+        path.join(chapterDirectory, 'nested.adoc'),
+        'outside\n// tag::visible[]\nvisible *content*\n// end::visible[]\n',
+        'utf8',
+      );
+      await writeFile(
+        path.join(chapterDirectory, 'introduction.adoc'),
+        'include::nested.adoc[tags=visible]',
+        'utf8',
+      );
+
+      const result = await render({
+        allowLocalIncludes: true,
+        allowedIncludeRootPaths: [temporaryDirectory],
+        kind: 'asciidoc',
+        source: [
+          '= Include Selection',
+          '',
+          'include::chapters/introduction.adoc[]',
+        ].join('\n'),
+        sourcePath: path.join(temporaryDirectory, 'guide.adoc'),
+      });
+
+      expect(result.html).toContain('visible <strong>content</strong>');
+      expect(result.html).not.toContain('outside');
+      expect(result.messages ?? []).toEqual([]);
+    } finally {
+      await rm(temporaryDirectory, {
+        force: true,
+        recursive: true,
+      });
+    }
+  });
+
+  it('rejects includes outside the allowed workspace roots', async (): Promise<void> => {
+    const temporaryDirectory = await mkdtemp(path.join(tmpdir(), 'adocmd-forge-boundary-'));
+    const outsideDirectory = await mkdtemp(path.join(tmpdir(), 'adocmd-forge-outside-'));
+
+    try {
+      await writeFile(
+        path.join(outsideDirectory, 'secret.adoc'),
+        'secret content',
+        'utf8',
+      );
+      const result = await render({
+        allowLocalIncludes: true,
+        allowedIncludeRootPaths: [temporaryDirectory],
+        kind: 'asciidoc',
+        source: `include::../${path.basename(outsideDirectory)}/secret.adoc[]`,
+        sourcePath: path.join(temporaryDirectory, 'guide.adoc'),
+      });
+
+      expect(result.html).not.toContain('secret content');
+      expect(result.messages?.some((message) => (
+        message.severity === 'error'
+        && message.message.includes('outside')
+      ))).toBe(true);
+    } finally {
+      await rm(temporaryDirectory, {
+        force: true,
+        recursive: true,
+      });
+      await rm(outsideDirectory, {
+        force: true,
+        recursive: true,
+      });
+    }
+  });
+
+  it('stops recursive include cycles with a structured error', async (): Promise<void> => {
+    const temporaryDirectory = await mkdtemp(path.join(tmpdir(), 'adocmd-forge-cycle-'));
+
+    try {
+      await writeFile(
+        path.join(temporaryDirectory, 'a.adoc'),
+        'include::b.adoc[]',
+        'utf8',
+      );
+      await writeFile(
+        path.join(temporaryDirectory, 'b.adoc'),
+        'include::a.adoc[]',
+        'utf8',
+      );
+      const result = await render({
+        allowLocalIncludes: true,
+        allowedIncludeRootPaths: [temporaryDirectory],
+        kind: 'asciidoc',
+        source: 'include::a.adoc[]',
+        sourcePath: path.join(temporaryDirectory, 'guide.adoc'),
+      });
+
+      expect(result.html).not.toContain('Maximum call stack');
+      expect(result.messages?.some((message) => (
+        message.severity === 'error'
+        && message.message.includes('循環引用')
+      ))).toBe(true);
+    } finally {
+      await rm(temporaryDirectory, {
+        force: true,
+        recursive: true,
+      });
+    }
+  });
+
+  it('reports malformed and missing include tags without aborting the preview', async (): Promise<void> => {
+    const temporaryDirectory = await mkdtemp(path.join(tmpdir(), 'adocmd-forge-tags-'));
+
+    try {
+      await writeFile(
+        path.join(temporaryDirectory, 'malformed.adoc'),
+        '// tag::wanted[]\n// end::other[]\n',
+        'utf8',
+      );
+      const result = await render({
+        allowLocalIncludes: true,
+        allowedIncludeRootPaths: [temporaryDirectory],
+        kind: 'asciidoc',
+        source: [
+          'include::malformed.adoc[tags=wanted]',
+          'include::malformed.adoc[tags=missing]',
+        ].join('\n'),
+        sourcePath: path.join(temporaryDirectory, 'guide.adoc'),
+      });
+
+      expect(result.html).toBeTypeOf('string');
+      expect(result.messages?.some((message) => (
+        message.severity === 'warning'
+        && message.message.includes('mismatched-end-tag')
+        && message.message.includes('預期 wanted')
+      ))).toBe(true);
+      expect(result.messages?.some((message) => (
+        message.severity === 'warning'
+        && message.message.includes('missing-tag')
+      ))).toBe(true);
+    } finally {
+      await rm(temporaryDirectory, {
+        force: true,
+        recursive: true,
+      });
+    }
+  });
+
   it('resolves a trusted AsciiDoc stylesheet relative to the document', async (): Promise<void> => {
     const sourcePath = path.join(
       path.resolve('workspace'),

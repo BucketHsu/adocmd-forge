@@ -36,7 +36,7 @@ npm 12 可能封鎖具有 install script 的相依套件。不得直接全面允
 | `npm run build` | 產生 production Extension Host bundle |
 | `npm run watch` | 持續重建開發 bundle |
 | `npm run test:integration` | 啟動隔離的 VS Code 1.97.2 Extension Host |
-| `npm run check` | typecheck、lint、unit test、build |
+| `npm run check` | typecheck、lint、unit test、build、VSIX 封裝清單檢查 |
 | `npm run verify` | 完整 check 與 Extension Host 整合測試 |
 | `npm run package:list` | 列出 VSIX 封裝內容 |
 | `npm run package:vsix` | 執行品質檢查並建立 VSIX |
@@ -88,6 +88,8 @@ Bug 修正必須先加入能重現問題的 regression test，並確認測試在
 新增語法時，先更新 `src/language/asciidocSyntax.ts` 的目錄，再由補全、Hover 與語法說明共用該資料。補全必須新增對應的游標前綴測試，Hover 必須測試 Range 與非語法文字，避免在一般段落顯示大量無關項目。
 
 `AdocMD Forge: Open AsciiDoc Syntax Guide` 會開啟可編輯的 untitled AsciiDoc 說明文件；它不寫入工作區，也不需要檔案權限。
+
+AsciiDoc 預覽在受信任且已儲存的文件中使用 renderer worker 內的單次 IncludeProcessor registry。來源文件目錄與 Extension Host 傳入的 workspace roots 會先經 `realpath` 邊界檢查，再由 `SecureIncludeResolver` 解析相對 `include::`；未受信任 workspace、絕對／外部 URI、workspace 外路徑、symbolic link 逸出、循環與超過深度的 include 都不會讀取。`lines`、`tag` 與 `tags` 由 `selectIncludeContent` 套用，問題會寫入 renderer message 與 Output Channel。每次 render 都建立獨立 registry，不共享其他文件的 include 狀態。
 
 ## 8. 圖片工作流
 
@@ -223,7 +225,7 @@ npm run package:vsix
 安裝測試使用隔離目錄，避免變更開發者日常 VS Code：
 
 ```powershell
-code --extensions-dir .vscode-test/installed-extensions --install-extension artifacts/adocmd-forge-1.1.0.vsix --force
+code --extensions-dir .vscode-test/installed-extensions --install-extension artifacts/adocmd-forge-1.2.0.vsix --force
 ```
 
 ## 17. 發行

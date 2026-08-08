@@ -137,6 +137,36 @@ function parseAsciiDocLine(
     });
   }
 
+  const linkPattern = /\blink:([^\s\[]+)\s*\[/gu;
+  for (const match of line.matchAll(linkPattern)) {
+    const target = match[1];
+    if (target === undefined) {
+      continue;
+    }
+    const matchIndex = match.index;
+    const targetOffset = line.indexOf(target, matchIndex);
+    references.push({
+      kind: 'link',
+      target,
+      range: createRange(lineNumber, Math.max(0, targetOffset), target.length),
+    });
+  }
+
+  const inlineImagePattern = /\bimage:(?!:)([^\s\[]+)\s*\[/gu;
+  for (const match of line.matchAll(inlineImagePattern)) {
+    const target = match[1];
+    if (target === undefined) {
+      continue;
+    }
+    const matchIndex = match.index;
+    const targetOffset = line.indexOf(target, matchIndex);
+    references.push({
+      kind: 'image',
+      target,
+      range: createRange(lineNumber, Math.max(0, targetOffset), target.length),
+    });
+  }
+
   const xrefPattern = /\bxref:([^\s\[]+)\s*\[/gu;
   for (const match of line.matchAll(xrefPattern)) {
     const target = match[1];
@@ -231,7 +261,7 @@ function detectFence(
 }
 
 function isReferenceKind(value: string | undefined): value is 'link' | 'xref' | 'image' | 'include' {
-  return value === 'xref' || value === 'include' || value === 'image';
+  return value === 'xref' || value === 'include' || value === 'image' || value === 'link';
 }
 
 function createRange(

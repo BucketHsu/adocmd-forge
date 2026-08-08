@@ -46,6 +46,7 @@ const RENDER_REQUEST_REQUIRED_KEYS = [
 ] as const;
 const RENDER_REQUEST_OPTIONAL_KEYS = [
   'allowLocalIncludes',
+  'allowedIncludeRootPaths',
   'sourcePath',
 ] as const;
 const RENDER_RESULT_REQUIRED_KEYS = [
@@ -187,6 +188,9 @@ function isRenderRequestValue(value: unknown): value is RenderRequest {
   ) && (
     !Object.hasOwn(properties, 'sourcePath')
     || typeof properties.sourcePath === 'string'
+  ) && (
+    !Object.hasOwn(properties, 'allowedIncludeRootPaths')
+    || isStringArray(properties.allowedIncludeRootPaths)
   );
 }
 
@@ -217,6 +221,10 @@ function isRenderResultValue(value: unknown): value is RenderResult {
 }
 
 function isStylesheetPathArray(value: unknown): value is readonly string[] {
+  return isStringArray(value);
+}
+
+function isStringArray(value: unknown): value is readonly string[] {
   if (
     !Array.isArray(value)
     || Reflect.getPrototypeOf(value) !== Array.prototype

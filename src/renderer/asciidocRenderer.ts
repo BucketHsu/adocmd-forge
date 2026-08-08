@@ -8,6 +8,7 @@ import type {
 } from '@asciidoctor/core';
 
 import type { RenderRequest } from '../models/renderRequest';
+import { createSecureIncludeRegistry } from './include/asciidoctorIncludeProcessor';
 import type { RenderMessage } from '../models/renderMessage';
 import createAsciidoctorRuntime from './asciidoctorRuntime.cjs';
 
@@ -147,15 +148,17 @@ function isObjectLike(value: unknown): value is object {
 }
 
 function createProcessorOptions(request: RenderRequest): ProcessorOptions {
+  const extensionRegistry = createExtensionRegistry(request);
   const options: ProcessorOptions = {
     attributes: {
       showtitle: true,
     },
     header_footer: false,
-    safe: request.allowLocalIncludes === true
-      ? 'safe'
-      : 'secure',
+    safe: 'secure',
     sourcemap: true,
+    ...(extensionRegistry === undefined ? {} : {
+      extension_registry: extensionRegistry,
+    }),
   };
 
   if (request.sourcePath !== undefined && request.sourcePath.length > 0) {
@@ -163,6 +166,27 @@ function createProcessorOptions(request: RenderRequest): ProcessorOptions {
   }
 
   return options;
+}
+
+function createExtensionRegistry(
+  request: RenderRequest,
+): ProcessorOptions['extension_registry'] {
+  if (
+    request.allowLocalIncludes !== true
+    || request.sourcePath === undefined
+    || request.sourcePath.length === 0
+  ) {
+    return undefined;
+  }
+
+  const rootPaths = request.allowedIncludeRootPaths === undefined
+    || request.allowedIncludeRootPaths.length === 0
+    ? [path.dirname(path.resolve(request.sourcePath))]
+    : request.allowedIncludeRootPaths;
+  return createSecureIncludeRegistry(asciidoctor, {
+    allowedRootPaths: rootPaths,
+    sourcePath: request.sourcePath,
+  });
 }
 
 const ATTRIBUTE_CONTROL_CHARACTER_PATTERN = /[\u0000-\u001F\u007F]/u;

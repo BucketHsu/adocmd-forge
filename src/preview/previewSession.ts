@@ -221,6 +221,7 @@ export class PreviewSession implements vscode.Disposable {
       const request: RenderRequest = isHostFileSystemUri(document.uri)
         ? {
             allowLocalIncludes: vscode.workspace.isTrusted,
+            allowedIncludeRootPaths: this.allowedResourceRootPaths,
             kind,
             source: document.getText(),
             sourcePath: document.uri.fsPath,

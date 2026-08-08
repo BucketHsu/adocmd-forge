@@ -65,6 +65,9 @@ export class ExportService {
       kind: input.kind,
       source: input.source,
       ...(input.sourcePath === undefined ? {} : { sourcePath: input.sourcePath }),
+      ...(input.workspaceRootPath === undefined ? {} : {
+        allowedIncludeRootPaths: [input.workspaceRootPath],
+      }),
       allowLocalIncludes: input.workspaceTrusted,
     });
     const title = renderResult.title ?? getFallbackTitle(input.sourcePath);

@@ -63,11 +63,13 @@ describe('link reference parser', (): void => {
     ]);
   });
 
-  it('解析 AsciiDoc xref/include/image、shorthand xref，且忽略 source block', (): void => {
+  it('解析 AsciiDoc link/xref/include/image、shorthand xref，且忽略 source block', (): void => {
     const source = [
+      'link:guide.adoc#intro[指南]',
       'xref:guide.adoc#intro[指南]',
       'include::parts/chapter.adoc[leveloffset=+1]',
       'image::images/logo.png[Logo]',
+      'image:images/inline-logo.png[Inline logo]',
       '<<#intro,Introduction>>',
       '----',
       'xref:missing.adoc[Ignored]',
@@ -76,9 +78,11 @@ describe('link reference parser', (): void => {
 
     const references = parseDocumentReferences({ source, kind: 'asciidoc' });
     expect(references.map(({ kind, target }) => ({ kind, target }))).toEqual([
+      { kind: 'link', target: 'guide.adoc#intro' },
       { kind: 'xref', target: 'guide.adoc#intro' },
       { kind: 'include', target: 'parts/chapter.adoc' },
       { kind: 'image', target: 'images/logo.png' },
+      { kind: 'image', target: 'images/inline-logo.png' },
       { kind: 'xref', target: '#intro' },
     ]);
     expect(references[0]?.range).toEqual({

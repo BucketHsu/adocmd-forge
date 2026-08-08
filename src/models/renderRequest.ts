@@ -8,6 +8,11 @@ export interface RenderRequest {
    * 僅能由已信任工作區的 Extension Host adapter 開啟。
    */
   readonly allowLocalIncludes?: boolean;
+  /**
+   * AsciiDoc include 可讀取的 canonical root 候選；只接受 workspace 內的目錄。
+   * 未提供時，renderer 會退回以 sourcePath 所在目錄作為唯一候選。
+   */
+  readonly allowedIncludeRootPaths?: readonly string[];
   readonly kind: DocumentKind;
   readonly source: string;
   /**

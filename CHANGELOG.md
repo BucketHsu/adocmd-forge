@@ -4,10 +4,17 @@
 
 ## Unreleased
 
+目前沒有尚未歸入版本的變更。
+
+## 1.2.0 - 2026-08-08
+
 ### Added
 
 - 預覽面板新增 IDEA 類文件工具列，可直接執行文字格式化、預覽版面切換、重新整理、AsciiDoc 語法說明與 HTML／PDF 匯出。
 - 工具列操作會綁定目前預覽來源文件，即使 Preview Only 模式沒有文字編輯器焦點，也能正確修改與匯出來源文件。
+- AsciiDoc `include::` 預覽改由受 workspace root 與 realpath 保護的 IncludeProcessor 處理，支援巢狀 include、`lines`、`tag`／`tags`，並拒絕循環與越界路徑。
+- Link Checker 支援 AsciiDoc `link:` macro，並對引用目標保留精確 Problems Range。
+- VSIX 封裝清單納入 PNG 與 ICO 圖示；`npm run check` 會驗證暫時 Marketplace README 與封裝內容。
 
 ## 1.1.0 - 2026-08-08
 
