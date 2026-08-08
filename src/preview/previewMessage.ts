@@ -43,11 +43,35 @@ export interface PreviewOpenLinkMessage {
   readonly href: string;
 }
 
+export type PreviewToolbarAction =
+  | 'exportEmbeddedHtml'
+  | 'exportHtml'
+  | 'exportPdf'
+  | 'exportStandaloneHtml'
+  | 'formatBold'
+  | 'formatCode'
+  | 'formatHighlight'
+  | 'formatItalic'
+  | 'formatStrike'
+  | 'formatSubscript'
+  | 'formatSuperscript'
+  | 'openSyntaxGuide'
+  | 'previewOnly'
+  | 'previewSource'
+  | 'previewSplit'
+  | 'refreshPreview';
+
+export interface PreviewToolbarActionMessage {
+  readonly type: 'toolbarAction';
+  readonly action: PreviewToolbarAction;
+}
+
 export type WebviewToExtensionMessage =
   | PreviewReadyMessage
   | PreviewRenderedMessage
   | PreviewScrollMessage
-  | PreviewOpenLinkMessage;
+  | PreviewOpenLinkMessage
+  | PreviewToolbarActionMessage;
 
 type MessageRecord = Readonly<Record<PropertyKey, unknown>>;
 
@@ -64,6 +88,30 @@ const WEBVIEW_STYLESHEET_SCHEMES = new Set([
   'vscode-webview',
   'vscode-webview-resource',
 ]);
+const PREVIEW_TOOLBAR_ACTIONS: ReadonlySet<string> = new Set([
+  'exportEmbeddedHtml',
+  'exportHtml',
+  'exportPdf',
+  'exportStandaloneHtml',
+  'formatBold',
+  'formatCode',
+  'formatHighlight',
+  'formatItalic',
+  'formatStrike',
+  'formatSubscript',
+  'formatSuperscript',
+  'openSyntaxGuide',
+  'previewOnly',
+  'previewSource',
+  'previewSplit',
+  'refreshPreview',
+]);
+
+export function isPreviewToolbarAction(
+  value: unknown,
+): value is PreviewToolbarAction {
+  return typeof value === 'string' && PREVIEW_TOOLBAR_ACTIONS.has(value);
+}
 
 function isMessageRecord(value: unknown): value is MessageRecord {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
@@ -269,6 +317,13 @@ export function isWebviewToExtensionMessage(
           'href',
         ])
           && isSafeLinkHref(value.href);
+
+      case 'toolbarAction':
+        return hasExactKeys(value, [
+          'type',
+          'action',
+        ])
+          && isPreviewToolbarAction(value.action);
 
       default:
         return false;

@@ -3,9 +3,9 @@
 :toclevels: 3
 :sectanchors:
 :source-highlighter: highlight.js
-:imagesdir: 
+:imagesdir: images
 
-image::images\icon.png[AdocMD Forge,128,128]
+image::icon.png[AdocMD Forge,128,128]
 
 AdocMD Forge 是提供 AsciiDoc 與 Markdown 撰寫體驗的 VS Code 擴充套件。
 `1.1.0` 是可安裝的文件工作台版本，除了安全的即時預覽、雙向同步捲動、AsciiDoc 語法輔助與圖片工作流，也提供目前文件的 Outline 標題樹、點擊跳轉、本機引用診斷、HTML／PDF 匯出與編輯器快速工具列。
@@ -30,7 +30,8 @@ AdocMD Forge 是提供 AsciiDoc 與 Markdown 撰寫體驗的 VS Code 擴充套�
 * 支援預覽中的本機圖片與相對連結。
 * 在受信任工作區中支援安全範圍內的 AsciiDoc `include::`。
 * 在受信任工作區中，Open Preview 會依來源文件位置套用 `:stylesheet:` 與 `:stylesdir:` 宣告的本機 `.css`；例如 `:stylesheet: ../stylesheets/colony.css`。
-* 編輯器標題列提供粗體、斜體、注目、等寬、刪除線、上標與下標快速插入工具。
+* 編輯器標題列與預覽面板工具列提供粗體、斜體、注目、等寬、刪除線、上標與下標快速插入工具。
+* 預覽面板工具列可直接執行格式化、重新整理、語法說明、HTML 與 PDF 匯出，不必離開預覽畫面。
 * 可切換僅文字、文字／預覽分割與僅預覽版面。
 
 === 安全性
@@ -135,7 +136,7 @@ AdocMD Forge 是提供 AsciiDoc 與 Markdown 撰寫體驗的 VS Code 擴充套�
 |使用本機 `asciidoctor-pdf` 匯出 PDF。
 |===
 
-也可以使用編輯器標題列上的預覽按鈕。
+也可以使用編輯器標題列上的預覽按鈕，或在預覽面板上使用 IDEA 類文件工具列。
 
 == 設定
 

@@ -222,6 +222,8 @@ Provider 不負責解析完整文件或執行檔案操作；語法目錄與核�
 - `registerFormattingCommands` 將粗體、斜體、注目、等寬、刪除線、上標與下標映射至 AsciiDoc／Markdown 對應標記。
 - 純函式 `textFormattingCore` 先以文件 offset 計算多游標結果，再由 VS Code adapter 一次套用編輯並恢復選取範圍。
 - `PreviewManager.setLayout` 管理 source、split、preview 三種版面；source 模式釋放 Preview Panel，split／preview 模式只改變 Panel 所在欄位。
+- 預覽 Webview 以 `preview-toolbar` 提供 IDEA 類格式、版面、重新整理、語法說明與 HTML／PDF 操作；按鈕只送出白名單 `toolbarAction`，不把任意 command 或文件內容傳回 Extension Host。
+- `PreviewManager` 以來源文件 URI 重新取得 `TextEditor`，因此在 Preview Only 模式仍能套用格式與匯出，不依賴目前焦點是否停留在文字編輯器。
 - 所有工具列命令仍走 `CommandExecutor`，錯誤寫入 Output Channel 並顯示可理解的通知。
 
 ## 10.2 外部 Asciidoctor PDF

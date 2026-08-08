@@ -34,12 +34,20 @@ export class PdfExportProvider implements vscode.Disposable {
     this.runner = options.runner ?? defaultAsciiDocCliRunner;
   }
 
-  public async exportActive(destination?: vscode.Uri): Promise<void> {
+  public async exportActive(
+    destination?: vscode.Uri,
+    documentUri?: vscode.Uri,
+  ): Promise<void> {
     if (this.disposed) {
       throw new Error('PDF 匯出服務已停止。');
     }
 
-    const editor = vscode.window.activeTextEditor;
+    const editor = documentUri === undefined
+      ? vscode.window.activeTextEditor
+      : await vscode.window.showTextDocument(documentUri, {
+        preserveFocus: true,
+        preview: false,
+      });
     if (editor === undefined) {
       throw new Error('請先開啟要匯出的 AsciiDoc 文件。');
     }
@@ -131,6 +139,13 @@ export class PdfExportProvider implements vscode.Disposable {
     void vscode.window.showInformationMessage(
       `PDF 已匯出：${path.basename(resolved.destinationPath)}`,
     );
+  }
+
+  public async exportDocument(
+    documentUri: vscode.Uri,
+    destination?: vscode.Uri,
+  ): Promise<void> {
+    await this.exportActive(destination, documentUri);
   }
 
   public dispose(): void {

@@ -136,6 +136,7 @@ export async function activateExtensionTest(): Promise<void> {
   assert.equal(updatedVersion?.length, 2);
 
   await verifyAsciiDocLanguageProviders(extensionExports);
+  await verifyFormattingCommands();
   await vscode.window.showTextDocument(document);
   await verifyHtmlExports();
   await vscode.window.showTextDocument(document);
@@ -176,6 +177,24 @@ export async function activateExtensionTest(): Promise<void> {
   await waitUntilPreviewTabCount(1);
 
   await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+}
+
+async function verifyFormattingCommands(): Promise<void> {
+  const formattingDocument = await vscode.workspace.openTextDocument({
+    content: '粗體文字',
+    language: 'markdown',
+  });
+  const editor = await vscode.window.showTextDocument(formattingDocument);
+  editor.selection = new vscode.Selection(
+    new vscode.Position(0, 0),
+    new vscode.Position(0, formattingDocument.getText().length),
+  );
+
+  await vscode.commands.executeCommand('adocmdForge.formatBold');
+  assert.equal(formattingDocument.getText(), '**粗體文字**');
+
+  await vscode.commands.executeCommand('adocmdForge.formatItalic');
+  assert.equal(formattingDocument.getText(), '***粗體文字***');
 }
 
 async function verifyHtmlExports(): Promise<void> {

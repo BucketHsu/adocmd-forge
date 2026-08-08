@@ -12,7 +12,7 @@ export const FORMAT_STRIKE_COMMAND = 'adocmdForge.formatStrike';
 export const FORMAT_SUBSCRIPT_COMMAND = 'adocmdForge.formatSubscript';
 export const FORMAT_SUPERSCRIPT_COMMAND = 'adocmdForge.formatSuperscript';
 
-type FormatKind =
+export type FormatKind =
   | 'bold'
   | 'code'
   | 'highlight'
@@ -77,12 +77,10 @@ export function registerFormattingCommands(
   ));
 }
 
-async function applyFormat(kind: FormatKind): Promise<void> {
-  const editor = vscode.window.activeTextEditor;
-  if (editor === undefined) {
-    throw new Error('請先開啟要套用格式的文件。');
-  }
-
+export async function applyFormatToEditor(
+  editor: vscode.TextEditor,
+  kind: FormatKind,
+): Promise<void> {
   const documentKind = resolveDocumentKind(
     editor.document.languageId,
     editor.document.fileName,
@@ -92,4 +90,13 @@ async function applyFormat(kind: FormatKind): Promise<void> {
   }
 
   await applyInlineMarkup(editor, MARKUP_BY_KIND[kind][documentKind]);
+}
+
+async function applyFormat(kind: FormatKind): Promise<void> {
+  const editor = vscode.window.activeTextEditor;
+  if (editor === undefined) {
+    throw new Error('請先開啟要套用格式的文件。');
+  }
+
+  await applyFormatToEditor(editor, kind);
 }

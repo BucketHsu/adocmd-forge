@@ -171,10 +171,11 @@ Webview runtime 與 Extension Host 是不同信任邊界。
 - AsciiDoc `:stylesheet:`／`:stylesdir:` 只在受信任且已儲存的本機文件啟用；候選路徑必須通過 workspace root、realpath、`.css` 檔案與 `localResourceRoots` 檢查。
 - 文件 stylesheet 由 Webview runtime 建立與清理 `<link>`，不把 CSS 內容內嵌到訊息或 inline script。
 - 樣式使用 VS Code theme token，並驗證高對比模式。
+- 預覽面板工具列只使用靜態 `data-toolbar-action` 按鈕；Webview runtime 會把動作轉成白名單訊息，Extension Host 再以來源文件 URI 執行實際命令。
 
 ## 13.1 快速工具列與 PDF
 
-編輯器標題列的格式命令不直接拼接游標文字；先由 `textFormattingCore` 以 offset 計算結果，再由 adapter 套用單一 edit，避免多游標造成行號與選取位置漂移。
+編輯器標題列與預覽面板工具列的格式命令不直接拼接游標文字；先由 `textFormattingCore` 以 offset 計算結果，再由 adapter 套用單一 edit，避免多游標造成行號與選取位置漂移。預覽面板操作會以 `showTextDocument(documentUri, { preserveFocus: true })` 取得來源編輯器，維持 Preview Only 模式仍可編輯來源文件。
 
 `Export PDF` 只適用已儲存、受信任本機工作區的 AsciiDoc。執行前驗證來源／目的地 workspace 邊界與覆寫確認，並使用不經 shell 的外部程序；使用者需在設定中提供本機 `asciidoctor-pdf` 與必要的 `asciidoctor-diagram` 等元件。
 
@@ -222,7 +223,7 @@ npm run package:vsix
 安裝測試使用隔離目錄，避免變更開發者日常 VS Code：
 
 ```powershell
-code --extensions-dir .vscode-test/installed-extensions --install-extension artifacts/adocmd-forge-1.0.0.vsix --force
+code --extensions-dir .vscode-test/installed-extensions --install-extension artifacts/adocmd-forge-1.1.0.vsix --force
 ```
 
 ## 17. 發行

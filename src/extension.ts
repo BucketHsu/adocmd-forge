@@ -61,20 +61,6 @@ export function activate(context: vscode.ExtensionContext): {
       ),
     }),
   );
-  const previewManager = new PreviewManager({
-    extensionUri: context.extensionUri,
-    openLink: async (documentUri, href): Promise<void> => {
-      await linkOpener.open(documentUri, href);
-    },
-    outputChannel,
-    renderer: (request, signal): Promise<RenderResult> => (
-      rendererWorkerService.render(request, signal)
-    ),
-  });
-
-  const imageProviders = registerImageProviders(commandExecutor);
-  const outlineRegistration = registerOutlineProvider(commandExecutor);
-  const diagnosticRegistration = registerLinkDiagnostics(commandExecutor, outputChannel);
   const exportRegistration = registerExportCommands(
     commandExecutor,
     (request, signal): Promise<RenderResult> => (
@@ -82,6 +68,29 @@ export function activate(context: vscode.ExtensionContext): {
     ),
     outputChannel,
   );
+  const previewManager = new PreviewManager({
+    extensionUri: context.extensionUri,
+    exportDocument: async (documentUri, format): Promise<void> => {
+      await exportRegistration.provider.exportDocument(documentUri, format);
+    },
+    exportPdf: async (documentUri): Promise<void> => {
+      await exportRegistration.pdfProvider.exportDocument(documentUri);
+    },
+    openLink: async (documentUri, href): Promise<void> => {
+      await linkOpener.open(documentUri, href);
+    },
+    outputChannel,
+    renderer: (request, signal): Promise<RenderResult> => (
+      rendererWorkerService.render(request, signal)
+    ),
+    runToolbarAction: (title, action): Promise<void> => (
+      commandExecutor.run(title, action)
+    ),
+  });
+
+  const imageProviders = registerImageProviders(commandExecutor);
+  const outlineRegistration = registerOutlineProvider(commandExecutor);
+  const diagnosticRegistration = registerLinkDiagnostics(commandExecutor, outputChannel);
   context.subscriptions.push(
     outputChannel,
     previewManager,

@@ -23,6 +23,7 @@ export const EXPORT_PDF_COMMAND = 'adocmdForge.exportPdf';
 
 export interface ExportRegistration {
   readonly disposables: readonly vscode.Disposable[];
+  readonly pdfProvider: PdfExportProvider;
   readonly provider: ExportProvider;
 }
 
@@ -37,11 +38,17 @@ export class ExportProvider implements vscode.Disposable {
   public async exportActive(
     format: ExportFormat,
     destination?: vscode.Uri,
+    documentUri?: vscode.Uri,
   ): Promise<ExportOutput | undefined> {
     if (this.disposed) {
       throw new Error('HTML 匯出服務已停止。');
     }
-    const editor = vscode.window.activeTextEditor;
+    const editor = documentUri === undefined
+      ? vscode.window.activeTextEditor
+      : await vscode.window.showTextDocument(documentUri, {
+        preserveFocus: true,
+        preview: false,
+      });
     if (editor === undefined) {
       throw new Error('請先開啟要匯出的 AsciiDoc 或 Markdown 文件。');
     }
@@ -113,6 +120,14 @@ export class ExportProvider implements vscode.Disposable {
     return result;
   }
 
+  public async exportDocument(
+    documentUri: vscode.Uri,
+    format: ExportFormat,
+    destination?: vscode.Uri,
+  ): Promise<ExportOutput | undefined> {
+    return this.exportActive(format, destination, documentUri);
+  }
+
   public dispose(): void {
     this.disposed = true;
   }
@@ -174,7 +189,7 @@ export function registerExportCommands(
       },
     ),
   ];
-  return { disposables, provider };
+  return { disposables, pdfProvider, provider };
 }
 
 class VscodeExportFileSystem implements ExportFileSystem {

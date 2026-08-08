@@ -32,6 +32,11 @@ let windowScrollToMock: ReturnType<typeof vi.fn>;
 describe('PreviewRuntime', (): void => {
   beforeEach((): void => {
     document.body.innerHTML = [
+      '<header id="preview-toolbar">',
+      '<button type="button" data-toolbar-action="formatBold"><span>B</span></button>',
+      '<button type="button" data-toolbar-action="exportPdf">PDF</button>',
+      '<button type="button" data-toolbar-action="invalidAction">Invalid</button>',
+      '</header>',
       '<div id="preview-status" hidden></div>',
       '<main id="preview-content"></main>',
     ].join('');
@@ -97,6 +102,43 @@ describe('PreviewRuntime', (): void => {
       {
         type: 'rendered',
         revision: 2,
+      },
+    ]);
+    harness.runtime.dispose();
+  });
+
+  it('posts toolbar actions and ignores unknown controls', (): void => {
+    const harness = createRuntimeHarness();
+    harness.runtime.start();
+    harness.postedMessages.splice(0);
+
+    document.querySelector<HTMLButtonElement>(
+      '[data-toolbar-action="formatBold"] span',
+    )?.dispatchEvent(new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+    }));
+    document.querySelector<HTMLButtonElement>(
+      '[data-toolbar-action="invalidAction"]',
+    )?.dispatchEvent(new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+    }));
+    document.querySelector<HTMLButtonElement>(
+      '[data-toolbar-action="exportPdf"]',
+    )?.dispatchEvent(new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+    }));
+
+    expect(harness.postedMessages).toEqual([
+      {
+        type: 'toolbarAction',
+        action: 'formatBold',
+      },
+      {
+        type: 'toolbarAction',
+        action: 'exportPdf',
       },
     ]);
     harness.runtime.dispose();
@@ -525,9 +567,11 @@ function createRuntimeHarness(
 ): RuntimeHarness {
   const contentElement = document.getElementById('preview-content');
   const statusElement = document.getElementById('preview-status');
+  const toolbarElement = document.getElementById('preview-toolbar');
   if (
     !(contentElement instanceof HTMLElement)
     || !(statusElement instanceof HTMLElement)
+    || !(toolbarElement instanceof HTMLElement)
   ) {
     throw new Error('Preview test shell is incomplete.');
   }
@@ -547,7 +591,13 @@ function createRuntimeHarness(
   return {
     contentElement,
     postedMessages,
-    runtime: new PreviewRuntime(api, contentElement, statusElement, state),
+    runtime: new PreviewRuntime(
+      api,
+      contentElement,
+      statusElement,
+      state,
+      toolbarElement,
+    ),
     savedStates,
   };
 }

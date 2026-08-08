@@ -45,6 +45,14 @@ const fakeWindow = {
   }),
   showWarningMessage: vi.fn((): Promise<string | undefined> => Promise.resolve(undefined)),
   showInformationMessage: vi.fn((): Promise<string | undefined> => Promise.resolve(undefined)),
+  showTextDocument: vi.fn((uri: FakeUri): Promise<{
+    readonly document: ReturnType<typeof createDocument>;
+  }> => Promise.resolve({
+    document: createDocument(
+      uri.fsPath.endsWith('.adoc') ? 'asciidoc' : 'markdown',
+      uri,
+    ),
+  })),
 };
 const fakeWorkspace = {
   isTrusted: true,
@@ -139,6 +147,15 @@ describe('ExportProvider', (): void => {
     fakeWindow.showWarningMessage.mockResolvedValue(undefined);
     fakeWindow.showInformationMessage.mockReset();
     fakeWindow.showInformationMessage.mockResolvedValue(undefined);
+    fakeWindow.showTextDocument.mockReset();
+    fakeWindow.showTextDocument.mockImplementation((uri: FakeUri): Promise<{
+      readonly document: ReturnType<typeof createDocument>;
+    }> => Promise.resolve({
+      document: createDocument(
+        uri.fsPath.endsWith('.adoc') ? 'asciidoc' : 'markdown',
+        uri,
+      ),
+    }));
   });
 
   it('validates active editor, trust and local workspace before exporting', async (): Promise<void> => {
@@ -183,6 +200,29 @@ describe('ExportProvider', (): void => {
     expect(service.export).toHaveBeenNthCalledWith(2, expect.objectContaining({ format: 'standalone-html' }));
     expect(service.export).toHaveBeenNthCalledWith(3, expect.objectContaining({ format: 'embedded-html' }));
     expect(fakeWindow.showInformationMessage).toHaveBeenCalledTimes(3);
+  });
+
+  it('exports a specified document even when the preview owns focus', async (): Promise<void> => {
+    const service = createService();
+    const provider = new ExportProvider(service as never);
+    fakeWindow.activeTextEditor = undefined;
+
+    await provider.exportDocument(
+      asVscodeUri(new FakeUri('/workspace/docs/from-preview.md')),
+      'html',
+      asVscodeUri(new FakeUri('/workspace/out/from-preview.html')),
+    );
+
+    expect(fakeWindow.showTextDocument).toHaveBeenCalledWith(
+      expect.objectContaining({ fsPath: '/workspace/docs/from-preview.md' }),
+      { preserveFocus: true, preview: false },
+    );
+    expect(service.export).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourcePath: '/workspace/docs/from-preview.md',
+        format: 'html',
+      }),
+    );
   });
 
   it('protects existing files and directories with an explicit confirmation', async (): Promise<void> => {
@@ -241,6 +281,31 @@ describe('ExportProvider', (): void => {
     expect(fakeWindow.showInformationMessage).toHaveBeenCalledWith(
       'PDF 已匯出：guide.pdf',
     );
+  });
+
+  it('exports PDF for a specified document when the preview owns focus', async (): Promise<void> => {
+    const run = vi.fn((options: {
+      readonly args: readonly string[];
+    }): Promise<void> => {
+      files.set('/workspace/out/from-preview.pdf', 'file');
+      expect(options.args).toContain('/workspace/docs/from-preview.adoc');
+      return Promise.resolve();
+    });
+    fakeWindow.activeTextEditor = undefined;
+    const provider = new PdfExportProvider({
+      runner: { run },
+    });
+
+    await provider.exportDocument(
+      asVscodeUri(new FakeUri('/workspace/docs/from-preview.adoc')),
+      asVscodeUri(new FakeUri('/workspace/out/from-preview.pdf')),
+    );
+
+    expect(fakeWindow.showTextDocument).toHaveBeenCalledWith(
+      expect.objectContaining({ fsPath: '/workspace/docs/from-preview.adoc' }),
+      { preserveFocus: true, preview: false },
+    );
+    expect(run).toHaveBeenCalledOnce();
   });
 
   it('registers all export commands through the command executor', (): void => {
