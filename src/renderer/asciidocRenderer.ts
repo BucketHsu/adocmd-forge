@@ -193,19 +193,19 @@ const ATTRIBUTE_CONTROL_CHARACTER_PATTERN = /[\u0000-\u001F\u007F]/u;
 const ATTRIBUTE_URI_SCHEME_PATTERN = /^[a-z][a-z\d+.-]*:/iu;
 
 /**
- * 讀取文件層級的 AsciiDoc stylesheet 宣告，供受信任的本機預覽載入。
+ * 讀取已儲存文件的 AsciiDoc stylesheet 宣告，供本機預覽載入。
  *
  * Asciidoctor 的 embedded output 不會自行產生 stylesheet link，因此必須
  * 將 `stylesdir` 與 `stylesheet` 解析成候選檔案路徑，再由 PreviewSession
- * 依 workspace root、實體檔案與 Webview resource policy 做第二次檢查。
+ * 依 workspace root、實體檔案與 Webview resource policy 做第二次檢查；
+ * include 的信任條件不會因此被放寬。
  */
 function resolveAsciiDocStylesheets(
   document: Document,
   request: RenderRequest,
 ): readonly string[] {
   if (
-    request.allowLocalIncludes !== true
-    || request.sourcePath === undefined
+    request.sourcePath === undefined
     || request.sourcePath.length === 0
   ) {
     return [];

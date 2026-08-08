@@ -349,7 +349,7 @@ describe('document renderer', (): void => {
     ]);
   });
 
-  it('supports stylesdir and does not expose stylesheets for untrusted or untitled documents', async (): Promise<void> => {
+  it('supports stylesdir for saved documents and keeps untitled documents stylesheet-free', async (): Promise<void> => {
     const source = [
       ':stylesdir: ../stylesheets',
       ':stylesheet: colony.css',
@@ -378,7 +378,9 @@ describe('document renderer', (): void => {
     expect(trustedResult.stylesheets).toEqual([
       path.join(path.dirname(path.dirname(sourcePath)), 'stylesheets', 'colony.css'),
     ]);
-    expect(untrustedResult.stylesheets).toBeUndefined();
+    expect(untrustedResult.stylesheets).toEqual([
+      path.join(path.dirname(path.dirname(sourcePath)), 'stylesheets', 'colony.css'),
+    ]);
     expect(untitledResult.stylesheets).toBeUndefined();
   });
 

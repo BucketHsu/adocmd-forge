@@ -177,6 +177,11 @@ describe('isWebviewToExtensionMessage', () => {
       revision: Number.MAX_SAFE_INTEGER,
     },
     {
+      type: 'stylesheetStatus',
+      href: 'https://file%2B.vscode-resource.vscode-cdn.net/workspace/stylesheets/colony.css',
+      status: 'loaded',
+    },
+    {
       type: 'scroll',
       sourceLine: 0,
       sequence: 0,
@@ -209,6 +214,16 @@ describe('isWebviewToExtensionMessage', () => {
     {
       type: 'rendered',
       revision: -1,
+    },
+    {
+      type: 'stylesheetStatus',
+      href: 'https://file%2B.vscode-resource.vscode-cdn.net/workspace/stylesheets/colony.css',
+      status: 'pending',
+    },
+    {
+      type: 'stylesheetStatus',
+      href: 'https://example.com/colony.css',
+      status: 'loaded',
     },
     {
       type: 'scroll',

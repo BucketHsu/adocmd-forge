@@ -341,6 +341,20 @@ export class PreviewRuntime {
       const element = document.createElement('link');
       element.setAttribute('rel', 'stylesheet');
       element.setAttribute(DOCUMENT_STYLESHEET_ATTRIBUTE, 'true');
+      element.addEventListener('load', () => {
+        this.postMessage({
+          type: 'stylesheetStatus',
+          href: stylesheet,
+          status: 'loaded',
+        });
+      }, { once: true });
+      element.addEventListener('error', () => {
+        this.postMessage({
+          type: 'stylesheetStatus',
+          href: stylesheet,
+          status: 'error',
+        });
+      }, { once: true });
       element.href = stylesheet;
       document.head.append(element);
       elements.push(element);

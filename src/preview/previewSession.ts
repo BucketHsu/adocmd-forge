@@ -36,6 +36,7 @@ export type PreviewRenderer = (
 
 export interface PreviewSessionOptions {
   readonly allowedResourceRootPaths: readonly string[];
+  readonly allowedStylesheetRootPaths: readonly string[];
   readonly documentUri: vscode.Uri;
   readonly extensionUri: vscode.Uri;
   readonly onActivate: (session: PreviewSession) => void;
@@ -58,6 +59,7 @@ export interface PreviewSessionOptions {
  */
 export class PreviewSession implements vscode.Disposable {
   private allowedResourceRootPaths: readonly string[];
+  private allowedStylesheetRootPaths: readonly string[];
   private activeRenderController: AbortController | undefined;
   private disposed = false;
   private lastEditorSourceLine: number | undefined;
@@ -72,6 +74,7 @@ export class PreviewSession implements vscode.Disposable {
 
   public constructor(private readonly options: PreviewSessionOptions) {
     this.allowedResourceRootPaths = options.allowedResourceRootPaths;
+    this.allowedStylesheetRootPaths = options.allowedStylesheetRootPaths;
     this.documentUri = options.documentUri;
     this.panel = options.panel;
 
@@ -138,9 +141,11 @@ export class PreviewSession implements vscode.Disposable {
 
   public updateResourceRoots(
     allowedResourceRootPaths: readonly string[],
+    allowedStylesheetRootPaths: readonly string[],
     localResourceRoots: readonly vscode.Uri[],
   ): void {
     this.allowedResourceRootPaths = allowedResourceRootPaths;
+    this.allowedStylesheetRootPaths = allowedStylesheetRootPaths;
     this.panel.webview.options = {
       ...this.panel.webview.options,
       localResourceRoots,
@@ -250,6 +255,17 @@ export class PreviewSession implements vscode.Disposable {
         result.stylesheets,
         request.sourcePath,
       );
+      if (
+        result.stylesheets !== undefined
+        && result.stylesheets.length > 0
+        && stylesheets.length === 0
+      ) {
+        this.options.outputChannel.appendLine(
+          `[${new Date().toISOString()}] Preview stylesheet skipped for `
+          + `${this.getDocumentLogLabel()} (workspaceTrusted=`
+          + `${String(vscode.workspace.isTrusted)}).`,
+        );
+      }
       this.postMessage({
         type: 'render',
         revision: requestedRevision,
@@ -331,6 +347,17 @@ export class PreviewSession implements vscode.Disposable {
             }
           }
           if (resolution.kind === 'local') {
+            if (!vscode.workspace.isTrusted) {
+              const safeAttributes = {
+                ...attributes,
+              };
+              delete safeAttributes.src;
+              return {
+                tagName,
+                attribs: safeAttributes,
+              };
+            }
+
             const physicalImagePath = this.resolvePhysicalImagePath(
               resolution.path,
               physicalRootPaths,
@@ -402,17 +429,16 @@ export class PreviewSession implements vscode.Disposable {
       stylesheetPaths === undefined
       || stylesheetPaths.length === 0
       || sourceFilePath === undefined
-      || !vscode.workspace.isTrusted
     ) {
       return [];
     }
 
-    const physicalRootPaths = this.getPhysicalRootPaths();
+    const physicalRootPaths = this.getPhysicalStylesheetRootPaths();
     const sources: string[] = [];
     const seen = new Set<string>();
     for (const stylesheetPath of stylesheetPaths) {
       const requestedPath = resolvePreviewStylesheet(
-        this.allowedResourceRootPaths,
+        this.allowedStylesheetRootPaths,
         stylesheetPath,
       );
       if (requestedPath === undefined) {
@@ -473,6 +499,16 @@ export class PreviewSession implements vscode.Disposable {
     });
   }
 
+  private getPhysicalStylesheetRootPaths(): readonly string[] {
+    return this.allowedStylesheetRootPaths.flatMap((rootPath) => {
+      try {
+        return [realpathSync(rootPath)];
+      } catch {
+        return [];
+      }
+    });
+  }
+
   private async handleWebviewMessage(message: unknown): Promise<void> {
     if (this.disposed || !isWebviewToExtensionMessage(message)) {
       return;
@@ -485,6 +521,14 @@ export class PreviewSession implements vscode.Disposable {
         break;
 
       case 'rendered':
+        break;
+
+      case 'stylesheetStatus':
+        this.options.outputChannel.appendLine(
+          `[${new Date().toISOString()}] Preview stylesheet `
+          + `${message.status} for ${this.getDocumentLogLabel()}: `
+          + message.href,
+        );
         break;
 
       case 'scroll':

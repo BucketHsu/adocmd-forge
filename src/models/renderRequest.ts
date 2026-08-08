@@ -5,7 +5,8 @@ import type { DocumentKind } from './documentKind';
  */
 export interface RenderRequest {
   /**
-   * 僅能由已信任工作區的 Extension Host adapter 開啟。
+   * 僅能由已信任工作區的 Extension Host adapter 開啟本機 include。
+   * 文件層級 stylesheet 不受此旗標限制，會由預覽資源邊界另外驗證。
    */
   readonly allowLocalIncludes?: boolean;
   /**

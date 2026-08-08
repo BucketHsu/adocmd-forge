@@ -2,7 +2,7 @@
   "name": "adocmd-forge",
   "displayName": "AdocMD Forge",
   "description": "Secure live preview for AsciiDoc and Markdown with synchronized scrolling and VS Code theme support.",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "publisher": "BucketHsu",
   "license": "MIT",
   "icon": "images/icon.png",
@@ -33,7 +33,7 @@
   "capabilities": {
     "untrustedWorkspaces": {
       "supported": "limited",
-      "description": "Preview rendering remains available, but local includes, local images, local link navigation, and remote images are disabled until the workspace is trusted."
+      "description": "Preview rendering and local document stylesheets remain available, but local includes, local images, local link navigation, and remote images are disabled until the workspace is trusted."
     }
   },
   "main": "./dist/extension.js",

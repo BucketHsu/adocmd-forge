@@ -32,6 +32,12 @@ export interface PreviewRenderedMessage {
   readonly revision: number;
 }
 
+export interface PreviewStylesheetStatusMessage {
+  readonly type: 'stylesheetStatus';
+  readonly href: string;
+  readonly status: 'loaded' | 'error';
+}
+
 export interface PreviewScrollMessage {
   readonly type: 'scroll';
   readonly sourceLine: number;
@@ -62,6 +68,7 @@ export interface PreviewToolbarActionMessage {
 export type WebviewToExtensionMessage =
   | PreviewReadyMessage
   | PreviewRenderedMessage
+  | PreviewStylesheetStatusMessage
   | PreviewScrollMessage
   | PreviewOpenLinkMessage
   | PreviewToolbarActionMessage;
@@ -311,6 +318,15 @@ export function isWebviewToExtensionMessage(
           'revision',
         ])
           && isNonNegativeSafeInteger(value.revision);
+
+      case 'stylesheetStatus':
+        return hasExactKeys(value, [
+          'type',
+          'href',
+          'status',
+        ])
+          && isSafeStylesheetUri(value.href)
+          && (value.status === 'loaded' || value.status === 'error');
 
       case 'scroll':
         return hasExactKeys(value, [

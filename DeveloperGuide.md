@@ -170,7 +170,7 @@ Webview runtime 與 Extension Host 是不同信任邊界。
 - Webview 收到訊息後仍要做 runtime validation。
 - Webview 送出的 URI、行號、revision 與 command 不可直接信任。
 - 本機資源只透過 `webview.asWebviewUri()`。
-- AsciiDoc `:stylesheet:`／`:stylesdir:` 只在受信任且已儲存的本機文件啟用；候選路徑必須通過 workspace root、realpath、`.css` 檔案與 `localResourceRoots` 檢查。
+- AsciiDoc `:stylesheet:`／`:stylesdir:` 只對已儲存的本機文件啟用；候選路徑必須通過 workspace root、realpath、`.css` 檔案與 `localResourceRoots` 檢查。未受信任工作區仍可套用這個文件 CSS，但 include、圖片、連結導航與遠端圖片維持停用。
 - 文件 stylesheet 由 Webview runtime 建立與清理 `<link>`，不把 CSS 內容內嵌到訊息或 inline script；訊息驗證同時支援舊式 Webview scheme 與 VS Code 1.97+ 的 `https://*.vscode-resource.vscode-cdn.net` URI，仍拒絕一般外部 HTTPS。
 - 樣式使用 VS Code theme token，並驗證高對比模式。
 - 預覽面板工具列只使用靜態 `data-toolbar-action` 按鈕，負責版面、重新整理、語法說明與匯出；Webview runtime 會把動作轉成白名單訊息，Extension Host 再以來源文件 URI 執行實際命令。
@@ -225,7 +225,7 @@ npm run package:vsix
 安裝測試使用隔離目錄，避免變更開發者日常 VS Code：
 
 ```powershell
-code --extensions-dir .vscode-test/installed-extensions --install-extension artifacts/adocmd-forge-1.2.2.vsix --force
+code --extensions-dir .vscode-test/installed-extensions --install-extension artifacts/adocmd-forge-1.2.3.vsix --force
 ```
 
 ## 17. 發行

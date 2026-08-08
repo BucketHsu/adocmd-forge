@@ -6,6 +6,13 @@
 
 目前沒有尚未歸入版本的變更。
 
+## 1.2.3 - 2026-08-08
+
+### Fixed
+
+- 修正 Open Preview 不會套用文件 `:stylesheet:`／`:stylesdir:` 的問題；已儲存文件的本機 CSS 不再因 Workspace Trust 被直接略過，仍會限制於文件／工作區範圍與 Webview 安全資源政策。
+- 保留未受信任 workspace 對 include、圖片、連結與遠端圖片的限制，並在 Output Channel 記錄 stylesheet 實際載入或失敗狀態，方便診斷 VS Code Webview 資源問題。
+
 ## 1.2.2 - 2026-08-08
 
 ### Fixed

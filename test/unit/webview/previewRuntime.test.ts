@@ -163,6 +163,12 @@ describe('PreviewRuntime', (): void => {
     expect(stylesheetLinks[0]?.getAttribute('href')).toBe(
       'https://file%2B.vscode-resource.vscode-cdn.net/workspace/stylesheets/colony.css',
     );
+    stylesheetLinks[0]?.dispatchEvent(new Event('load'));
+    expect(harness.postedMessages).toContainEqual({
+      type: 'stylesheetStatus',
+      href: 'https://file%2B.vscode-resource.vscode-cdn.net/workspace/stylesheets/colony.css',
+      status: 'loaded',
+    });
 
     sendExtensionMessage({
       type: 'render',
