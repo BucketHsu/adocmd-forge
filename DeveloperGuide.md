@@ -177,7 +177,7 @@ Webview runtime 與 Extension Host 是不同信任邊界。
 
 ## 13.1 浮動格式面板與 PDF
 
-格式命令由 `Show Formatting Palette` Quick Pick 浮動面板與選取文字右鍵選單提供，不在編輯器標題列常駐七個按鈕；命令不直接拼接游標文字，先由 `textFormattingCore` 以 offset 計算結果，再由 adapter 套用單一 edit，避免多游標造成行號與選取位置漂移。Preview Webview 不提供操作工具列，避免使用者切換焦點後失去來源選取範圍。
+格式命令由 `Show Formatting Palette` Quick Pick 浮動面板與選取文字右鍵選單提供，不在編輯器標題列常駐七個按鈕；命令不直接拼接游標文字，先由 `textFormattingCore` 以 offset 計算結果，再由 adapter 套用單一 edit，避免多游標造成行號與選取位置漂移。Preview Webview 不提供操作工具列，避免使用者切換焦點後失去來源選取範圍。所有 `editor/title` 與 `view/title` 操作必須宣告 VS Code Codicon，命令 `title` 則提供滑鼠提示與命令面板文字。
 
 `Export PDF` 只適用已儲存、受信任本機工作區的 AsciiDoc。執行前驗證來源／目的地 workspace 邊界與覆寫確認，並使用不經 shell 的外部程序；使用者需在設定中提供本機 `asciidoctor-pdf` 與必要的 `asciidoctor-diagram` 等元件。
 
@@ -225,7 +225,7 @@ npm run package:vsix
 安裝測試使用隔離目錄，避免變更開發者日常 VS Code：
 
 ```powershell
-code --extensions-dir .vscode-test/installed-extensions --install-extension artifacts/adocmd-forge-1.2.5.vsix --force
+code --extensions-dir .vscode-test/installed-extensions --install-extension artifacts/adocmd-forge-1.2.6.vsix --force
 ```
 
 ## 17. 發行

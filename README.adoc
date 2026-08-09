@@ -8,7 +8,7 @@
 image::images/icon.png[AdocMD Forge,128,128]
 
 AdocMD Forge 是提供 AsciiDoc 與 Markdown 撰寫體驗的 VS Code 擴充套件。
-`1.2.5` 是可安裝的文件工作台版本，除了安全的即時預覽、雙向同步捲動、AsciiDoc 語法輔助與圖片工作流，也提供目前文件的 Outline 標題樹、點擊跳轉、本機引用診斷、HTML／PDF 匯出與浮動格式面板。
+`1.2.6` 是可安裝的文件工作台版本，除了安全的即時預覽、雙向同步捲動、AsciiDoc 語法輔助與圖片工作流，也提供目前文件的 Outline 標題樹、點擊跳轉、本機引用診斷、HTML／PDF 匯出與浮動格式面板。
 
 圖片貼上使用 VS Code 1.97 以上的 `DocumentPasteEditProvider`。只有在 VS Code 與作業系統將剪貼簿圖片以 `image/*` 或 `files` DataTransfer 提供給擴充套件時，才會攔截並處理圖片；若平台未提供二進位剪貼簿資料，請改用拖曳或 `Copy Image` 指令。
 
@@ -17,7 +17,7 @@ AdocMD Forge 是提供 AsciiDoc 與 Markdown 撰寫體驗的 VS Code 擴充套�
 * AsciiDoc：`.adoc`、`.asciidoc`
 * Markdown：`.md`
 
-== 1.2.5 功能
+== 1.2.6 功能
 
 === 即時預覽
 
@@ -33,6 +33,7 @@ AdocMD Forge 是提供 AsciiDoc 與 Markdown 撰寫體驗的 VS Code 擴充套�
 * `Show Formatting Palette` 使用 VS Code Quick Pick 顯示浮動格式面板，提供粗體、斜體、注目、等寬、刪除線、上標與下標，不在來源編輯器右上角常駐七個格式按鈕。
 * 選取文字後可從右鍵選單開啟浮動格式面板或直接套用個別格式；有選取文字時包覆內容，沒有選取文字時插入成對標記並將游標放在中間。
 * Preview Webview 不顯示工具列；版面切換、重新整理、語法說明、HTML 與 PDF 匯出維持由來源編輯器標題列操作。
+* 來源編輯器與 Outline 標題列操作使用 VS Code Codicon，滑鼠停留時以命令標題顯示功能說明，不占用右上角的文字寬度。
 * Preview 使用獨立外層內距，文件 stylesheet 即使設定 `body { padding: 0 }`，內容也不會貼齊面板邊緣。
 * 可切換僅文字、文字／預覽分割與僅預覽版面。
 
@@ -204,7 +205,7 @@ AdocMD Forge 是提供 AsciiDoc 與 Markdown 撰寫體驗的 VS Code 擴充套�
 
 [source,bash]
 ----
-code --install-extension artifacts/adocmd-forge-1.2.5.vsix
+code --install-extension artifacts/adocmd-forge-1.2.6.vsix
 ----
 
 === 使用 VS Code
@@ -212,7 +213,7 @@ code --install-extension artifacts/adocmd-forge-1.2.5.vsix
 . 開啟 Extensions 檢視。
 . 選擇右上角的 `...`。
 . 選擇 `Install from VSIX...`。
-. 選取 `adocmd-forge-1.2.5.vsix`。
+. 選取 `adocmd-forge-1.2.6.vsix`。
 
 == 使用方式
 
@@ -277,7 +278,7 @@ npm run verify
 
 完整開發說明請參閱 link:DeveloperGuide.md[DeveloperGuide.md]，架構決策請參閱 link:Architecture.md[Architecture.md]。
 
-== 1.2.5 已知限制
+== 1.2.6 已知限制
 
 HTML 匯出只讀取位於目前受信任 workspace 內的本機圖片；遠端圖片不會由匯出流程發出網路請求，無法讀取的圖片會移除 `src`，保留其替代文字。輸出檔案不可覆蓋來源文件，且使用者取消儲存或覆寫確認時不會寫入檔案。
 

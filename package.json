@@ -2,7 +2,7 @@
   "name": "adocmd-forge",
   "displayName": "AdocMD Forge",
   "description": "Secure live preview for AsciiDoc and Markdown with synchronized scrolling and VS Code theme support.",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "publisher": "BucketHsu",
   "license": "MIT",
   "icon": "images/icon.png",
@@ -67,12 +67,14 @@
         "command": "adocmdForge.openPreview",
         "title": "Open Preview",
         "category": "AdocMD Forge",
-        "enablement": "editorLangId == markdown || editorLangId == asciidoc"
+        "enablement": "editorLangId == markdown || editorLangId == asciidoc",
+        "icon": "$(open-preview)"
       },
       {
         "command": "adocmdForge.refreshPreview",
         "title": "Refresh Preview",
-        "category": "AdocMD Forge"
+        "category": "AdocMD Forge",
+        "icon": "$(refresh)"
       },
       {
         "command": "adocmdForge.previewSource",
@@ -145,42 +147,49 @@
         "command": "adocmdForge.openSyntaxGuide",
         "title": "Open AsciiDoc Syntax Guide",
         "category": "AdocMD Forge",
-        "enablement": "editorLangId == asciidoc"
+        "enablement": "editorLangId == asciidoc",
+        "icon": "$(book)"
       },
       {
         "command": "adocmdForge.copyImage",
         "title": "Copy Image",
         "category": "AdocMD Forge",
-        "enablement": "editorLangId == markdown || editorLangId == asciidoc"
+        "enablement": "editorLangId == markdown || editorLangId == asciidoc",
+        "icon": "$(file-media)"
       },
       {
         "command": "adocmdForge.refreshOutline",
         "title": "Refresh Outline",
-        "category": "AdocMD Forge"
+        "category": "AdocMD Forge",
+        "icon": "$(refresh)"
       },
       {
         "command": "adocmdForge.validateLinks",
         "title": "Validate Links",
         "category": "AdocMD Forge",
-        "enablement": "editorLangId == markdown || editorLangId == asciidoc"
+        "enablement": "editorLangId == markdown || editorLangId == asciidoc",
+        "icon": "$(checklist)"
       },
       {
         "command": "adocmdForge.exportHtml",
         "title": "Export HTML",
         "category": "AdocMD Forge",
-        "enablement": "editorLangId == markdown || editorLangId == asciidoc"
+        "enablement": "editorLangId == markdown || editorLangId == asciidoc",
+        "icon": "$(file-code)"
       },
       {
         "command": "adocmdForge.exportStandaloneHtml",
         "title": "Export Standalone HTML",
         "category": "AdocMD Forge",
-        "enablement": "editorLangId == markdown || editorLangId == asciidoc"
+        "enablement": "editorLangId == markdown || editorLangId == asciidoc",
+        "icon": "$(globe)"
       },
       {
         "command": "adocmdForge.exportEmbeddedHtml",
         "title": "Export Embedded HTML",
         "category": "AdocMD Forge",
-        "enablement": "editorLangId == markdown || editorLangId == asciidoc"
+        "enablement": "editorLangId == markdown || editorLangId == asciidoc",
+        "icon": "$(code)"
       },
       {
         "command": "adocmdForge.exportPdf",

@@ -8,6 +8,8 @@ interface PackageManifest {
   readonly contributes?: {
     readonly commands?: readonly {
       readonly command?: string;
+      readonly icon?: string;
+      readonly title?: string;
     }[];
     readonly configuration?: {
       readonly properties?: Record<string, unknown>;
@@ -44,7 +46,7 @@ describe('extension manifest', (): void => {
     expect(manifest.name).toBe('adocmd-forge');
     expect(manifest.displayName).toBe('AdocMD Forge');
     expect(manifest.publisher).toBe('BucketHsu');
-    expect(manifest.version).toBe('1.2.5');
+    expect(manifest.version).toBe('1.2.6');
     expect(manifest.description).toBe(
       'Secure live preview for AsciiDoc and Markdown with synchronized '
       + 'scrolling and VS Code theme support.',
@@ -227,5 +229,30 @@ describe('extension manifest', (): void => {
       group: '2_modification@0',
       when: 'editorLangId == markdown || editorLangId == asciidoc',
     });
+  });
+
+  it('uses icons with text tooltips for every title-bar action', async (): Promise<void> => {
+    const manifest = await readManifest();
+    const commands = new Map(
+      manifest.contributes?.commands?.map((command) => [
+        command.command,
+        command,
+      ]),
+    );
+    const titleBarMenus = [
+      ...(manifest.contributes?.menus?.['editor/title'] as readonly {
+        readonly command?: string;
+      }[] | undefined ?? []),
+      ...(manifest.contributes?.menus?.['view/title'] as readonly {
+        readonly command?: string;
+      }[] | undefined ?? []),
+    ];
+
+    for (const menu of titleBarMenus) {
+      const command = commands.get(menu.command);
+      expect(command?.icon, menu.command).toMatch(/^\$\([a-z-]+\)$/u);
+      expect(command?.title, menu.command).toBeTypeOf('string');
+      expect(command?.title, menu.command).toMatch(/\S/u);
+    }
   });
 });
