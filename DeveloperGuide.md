@@ -183,6 +183,8 @@ Webview runtime 與 Extension Host 是不同信任邊界。
 
 `editor/title` 執行命令時會自動傳入目前文件 URI。匯出命令必須先以支援的來源副檔名辨識此參數；只有非來源文件 URI 才能作為程式化呼叫指定的輸出位置，避免將 `.adoc`／`.md` 誤判成匯出目的地。
 
+Windows 的 RubyGems CLI 通常同時提供無副檔名腳本與 `.bat` 包裝檔，但 Node `spawn` 無法直接執行它們。`asciidocCli` 以 `where.exe` 找出命令與 `ruby.exe`，只接受位於相同 Ruby `bin` 目錄的配對，並直接呼叫 Ruby 腳本；不得為了支援 `.bat` 改用 `shell: true`。
+
 ## 14. 相依套件
 
 新增套件前確認：
@@ -227,7 +229,7 @@ npm run package:vsix
 安裝測試使用隔離目錄，避免變更開發者日常 VS Code：
 
 ```powershell
-code --extensions-dir .vscode-test/installed-extensions --install-extension artifacts/adocmd-forge-1.2.7.vsix --force
+code --extensions-dir .vscode-test/installed-extensions --install-extension artifacts/adocmd-forge-1.2.8.vsix --force
 ```
 
 ## 17. 發行

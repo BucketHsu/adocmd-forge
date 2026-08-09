@@ -6,6 +6,13 @@
 
 目前沒有尚未歸入版本的變更。
 
+## 1.2.8 - 2026-08-09
+
+### Fixed
+
+- 修正 Windows Node／VS Code 無法直接 `spawn` RubyGems 產生的 `asciidoctor-pdf`／`.bat`，即使命令已安裝且位於 PATH 仍回傳 `ENOENT` 的問題。
+- Windows 會透過 `where.exe` 配對同一 Ruby `bin` 目錄中的 `ruby.exe` 與 gem 腳本，再以無 shell 方式安全執行；找不到命令時顯示可操作的安裝與設定提示。
+
 ## 1.2.7 - 2026-08-09
 
 ### Fixed
