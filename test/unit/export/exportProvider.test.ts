@@ -325,4 +325,39 @@ describe('ExportProvider', (): void => {
     }
     expect((registration.provider as unknown as { disposed: boolean }).disposed).toBe(true);
   });
+
+  it('treats editor title URI arguments as source documents', async (): Promise<void> => {
+    const service = createService();
+    const executor = {
+      run: vi.fn((_title: string, action: () => Promise<void>): Promise<void> => action()),
+    };
+    const registration = registerExportCommands(
+      executor,
+      (): Promise<never> => Promise.reject(new Error('not called')),
+    );
+    fakeWindow.activeTextEditor = undefined;
+
+    await commands.get('adocmdForge.exportHtml')?.(
+      asVscodeUri(new FakeUri('/workspace/docs/from-title.md')),
+    );
+    await commands.get('adocmdForge.exportPdf')?.(
+      asVscodeUri(new FakeUri('/workspace/docs/from-title.adoc')),
+    );
+
+    expect(fakeWindow.showTextDocument).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ fsPath: '/workspace/docs/from-title.md' }),
+      { preserveFocus: true, preview: false },
+    );
+    expect(fakeWindow.showTextDocument).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ fsPath: '/workspace/docs/from-title.adoc' }),
+      { preserveFocus: true, preview: false },
+    );
+    expect(fakeWindow.showSaveDialog).toHaveBeenCalledTimes(2);
+    expect(service.export).not.toHaveBeenCalled();
+    for (const disposable of registration.disposables) {
+      disposable.dispose();
+    }
+  });
 });

@@ -6,7 +6,7 @@
 
 ## 2. 產品範圍
 
-AdocMD Forge 是 VS Code 文件工作台。1.2.6 正式版支援：
+AdocMD Forge 是 VS Code 文件工作台。1.2.7 正式版支援：
 
 - AsciiDoc：`.adoc`、`.asciidoc`
 - Markdown：`.md`
@@ -20,7 +20,7 @@ AdocMD Forge 是 VS Code 文件工作台。1.2.6 正式版支援：
 - HTML、Standalone HTML 與 Embedded HTML 匯出；三種模式共用 Renderer 與 Sanitizer
 - AsciiDoc 的本機 `asciidoctor-pdf` PDF 匯出命令整合
 
-1.2.6 發行關卡已由自動化測試、Extension Host 整合測試、VSIX 檢查與隔離安裝驗證完成；實際上架 Marketplace 仍需 Publisher 憑證與上架操作。
+1.2.7 發行關卡已由自動化測試、Extension Host 整合測試、VSIX 檢查與隔離安裝驗證完成；實際上架 Marketplace 仍需 Publisher 憑證與上架操作。
 
 DOCX、多人協作、雲端儲存與自訂 Asciidoctor extension 不屬於目前規劃範圍。
 
@@ -228,6 +228,7 @@ Provider 不負責解析完整文件或執行檔案操作；語法目錄與核�
 - 編輯器格式命令透過 Quick Pick 浮動格式面板與 `menus.editor/context` 提供；不在 `menus.editor/title` 常駐七個格式按鈕，選取文字時包覆內容，沒有選取文字時插入成對標記。
 - Preview Webview 只負責呈現文件與同步捲動，不建立操作工具列；預覽版面、重新整理、語法說明與 HTML／PDF 操作也由來源編輯器的 `menus.editor/title` 提供。
 - `editor/title` 與 `view/title` 命令一律宣告 Codicon；`title` 僅作為滑鼠提示與命令面板文字，避免標題列使用文字按鈕。
+- 匯出命令辨識 `editor/title` 自動傳入的來源文件 URI，不將它誤作目的地；非來源副檔名的 URI 仍可供整合測試與自動化指定輸出位置。
 - 格式命令由來源編輯器執行，不再依賴 Preview Panel 取得或恢復文字選取範圍。
 - 所有工具列命令仍走 `CommandExecutor`，錯誤寫入 Output Channel 並顯示可理解的通知。
 
@@ -309,7 +310,7 @@ VS Code 1.97 以上另註冊 `DocumentPasteEditProvider`，接收 `image/*`、`f
 - 涉及路徑的值在使用時再次驗證，不信任 manifest schema 即已足夠。
 - 無法在執行期間真正生效的選項不得公開。
 
-1.2.6 目前公開設定：
+1.2.7 目前公開設定：
 
 - `adocmdForge.outline.updateDelay`：預設 150 毫秒，範圍 50 至 2000 毫秒。
 - `adocmdForge.diagnostics.updateDelay`：預設 150 毫秒，範圍 50 至 2000 毫秒；Diagnostics 會在設定的延遲後重新檢查目前文件。

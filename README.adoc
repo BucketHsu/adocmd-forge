@@ -8,7 +8,7 @@
 image::images/icon.png[AdocMD Forge,128,128]
 
 AdocMD Forge 是提供 AsciiDoc 與 Markdown 撰寫體驗的 VS Code 擴充套件。
-`1.2.6` 是可安裝的文件工作台版本，除了安全的即時預覽、雙向同步捲動、AsciiDoc 語法輔助與圖片工作流，也提供目前文件的 Outline 標題樹、點擊跳轉、本機引用診斷、HTML／PDF 匯出與浮動格式面板。
+`1.2.7` 是可安裝的文件工作台版本，除了安全的即時預覽、雙向同步捲動、AsciiDoc 語法輔助與圖片工作流，也提供目前文件的 Outline 標題樹、點擊跳轉、本機引用診斷、HTML／PDF 匯出與浮動格式面板。
 
 圖片貼上使用 VS Code 1.97 以上的 `DocumentPasteEditProvider`。只有在 VS Code 與作業系統將剪貼簿圖片以 `image/*` 或 `files` DataTransfer 提供給擴充套件時，才會攔截並處理圖片；若平台未提供二進位剪貼簿資料，請改用拖曳或 `Copy Image` 指令。
 
@@ -17,7 +17,7 @@ AdocMD Forge 是提供 AsciiDoc 與 Markdown 撰寫體驗的 VS Code 擴充套�
 * AsciiDoc：`.adoc`、`.asciidoc`
 * Markdown：`.md`
 
-== 1.2.6 功能
+== 1.2.7 功能
 
 === 即時預覽
 
@@ -205,7 +205,7 @@ AdocMD Forge 是提供 AsciiDoc 與 Markdown 撰寫體驗的 VS Code 擴充套�
 
 [source,bash]
 ----
-code --install-extension artifacts/adocmd-forge-1.2.6.vsix
+code --install-extension artifacts/adocmd-forge-1.2.7.vsix
 ----
 
 === 使用 VS Code
@@ -213,7 +213,7 @@ code --install-extension artifacts/adocmd-forge-1.2.6.vsix
 . 開啟 Extensions 檢視。
 . 選擇右上角的 `...`。
 . 選擇 `Install from VSIX...`。
-. 選取 `adocmd-forge-1.2.6.vsix`。
+. 選取 `adocmd-forge-1.2.7.vsix`。
 
 == 使用方式
 
@@ -278,7 +278,7 @@ npm run verify
 
 完整開發說明請參閱 link:DeveloperGuide.md[DeveloperGuide.md]，架構決策請參閱 link:Architecture.md[Architecture.md]。
 
-== 1.2.6 已知限制
+== 1.2.7 已知限制
 
 HTML 匯出只讀取位於目前受信任 workspace 內的本機圖片；遠端圖片不會由匯出流程發出網路請求，無法讀取的圖片會移除 `src`，保留其替代文字。輸出檔案不可覆蓋來源文件，且使用者取消儲存或覆寫確認時不會寫入檔案。
 

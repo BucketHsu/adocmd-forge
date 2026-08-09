@@ -173,23 +173,47 @@ export function registerExportCommands(
     ...commands.map(([command, title, format]) => (
       vscode.commands.registerCommand(
         command,
-        async (destination?: vscode.Uri): Promise<void> => {
+        async (resource?: vscode.Uri): Promise<void> => {
           await commandExecutor.run(title, async (): Promise<void> => {
-            await provider.exportActive(format, destination);
+            const documentKind = resolveCommandDocumentKind(resource);
+            if (documentKind !== undefined && resource !== undefined) {
+              await provider.exportDocument(resource, format);
+              return;
+            }
+            await provider.exportActive(format, resource);
           });
         },
       )
     )),
     vscode.commands.registerCommand(
       EXPORT_PDF_COMMAND,
-      async (destination?: vscode.Uri): Promise<void> => {
+      async (resource?: vscode.Uri): Promise<void> => {
         await commandExecutor.run('Export PDF', async (): Promise<void> => {
-          await pdfProvider.exportActive(destination);
+          if (
+            resource !== undefined
+            && resolveCommandDocumentKind(resource) === 'asciidoc'
+          ) {
+            await pdfProvider.exportDocument(resource);
+            return;
+          }
+          await pdfProvider.exportActive(resource);
         });
       },
     ),
   ];
   return { disposables, pdfProvider, provider };
+}
+
+/**
+ * 編輯器標題列會把目前文件 URI 當成命令的第一個參數；命令面板則不會。
+ * 只有支援的來源副檔名視為文件 URI，其餘 URI 保留給自動化呼叫指定目的地。
+ */
+function resolveCommandDocumentKind(
+  resource: vscode.Uri | undefined,
+): ReturnType<typeof resolveDocumentKind> {
+  return resource === undefined
+    ? undefined
+    : resolveDocumentKind('', resource.fsPath);
 }
 
 class VscodeExportFileSystem implements ExportFileSystem {
