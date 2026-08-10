@@ -153,6 +153,21 @@ export class PreviewSession implements vscode.Disposable {
   }
 
   public handleEditorScroll(editor: vscode.TextEditor): void {
+    this.syncEditorSourceLine(editor, editor.visibleRanges[0]?.start.line);
+  }
+
+  public handleEditorSelection(editor: vscode.TextEditor): void {
+    this.syncEditorSourceLine(editor, editor.selection.active.line);
+  }
+
+  public dispose(): void {
+    this.disposeSession(true);
+  }
+
+  private syncEditorSourceLine(
+    editor: vscode.TextEditor,
+    sourceLine: number | undefined,
+  ): void {
     if (
       this.disposed
       || !this.webviewState.isReady
@@ -163,7 +178,6 @@ export class PreviewSession implements vscode.Disposable {
       return;
     }
 
-    const sourceLine = editor.visibleRanges[0]?.start.line;
     if (sourceLine === undefined) {
       return;
     }
@@ -183,10 +197,6 @@ export class PreviewSession implements vscode.Disposable {
       line: sourceLine,
       sequence: pendingSequence ?? this.createSequence(),
     });
-  }
-
-  public dispose(): void {
-    this.disposeSession(true);
   }
 
   private scheduleRender(delay: number): void {
@@ -601,7 +611,7 @@ export class PreviewSession implements vscode.Disposable {
       ({ document }) => document.uri.toString() === this.documentUri.toString(),
     );
     if (editor !== undefined) {
-      this.handleEditorScroll(editor);
+      this.handleEditorSelection(editor);
     }
   }
 

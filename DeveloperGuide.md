@@ -174,6 +174,7 @@ Webview runtime 與 Extension Host 是不同信任邊界。
 - 文件 stylesheet 由 Webview runtime 建立與清理 `<link>`，不把 CSS 內容內嵌到訊息或 inline script；訊息驗證同時支援舊式 Webview scheme 與 VS Code 1.97+ 的 `https://*.vscode-resource.vscode-cdn.net` URI，仍拒絕一般外部 HTTPS。
 - 樣式使用 VS Code theme token，並驗證高對比模式。
 - Preview Webview 不提供工具列或 command bridge，只接收預覽內容與捲動同步訊息；格式命令由 Quick Pick 浮動面板或來源編輯器右鍵選單執行，版面、重新整理、語法說明與匯出命令則由來源編輯器標題列執行。
+- `PreviewManager` 集中監聽來源編輯器的 selection 與 visible-range 事件；`PreviewSession` 優先以 selection active line 定位 Preview，純視窗捲動則使用可見範圍起始行，兩者共用相同 sequence 與去重流程。
 
 ## 13.1 浮動格式面板與 PDF
 
@@ -231,7 +232,7 @@ npm run package:vsix
 安裝測試使用隔離目錄，避免變更開發者日常 VS Code：
 
 ```powershell
-code --extensions-dir .vscode-test/installed-extensions --install-extension artifacts/adocmd-forge-1.2.9.vsix --force
+code --extensions-dir .vscode-test/installed-extensions --install-extension artifacts/adocmd-forge-1.3.0.vsix --force
 ```
 
 ## 17. 發行

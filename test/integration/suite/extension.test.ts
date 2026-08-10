@@ -159,6 +159,17 @@ export async function activateExtensionTest(): Promise<void> {
 
   const activeEditor = vscode.window.activeTextEditor;
   assert.ok(activeEditor, 'The Markdown editor unexpectedly lost focus.');
+  const caretPosition = new vscode.Position(
+    activeEditor.document.lineCount - 1,
+    0,
+  );
+  activeEditor.selection = new vscode.Selection(caretPosition, caretPosition);
+  await delay(50);
+  assert.equal(
+    activeEditor.selection.active.line,
+    activeEditor.document.lineCount - 1,
+    'Moving the source caret while previewing changed the editor selection.',
+  );
   const lastLine = activeEditor.document.lineAt(
     activeEditor.document.lineCount - 1,
   );

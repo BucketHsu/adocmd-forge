@@ -6,7 +6,7 @@
 
 ## 2. 產品範圍
 
-AdocMD Forge 是 VS Code 文件工作台。1.2.9 正式版支援：
+AdocMD Forge 是 VS Code 文件工作台。1.3.0 正式版支援：
 
 - AsciiDoc：`.adoc`、`.asciidoc`
 - Markdown：`.md`
@@ -20,7 +20,7 @@ AdocMD Forge 是 VS Code 文件工作台。1.2.9 正式版支援：
 - HTML、Standalone HTML 與 Embedded HTML 匯出；三種模式共用 Renderer 與 Sanitizer
 - AsciiDoc 的本機 `asciidoctor-pdf` PDF 匯出命令整合
 
-1.2.9 發行關卡已由自動化測試、Extension Host 整合測試、VSIX 檢查與隔離安裝驗證完成；實際上架 Marketplace 仍需 Publisher 憑證與上架操作。
+1.3.0 發行關卡由自動化測試、Extension Host 整合測試與 VSIX 檢查驗證；實際上架 Marketplace 仍需 Publisher 憑證與上架操作。
 
 DOCX、多人協作、雲端儲存與自訂 Asciidoctor extension 不屬於目前規劃範圍。
 
@@ -187,10 +187,11 @@ interface DocumentAnalysis {
 
 - Markdown 區塊使用 token `map` 加入 `data-source-line`。
 - AsciiDoc 區塊使用 AST source location 加入 `data-source-line`。
-- 編輯器可見範圍變更時，Extension 傳送來源行號。
+- 編輯器游標／選取位置變更時，Extension 傳送目前游標行；首次開啟與重新渲染後也以游標行定位。
+- 編輯器只有捲動畫面而未移動游標時，仍由可見範圍事件傳送畫面頂端來源行。
 - Webview 找出最近來源行標記並捲動。
 - Webview 捲動時以節流訊息回傳最近來源行號，Extension 使用 `revealRange`。
-- 雙方訊息包含 origin 與 sequence；套用遠端捲動期間抑制回傳，防止循環。
+- 訊息方向區分來源端，並以 sequence 配對往返；套用程式化捲動期間抑制回傳，防止循環。
 
 ## 9. Webview 安全
 
@@ -312,7 +313,7 @@ VS Code 1.97 以上另註冊 `DocumentPasteEditProvider`，接收 `image/*`、`f
 - 涉及路徑的值在使用時再次驗證，不信任 manifest schema 即已足夠。
 - 無法在執行期間真正生效的選項不得公開。
 
-1.2.9 目前公開設定：
+1.3.0 目前公開設定：
 
 - `adocmdForge.outline.updateDelay`：預設 150 毫秒，範圍 50 至 2000 毫秒。
 - `adocmdForge.diagnostics.updateDelay`：預設 150 毫秒，範圍 50 至 2000 毫秒；Diagnostics 會在設定的延遲後重新檢查目前文件。

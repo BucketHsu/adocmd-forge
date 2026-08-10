@@ -41,6 +41,11 @@ export class PreviewManager implements vscode.Disposable {
           .get(textEditor.document.uri.toString())
           ?.handleEditorScroll(textEditor);
       }),
+      vscode.window.onDidChangeTextEditorSelection(({ textEditor }) => {
+        this.sessions
+          .get(textEditor.document.uri.toString())
+          ?.handleEditorSelection(textEditor);
+      }),
       vscode.workspace.onDidChangeConfiguration((event) => {
         for (const session of this.sessions.values()) {
           session.handleConfigurationChange(event);

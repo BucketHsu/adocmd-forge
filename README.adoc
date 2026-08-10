@@ -8,7 +8,7 @@
 image::images/icon.png[AdocMD Forge,128,128]
 
 AdocMD Forge 是提供 AsciiDoc 與 Markdown 撰寫體驗的 VS Code 擴充套件。
-`1.2.9` 是可安裝的文件工作台版本，除了安全的即時預覽、雙向同步捲動、AsciiDoc 語法輔助與圖片工作流，也提供目前文件的 Outline 標題樹、點擊跳轉、本機引用診斷、HTML／PDF 匯出與浮動格式面板。
+`1.3.0` 是可安裝的文件工作台版本，除了安全的即時預覽、游標定位與雙向同步捲動、AsciiDoc 語法輔助及圖片工作流，也提供目前文件的 Outline 標題樹、點擊跳轉、本機引用診斷、HTML／PDF 匯出與浮動格式面板。
 
 圖片貼上使用 VS Code 1.97 以上的 `DocumentPasteEditProvider`。只有在 VS Code 與作業系統將剪貼簿圖片以 `image/*` 或 `files` DataTransfer 提供給擴充套件時，才會攔截並處理圖片；若平台未提供二進位剪貼簿資料，請改用拖曳或 `Copy Image` 指令。
 
@@ -17,7 +17,7 @@ AdocMD Forge 是提供 AsciiDoc 與 Markdown 撰寫體驗的 VS Code 擴充套�
 * AsciiDoc：`.adoc`、`.asciidoc`
 * Markdown：`.md`
 
-== 1.2.9 功能
+== 1.3.0 功能
 
 === 即時預覽
 
@@ -26,6 +26,7 @@ AdocMD Forge 是提供 AsciiDoc 與 Markdown 撰寫體驗的 VS Code 擴充套�
 * 編輯文件後自動更新，不需要重新開啟預覽。
 * 同一份來源文件只會開啟一個 Preview Panel。
 * 支援來源編輯器與預覽畫面的雙向同步捲動。
+* 在來源編輯器點選某一行，或以鍵盤移動游標時，預覽會捲動到該行所屬的最近可渲染段落；首次開啟與重新渲染後也會以目前游標行定位。
 * 自動套用 VS Code 深色、淺色與高對比佈景主題。
 * 支援預覽中的本機圖片與相對連結。
 * 在受信任工作區中支援安全範圍內的 AsciiDoc `include::`。
@@ -207,7 +208,7 @@ AdocMD Forge 是提供 AsciiDoc 與 Markdown 撰寫體驗的 VS Code 擴充套�
 
 [source,bash]
 ----
-code --install-extension artifacts/adocmd-forge-1.2.9.vsix
+code --install-extension artifacts/adocmd-forge-1.3.0.vsix
 ----
 
 === 使用 VS Code
@@ -215,13 +216,14 @@ code --install-extension artifacts/adocmd-forge-1.2.9.vsix
 . 開啟 Extensions 檢視。
 . 選擇右上角的 `...`。
 . 選擇 `Install from VSIX...`。
-. 選取 `adocmd-forge-1.2.9.vsix`。
+. 選取 `adocmd-forge-1.3.0.vsix`。
 
 == 使用方式
 
 . 開啟 `.adoc`、`.asciidoc` 或 `.md` 文件。
 . 開啟 Command Palette。
 . 執行 `AdocMD Forge: Open Preview`。
+. 在來源編輯器點選或移動游標，確認預覽跟隨目前行定位。
 . 編輯文件並確認預覽自動更新。
 . 在空白行輸入語法前綴，或按 `Ctrl+Space`，取得 AsciiDoc 語法補全。
 . 將游標移到常用語法上，查看繁體中文 Hover 說明。
@@ -280,7 +282,7 @@ npm run verify
 
 完整開發說明請參閱 link:DeveloperGuide.md[DeveloperGuide.md]，架構決策請參閱 link:Architecture.md[Architecture.md]。
 
-== 1.2.9 已知限制
+== 1.3.0 已知限制
 
 HTML 匯出只讀取位於目前受信任 workspace 內的本機圖片；遠端圖片不會由匯出流程發出網路請求，無法讀取的圖片會移除 `src`，保留其替代文字。輸出檔案不可覆蓋來源文件，且使用者取消儲存或覆寫確認時不會寫入檔案。
 
