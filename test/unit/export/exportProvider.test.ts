@@ -255,8 +255,10 @@ describe('ExportProvider', (): void => {
     const run = vi.fn((options: {
       readonly args: readonly string[];
       readonly command: string;
+      readonly cwd: string;
     }): Promise<void> => {
       expect(options.command).toBe('asciidoctor-pdf');
+      expect(options.cwd).toBe('/workspace/docs');
       expect(options.args).toEqual([
         '-o',
         '/workspace/out/guide.pdf',

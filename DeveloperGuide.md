@@ -185,6 +185,8 @@ Webview runtime 與 Extension Host 是不同信任邊界。
 
 Windows 的 RubyGems CLI 通常同時提供無副檔名腳本與 `.bat` 包裝檔，但 Node `spawn` 無法直接執行它們。`asciidocCli` 以 `where.exe` 找出命令與 `ruby.exe`，只接受位於相同 Ruby `bin` 目錄的配對，並直接呼叫 Ruby 腳本；不得為了支援 `.bat` 改用 `shell: true`。
 
+`PdfExportProvider` 必須以來源文件目錄作為 CLI `cwd`。Asciidoctor PDF 預設從目前工作目錄解析相對 `pdf-theme`、`pdf-themesdir` 與 `pdf-fontsdir`；改用 workspace root 會讓既有文件的 `:pdf-theme: ../pdf-theme.yml` 指向錯誤位置並退回預設 theme。
+
 ## 14. 相依套件
 
 新增套件前確認：
@@ -229,7 +231,7 @@ npm run package:vsix
 安裝測試使用隔離目錄，避免變更開發者日常 VS Code：
 
 ```powershell
-code --extensions-dir .vscode-test/installed-extensions --install-extension artifacts/adocmd-forge-1.2.8.vsix --force
+code --extensions-dir .vscode-test/installed-extensions --install-extension artifacts/adocmd-forge-1.2.9.vsix --force
 ```
 
 ## 17. 發行

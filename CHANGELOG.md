@@ -6,6 +6,13 @@
 
 目前沒有尚未歸入版本的變更。
 
+## 1.2.9 - 2026-08-10
+
+### Fixed
+
+- PDF 匯出改以來源 `.adoc` 所在目錄作為 `asciidoctor-pdf` 工作目錄，讓 `:pdf-theme: ../pdf-theme.yml`、相對 `pdf-themesdir` 與相對 `pdf-fontsdir` 與使用者在文件目錄手動執行 CLI 的解析結果一致。
+- 新增工作目錄回歸測試，避免 theme 找不到後退回預設 PDF 樣式與字型。
+
 ## 1.2.8 - 2026-08-09
 
 ### Fixed

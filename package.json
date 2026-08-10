@@ -2,7 +2,7 @@
   "name": "adocmd-forge",
   "displayName": "AdocMD Forge",
   "description": "Secure live preview for AsciiDoc and Markdown with synchronized scrolling and VS Code theme support.",
-  "version": "1.2.8",
+  "version": "1.2.9",
   "publisher": "BucketHsu",
   "license": "MIT",
   "icon": "images/icon.png",

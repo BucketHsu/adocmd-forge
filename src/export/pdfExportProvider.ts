@@ -127,7 +127,10 @@ export class PdfExportProvider implements vscode.Disposable {
     await this.runner.run({
       args,
       command,
-      cwd: workspaceFolder.uri.fsPath,
+      // Asciidoctor PDF 會從目前工作目錄解析相對的 pdf-theme、
+      // pdf-themesdir 與 pdf-fontsdir；保持與使用者在文件目錄執行 CLI
+      // 的結果一致，同時仍由前面的 workspace policy 限制來源與輸出。
+      cwd: path.dirname(editor.document.uri.fsPath),
     });
     if (await readFileType(target) !== 'file') {
       throw new Error('Asciidoctor PDF 指令完成，但沒有產生目標檔案。');

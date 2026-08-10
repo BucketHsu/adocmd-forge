@@ -46,7 +46,7 @@ describe('extension manifest', (): void => {
     expect(manifest.name).toBe('adocmd-forge');
     expect(manifest.displayName).toBe('AdocMD Forge');
     expect(manifest.publisher).toBe('BucketHsu');
-    expect(manifest.version).toBe('1.2.8');
+    expect(manifest.version).toBe('1.2.9');
     expect(manifest.description).toBe(
       'Secure live preview for AsciiDoc and Markdown with synchronized '
       + 'scrolling and VS Code theme support.',
