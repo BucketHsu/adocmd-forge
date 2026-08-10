@@ -15,17 +15,45 @@ AdocMD Forge 是為 AsciiDoc 與 Markdown 打造的 VS Code 文件工作台，�
 * 支援 `.adoc`、`.asciidoc` 與 `.md`。
 * 編輯後自動更新，不需要重新開啟預覽。
 * 點選或移動來源編輯器游標時，預覽會跟隨目前行定位。
+* 預覽會標示目前來源區塊，方便確認游標所在內容。
 * 支援來源編輯器與預覽畫面的雙向同步捲動。
 * 支援僅來源、來源與預覽分割、僅預覽三種版面。
 * 自動配合 VS Code 深色、淺色與高對比佈景主題。
 * AsciiDoc 預覽可載入工作區範圍內的 `:stylesheet:`、`:stylesdir:`、圖片與 `include::`。
+* 被引用的文件、樣式表、圖片或 include 更新時，已開啟的預覽會自動重新整理。
 
 === 編輯與語法輔助
 
+* 內建 AsciiDoc 語法醒目提示，涵蓋標題、屬性、清單、區塊、巨集、連結與行內格式。
+* 提供文件骨架、章節、表格、原始碼、admonition、xref、anchor、圖片與 include 等常用 Snippet。
+* 原生支援 VS Code Breadcrumbs、Go to Symbol 與程式碼摺疊。
 * 浮動格式面板提供粗體、斜體、注目、等寬、刪除線、上標與下標。
 * 選取文字後可從右鍵選單直接套用格式。
 * AsciiDoc 提供標題、清單、表格、區塊、連結、xref、anchor、圖片、include、attribute 與 TOC 的補全及 Hover 說明。
 * 內建繁體中文 AsciiDoc 語法指南與可直接使用的範例。
+
+[cols="2,2,4",options="header"]
+|===
+|Windows／Linux
+|macOS
+|用途
+
+|`Ctrl+B`
+|`Cmd+B`
+|粗體
+
+|`Ctrl+I`
+|`Cmd+I`
+|斜體
+
+|`Ctrl+Alt+C`
+|`Cmd+Alt+C`
+|行內等寬文字
+
+|`Ctrl+Shift+.`
+|`Cmd+Shift+.`
+|開啟浮動格式面板
+|===
 
 === 圖片工作流程
 
@@ -34,12 +62,18 @@ AdocMD Forge 是為 AsciiDoc 與 Markdown 打造的 VS Code 文件工作台，�
 * `Copy Image` 可從檔案選擇器匯入圖片，適用於無法提供二進位剪貼簿資料的平台。
 * 同名檔案會產生新檔名，不會直接覆寫既有圖片。
 
-=== Outline 與連結檢查
+=== Outline、工作區導覽與連結檢查
 
 * Explorer 的 Outline 顯示目前文件的標題階層，點選即可跳至來源位置。
+* 編輯 `xref`、`include::` 或 `image::` 時，可補全工作區內的文件、anchor 與資源路徑。
+* 圖片補全與連結檢查會依文件的 `:imagesdir:` 解析路徑。
+* `F12`／Go to Definition 可跳至被引用的文件或 anchor；文件連結也可直接開啟。
+* Find All References 可查詢工作區內指向同一 anchor 的引用。
+* Rename Symbol 可安全改名明確宣告的 anchor，並同步更新跨文件引用；自動標題 anchor 不會被直接改名。
 * AsciiDoc 可檢查 `link:`、`xref:`、`<<...>>`、`include::`、圖片與 anchor。
 * Markdown 可檢查連結、圖片、標題 anchor 與自訂 anchor。
 * 找不到的本機目標會顯示於 Problems Panel。
+* AsciiDoc 拼錯的路徑或 anchor 可從 Problems Panel 或燈泡選單套用 Quick Fix。
 
 === 匯出
 
@@ -90,7 +124,7 @@ code --install-extension adocmd-forge-<version>.vsix
 . 從編輯器標題列選擇 Open Preview，或執行 `AdocMD Forge: Open Preview`。
 . 在來源編輯器點選任一段落，預覽會移動到對應內容。
 . 編輯文件後，預覽會自動更新。
-. 使用 Explorer 的 Outline 導覽標題，或執行 `Validate Links` 檢查本機引用。
+. 使用 Explorer 的 Outline、`F12` 與 Find All References 導覽文件，或執行 `Validate Links` 檢查本機引用。
 
 == AsciiDoc 樣式表
 
@@ -262,10 +296,11 @@ gem install asciidoctor-diagram
 * 遠端圖片預設停用；啟用後也只允許 HTTPS。
 * 圖片、匯出目的地與本機引用均限制於允許的工作區範圍。
 * Link Checker 不會對 HTTP 或 HTTPS 網址發出探測請求。
+* 跨文件索引只在受信任工作區啟用，不會將索引或文件內容傳送至外部服務。
 
 == 已知限制
 
-* Outline 目前顯示 active editor 的文件結構，不建立整個工作區的多文件樹。
+* Explorer 的 Outline 目前顯示 active editor 的文件結構；跨文件補全、Definition、References 與安全 Rename 仍會使用受信任工作區索引。
 * Link Checker 只驗證本機檔案與文件內 anchor，不檢查遠端網址是否可連線。
 * 含動態 AsciiDoc 屬性的路徑若無法安全解析，會略過本機檔案檢查。
 * 圖片貼上取決於 VS Code、作業系統與來源應用程式是否提供 `image/*` 或 `files` DataTransfer；無法取得時請使用拖曳或 `Copy Image`。

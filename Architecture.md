@@ -10,13 +10,14 @@ AdocMD Forge 是 VS Code 文件工作台，目前支援：
 
 - AsciiDoc：`.adoc`、`.asciidoc`
 - Markdown：`.md`
-- Webview 即時預覽、雙向同步捲動與 VS Code 深色、淺色、高對比佈景主題
+- Webview 即時預覽、目前來源區塊標示、雙向同步捲動與 VS Code 深色、淺色、高對比佈景主題
 - 預覽相關的工作區與使用者層級設定
 - 受信任工作區內的安全本機圖片、連結與 AsciiDoc include
-- AsciiDoc 語法補全、Hover 與繁體中文語法說明
+- AsciiDoc TextMate 語法醒目提示、Snippet、快捷鍵、語法補全、Hover 與繁體中文語法說明
 - 受信任工作區內的圖片拖曳、圖片貼上與 `Copy Image` 檔案選取流程
-- 目前 active editor 的 AsciiDoc／Markdown Outline、標題階層與點擊跳轉
-- 目前 active editor 的 AsciiDoc／Markdown 本機引用檢查與 Problems Diagnostic
+- 目前 active editor 的 AsciiDoc／Markdown Outline、標題階層與點擊跳轉；AsciiDoc 另提供原生 Document Symbol 與 Folding Range
+- 受信任工作區內的 AsciiDoc 文件／anchor 索引、路徑與 anchor 補全、Definition、Document Link、References 與明確 anchor 安全 Rename
+- 目前 active editor 的 AsciiDoc／Markdown 本機引用檢查與 Problems Diagnostic；AsciiDoc 缺漏路徑與 anchor 提供 Quick Fix
 - HTML、Standalone HTML 與 Embedded HTML 匯出；三種模式共用 Renderer 與 Sanitizer
 - AsciiDoc 的本機 `asciidoctor-pdf` PDF 匯出命令整合
 
@@ -72,6 +73,8 @@ src/
   outline/
     outlineProvider.ts
     outlineParser.ts
+    documentStructure.ts
+    asciidocDocumentProvider.ts
   diagnostics/
     linkDiagnosticProvider.ts
     linkValidator.ts
@@ -86,13 +89,19 @@ src/
   settings/
     extensionSettings.ts
   language/
+    asciidocAttributes.ts
+    asciidocReferenceContext.ts
+    asciidocWorkspaceProviders.ts
     asciidocSyntax.ts
     asciidocCompletion.ts
     asciidocCompletionProvider.ts
     asciidocHover.ts
     asciidocHoverProvider.ts
     asciidocSyntaxGuide.ts
+    linkQuickFix.ts
     registerAsciiDocLanguage.ts
+    workspaceDocumentIndex.ts
+    workspaceLanguageService.ts
   models/
     documentKind.ts
     documentAnalysis.ts
@@ -180,8 +189,9 @@ interface DocumentAnalysis {
 5. Include Processor 對巢狀 include 維持 canonical ancestor 與最大深度，並套用 `lines`、`tag`／`tags` 選取；缺檔、循環、路徑拒絕與 tag 問題轉成 renderer message。
 6. AsciiDoc renderer 解析已儲存文件的 `:stylesheet:`／`:stylesdir:`，只傳遞候選本機 CSS 路徑；include 權限仍獨立受工作區信任狀態控制。
 7. Extension Host 以 workspace root、realpath、檔案類型與 Webview URI 邊界再次驗證 stylesheet，再透過具型別訊息更新 Webview 內容；未受信任工作區也只允許此範圍內的 CSS。
-8. Webview 以文件專用 `<link rel="stylesheet">` 管理樣式生命週期，不重設整份 `webview.html`，並在下一次 revision 或 dispose 時移除舊連結。
-9. Webview 回報已套用 revision，供測試與錯誤追蹤使用。
+8. 工作區索引監看已引用的文件、CSS、圖片與 include；相依資源異動時，以 debounce 重新檢查 active document 並重新渲染相關 Preview。
+9. Webview 以文件專用 `<link rel="stylesheet">` 管理樣式生命週期，不重設整份 `webview.html`，並在下一次 revision 或 dispose 時移除舊連結。
+10. Webview 回報已套用 revision，供測試與錯誤追蹤使用。
 
 ### 8.3 同步捲動
 
@@ -189,7 +199,7 @@ interface DocumentAnalysis {
 - AsciiDoc 區塊使用 AST source location 加入 `data-source-line`。
 - 編輯器游標／選取位置變更時，Extension 傳送目前游標行；首次開啟與重新渲染後也以游標行定位。
 - 編輯器只有捲動畫面而未移動游標時，仍由可見範圍事件傳送畫面頂端來源行。
-- Webview 找出最近來源行標記並捲動。
+- Webview 找出最近來源行標記並捲動，同時只標示該來源區塊；章節節點只標示直接標題，不將整章內容套上醒目樣式。
 - Webview 捲動時以節流訊息回傳最近來源行號，Extension 使用 `revealRange`。
 - 訊息方向區分來源端，並以 sequence 配對往返；套用程式化捲動期間抑制回傳，防止循環。
 
@@ -211,17 +221,31 @@ interface DocumentAnalysis {
 
 ## 10. AsciiDoc 語法輔助
 
-語法輔助由靜態語法目錄、純 TypeScript 核心與 VS Code adapter 組成：
+語法輔助由 TextMate grammar、Snippet、靜態語法目錄、純 TypeScript 核心與 VS Code adapter 組成：
 
+- `syntaxes/asciidoc.tmLanguage.json` 提供不依賴 Extension 啟動的 AsciiDoc 語法醒目提示；raw／literal block 必須優先於一般行內語法，避免錯誤著色。
+- `snippets/asciidoc.json` 提供常用文件結構與巨集，manifest 快捷鍵只在 AsciiDoc 編輯器有文字焦點時生效。
 - `asciidocSyntax.ts` 集中保存標題、段落、文字樣式、清單、區塊、連結、資源與屬性的說明、範例及 Snippet。
 - `asciidocCompletion.ts` 只依游標前綴判斷已知語法情境；一般段落文字不回傳補全，避免干擾正常撰寫。
 - `asciidocHover.ts` 以來源行文字與游標位置辨識語法，回傳穩定 Range 與繁體中文 Markdown 說明。
 - VS Code provider 只註冊 `file` 與 `untitled` 的 `asciidoc` 語言，不註冊 Markdown。
+- `AsciiDocDocumentProvider` 共用 `documentStructure.ts` 的純資料結構，提供 Document Symbol、Breadcrumbs、Go to Symbol 與 Folding Range。
 - `Open AsciiDoc Syntax Guide` 以 untitled AsciiDoc 文件開啟內建說明，內容與語法目錄保持同一版本。
 
 Provider 不負責解析完整文件或執行檔案操作；語法目錄與核心函式可在純 Node 單元測試，VS Code adapter 則由 Extension Host 整合測試驗證。
 
-## 10.1 編輯器浮動格式面板與版面
+### 10.1 工作區語意導覽
+
+- `WorkspaceDocumentIndex` 不依賴 VS Code API，保存 AsciiDoc／Markdown 文件分析、明確 anchor、自動標題 anchor 與引用；Completion、Definition、Document Link、References、Rename 與 Quick Fix 共用同一份結果。
+- `WorkspaceLanguageService` 是 VS Code 檔案系統 adapter，只在受信任工作區建立索引；初始掃描與後續檔案事件都排除 Git、相依套件、建置產物與測試下載目錄，且共用 10,000 個資源的硬上限。
+- 初始索引以小批次讀取，文件變更以 debounce 更新；workspace folder、信任狀態與 FileSystemWatcher 事件使用 generation 防止過期非同步結果回寫。
+- xref 補全可列出目前或目標文件的明確及自動 anchor；include 與圖片補全使用相對路徑，圖片另依靜態 `:imagesdir:` 調整基準目錄。
+- Definition 與 Document Link 可開啟本機文件或 anchor；References 會尋找工作區內指向同一目標 anchor 的引用。
+- Rename 只允許明確宣告的 anchor，先驗證名稱與同文件碰撞，再以單一 `WorkspaceEdit` 更新定義及 AsciiDoc／Markdown 跨文件引用；自動標題 anchor 必須先改為明確 anchor。
+- Code Action 只處理 `adocmd-forge` 的 `missing-file` 與 `missing-anchor` Diagnostic，依路徑或 anchor 相似度提供最多五個 Quick Fix，不自動套用猜測結果。
+- EventEmitter、FileSystemWatcher、Timer、索引與非同步 generation 均由 service 統一管理及釋放。
+
+### 10.2 編輯器浮動格式面板與版面
 
 - `registerFormattingCommands` 將粗體、斜體、注目、等寬、刪除線、上標與下標映射至 AsciiDoc／Markdown 對應標記。
 - 純函式 `textFormattingCore` 先以文件 offset 計算多游標結果，再由 VS Code adapter 一次套用編輯並恢復選取範圍。
@@ -235,7 +259,7 @@ Provider 不負責解析完整文件或執行檔案操作；語法目錄與核�
 - 格式命令由來源編輯器執行，不再依賴 Preview Panel 取得或恢復文字選取範圍。
 - 所有工具列命令仍走 `CommandExecutor`，錯誤寫入 Output Channel 並顯示可理解的通知。
 
-## 10.2 外部 Asciidoctor PDF
+### 10.3 外部 Asciidoctor PDF
 
 - HTML／Embedded／Standalone 匯出繼續使用內建 renderer；PDF 使用外部 `asciidoctor-pdf`，避免將 Ruby runtime、PDF converter、字型或 diagram extension 打包進 VSIX。
 - CLI 只以 `spawn`、參數陣列與工作區 cwd 執行，不經 shell；來源與目的地先通過 workspace path policy。
@@ -251,7 +275,7 @@ Provider 不負責解析完整文件或執行檔案操作；語法目錄與核�
 - 點擊項目只跳至對應文件與行號，不修改文件。
 - Active Editor 或文件內容變更時，只更新目前文件；文件修改由 `adocmdForge.outline.updateDelay` debounce。
 - TreeView、事件、debounce timer 與跳轉 command 均納入 Extension context 的 Disposable 生命週期。
-- 第一版不建立全工作區多文件樹；Link Checker 只檢查目前 active editor。
+- Explorer 不建立全工作區多文件樹；工作區語意索引獨立提供跨文件補全、導覽、References 與 Rename。Link Checker 仍只發布目前 active editor 的 Diagnostic。
 
 ## 12. Link Checker
 
@@ -270,9 +294,10 @@ Provider 不負責解析完整文件或執行檔案操作；語法目錄與核�
 1. `http`、`https`、`mailto` 等外部 URI 不做網路存活探測，只驗證語法與允許的 scheme。
 2. 本機或工作區 URI 必須存在，且不可經由 `..` 逃出允許的工作區根目錄。
 3. Fragment 指向目前文件或可讀取的目標文件時，必須存在於該文件的 anchor 集合。
-4. 動態屬性無法安全解析時，不臆測目標，也不讀取推算出的路徑。
-5. Diagnostic 必須具有精確 Range、`source`、穩定 `code` 與適當 severity。
-6. 文件關閉時刪除該 URI 結果，Extension 停用時 dispose。
+4. AsciiDoc 圖片路徑以文件目錄加上靜態 `:imagesdir:` 作為解析基準；動態、遠端或絕對屬性不會被推算。
+5. 動態屬性無法安全解析時，不臆測目標，也不讀取推算出的路徑。
+6. Diagnostic 必須具有精確 Range、`source`、穩定 `code` 與適當 severity，讓 AsciiDoc Code Action 可提供缺漏路徑或 anchor 的候選修正。
+7. 相依資源變更時重新檢查目前 active editor；文件關閉時刪除該 URI 結果，Extension 停用時 dispose。
 
 ## 13. 圖片流程
 

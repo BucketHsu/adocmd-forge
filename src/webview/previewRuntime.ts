@@ -22,6 +22,7 @@ export interface PreviewState {
 
 interface SourceMarker {
   readonly element: HTMLElement;
+  readonly highlightElement: HTMLElement;
   readonly sourceLine: number;
 }
 
@@ -31,6 +32,7 @@ const CONTENT_ELEMENT_ID = 'preview-content';
 const STATUS_ELEMENT_ID = 'preview-status';
 const SOURCE_LINE_ATTRIBUTE = 'data-source-line';
 const SOURCE_LINE_PATTERN = /^(?:0|[1-9]\d*)$/u;
+const CURRENT_SOURCE_CLASS = 'adocmd-forge-current-source';
 const DOCUMENT_STYLESHEET_ATTRIBUTE = 'data-adocmd-forge-document-stylesheet';
 const SCROLL_THROTTLE_MILLISECONDS = 80;
 const PROGRAMMATIC_SCROLL_IDLE_MILLISECONDS = 180;
@@ -103,6 +105,7 @@ export class PreviewRuntime {
   private currentLineCount = 0;
   private currentRevision = -1;
   private currentSourceLine: number;
+  private currentHighlightElement: HTMLElement | undefined;
   private isProgrammaticScroll = false;
   private markersBySourceLine: readonly SourceMarker[] = [];
   private markersInDocumentOrder: readonly SourceMarker[] = [];
@@ -163,6 +166,7 @@ export class PreviewRuntime {
     window.removeEventListener('pointerdown', this.handleUserScrollIntent);
     window.removeEventListener('keydown', this.handleKeyDown);
     this.contentElement.removeEventListener('click', this.handleLinkClick);
+    this.clearSourceHighlight();
     this.removeDocumentStylesheets();
     if (this.scrollThrottleTimer !== undefined) {
       window.clearTimeout(this.scrollThrottleTimer);
@@ -279,6 +283,7 @@ export class PreviewRuntime {
 
     this.currentRevision = revision;
     this.currentLineCount = lineCount;
+    this.clearSourceHighlight();
     this.contentElement.innerHTML = html;
     this.updateDocumentStylesheets(stylesheets);
     this.contentElement.removeAttribute('aria-busy');
@@ -360,6 +365,7 @@ export class PreviewRuntime {
       if (sourceLine !== undefined && element.getClientRects().length > 0) {
         markers.push({
           element,
+          highlightElement: getHighlightElement(element),
           sourceLine,
         });
       }
@@ -374,6 +380,7 @@ export class PreviewRuntime {
   private handleSourceLineScroll(sourceLine: number, sequence: number): void {
     this.nextSequence = Math.max(this.nextSequence, sequence);
     if (this.consumeOutboundSequence(sequence)) {
+      this.updateSourceHighlight(sourceLine);
       return;
     }
 
@@ -395,6 +402,7 @@ export class PreviewRuntime {
     }
 
     this.currentSourceLine = marker.sourceLine;
+    this.updateSourceHighlight(marker.sourceLine);
     this.persistState();
     this.beginProgrammaticScroll();
     marker.element.scrollIntoView({
@@ -445,6 +453,7 @@ export class PreviewRuntime {
     }
 
     this.currentSourceLine = marker.sourceLine;
+    this.updateSourceHighlight(marker.sourceLine);
     const sequence = this.createSequence();
     this.trackOutboundSequence(sequence);
     this.persistState();
@@ -533,9 +542,36 @@ export class PreviewRuntime {
     });
   }
 
+  private updateSourceHighlight(sourceLine: number): void {
+    const marker = findClosestSourceMarker(
+      this.markersBySourceLine,
+      sourceLine,
+    );
+    if (marker?.highlightElement === this.currentHighlightElement) {
+      return;
+    }
+    this.clearSourceHighlight();
+    marker?.highlightElement.classList.add(CURRENT_SOURCE_CLASS);
+    this.currentHighlightElement = marker?.highlightElement;
+  }
+
+  private clearSourceHighlight(): void {
+    this.currentHighlightElement?.classList.remove(CURRENT_SOURCE_CLASS);
+    this.currentHighlightElement = undefined;
+  }
+
   private postMessage(message: WebviewToExtensionMessage): void {
     this.api.postMessage(message);
   }
+}
+
+function getHighlightElement(element: HTMLElement): HTMLElement {
+  if (!/^sect\d+$/u.test(element.className)) {
+    return element;
+  }
+  return Array.from(element.children).find((child): child is HTMLElement => (
+    child instanceof HTMLElement && /^H[1-6]$/u.test(child.tagName)
+  )) ?? element;
 }
 
 export function initializePreview(): PreviewRuntime | undefined {

@@ -143,6 +143,31 @@ describe('LinkCheckerService', (): void => {
     ]);
   });
 
+  it('依 AsciiDoc imagesdir 檢查區塊與行內圖片', async (): Promise<void> => {
+    const fileSystem = new MemoryFileSystem();
+    fileSystem.files.set('/workspace/docs/assets/logo.png', 'binary');
+    fileSystem.files.set('/workspace/docs/assets/icon.svg', 'binary');
+    const service = new LinkCheckerService(fileSystem);
+
+    await expect(service.check({
+      ...workspaceInput,
+      documentUri: 'file:///workspace/docs/main.adoc',
+      sourcePath: '/workspace/docs/main.adoc',
+      kind: 'asciidoc',
+      source: [
+        '= Main',
+        ':imagesdir: assets',
+        '',
+        'image::logo.png[Logo]',
+        'image:icon.svg[Icon]',
+      ].join('\n'),
+    })).resolves.toEqual([]);
+    expect(fileSystem.stats).toEqual([
+      '/workspace/docs/assets/logo.png',
+      '/workspace/docs/assets/icon.svg',
+    ]);
+  });
+
   it('在未受信任、untitled 或 workspace 外時不讀取本機檔案', async (): Promise<void> => {
     const fileSystem = new MemoryFileSystem();
     fileSystem.files.set('/workspace/docs/other.md', '# Target');

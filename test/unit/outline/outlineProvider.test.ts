@@ -59,6 +59,11 @@ const activeEditorEmitter = new FakeEventEmitter<unknown>();
 const documentChangeEmitter = new FakeEventEmitter<{ readonly document: FakeDocument }>();
 const documentCloseEmitter = new FakeEventEmitter<FakeDocument>();
 const registeredCommands = new Map<string, (...args: unknown[]) => unknown>();
+const getConfiguration = vi.fn(
+  (): { get: (key: string, fallback: unknown) => unknown } => ({
+    get: (_key: string, fallback: unknown): unknown => fallback,
+  }),
+);
 const fakeWindow = {
   activeTextEditor: undefined as { readonly document: FakeDocument } | undefined,
   onDidChangeActiveTextEditor: activeEditorEmitter.event,
@@ -77,9 +82,7 @@ const fakeWindow = {
 const fakeWorkspace = {
   onDidChangeTextDocument: documentChangeEmitter.event,
   onDidCloseTextDocument: documentCloseEmitter.event,
-  getConfiguration: (): { get: (key: string, fallback: unknown) => unknown } => ({
-    get: (_key: string, fallback: unknown): unknown => fallback,
-  }),
+  getConfiguration,
   openTextDocument: (): Promise<FakeDocument> => {
     const activeEditor = fakeWindow.activeTextEditor;
     if (activeEditor === undefined) {
@@ -193,6 +196,7 @@ describe('OutlineProvider', (): void => {
     documentChangeEmitter.dispose();
     documentCloseEmitter.dispose();
     registeredCommands.clear();
+    getConfiguration.mockClear();
     fakeWindow.activeTextEditor = undefined;
   });
 
@@ -353,6 +357,7 @@ describe('OutlineProvider', (): void => {
     fakeWindow.activeTextEditor = { document };
     registration.provider.refresh();
     vi.advanceTimersByTime(150);
+    expect(getConfiguration).toHaveBeenCalledWith('adocmdForge', document.uri);
     const root = registration.provider.getChildren()[0];
     if (root === undefined) {
       throw new Error('Expected a registered Outline root.');

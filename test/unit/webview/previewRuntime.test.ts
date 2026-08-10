@@ -268,6 +268,40 @@ describe('PreviewRuntime', (): void => {
     harness.runtime.dispose();
   });
 
+  it('highlights the source block selected in the editor', (): void => {
+    const harness = createRuntimeHarness();
+    harness.runtime.start();
+    sendExtensionMessage({
+      type: 'render',
+      revision: 1,
+      html: [
+        '<div class="sect1" data-source-line="0">',
+        '<h2 id="intro">Intro</h2>',
+        '</div>',
+        '<p id="details" data-source-line="5">Details</p>',
+      ].join(''),
+      lineCount: 6,
+    });
+
+    const section = document.getElementById('intro');
+    const details = document.getElementById('details');
+    expect(section?.classList.contains('adocmd-forge-current-source')).toBe(true);
+    expect(section?.parentElement?.classList.contains(
+      'adocmd-forge-current-source',
+    )).toBe(false);
+
+    sendExtensionMessage({
+      type: 'scrollToSourceLine',
+      line: 5,
+      sequence: 999,
+    });
+    expect(section?.classList.contains('adocmd-forge-current-source')).toBe(false);
+    expect(details?.classList.contains('adocmd-forge-current-source')).toBe(true);
+
+    harness.runtime.dispose();
+    expect(details?.classList.contains('adocmd-forge-current-source')).toBe(false);
+  });
+
   it('keeps programmatic scrolling suppressed until a scroll key signals user intent', (): void => {
     vi.useFakeTimers();
     const harness = createRuntimeHarness();

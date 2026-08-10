@@ -14,7 +14,27 @@ interface PackageManifest {
     readonly configuration?: {
       readonly properties?: Record<string, unknown>;
     };
+    readonly grammars?: readonly {
+      readonly language?: string;
+      readonly path?: string;
+      readonly scopeName?: string;
+    }[];
+    readonly keybindings?: readonly {
+      readonly command?: string;
+      readonly key?: string;
+      readonly mac?: string;
+      readonly when?: string;
+    }[];
+    readonly languages?: readonly {
+      readonly configuration?: string;
+      readonly extensions?: readonly string[];
+      readonly id?: string;
+    }[];
     readonly menus?: Record<string, unknown>;
+    readonly snippets?: readonly {
+      readonly language?: string;
+      readonly path?: string;
+    }[];
     readonly views?: {
       readonly explorer?: readonly {
         readonly id?: string;
@@ -51,7 +71,7 @@ describe('extension manifest', (): void => {
     expect(manifest.name).toBe('adocmd-forge');
     expect(manifest.displayName).toBe('AdocMD Forge');
     expect(manifest.publisher).toBe('BucketHsu');
-    expect(manifest.version).toBe('1.3.1');
+    expect(manifest.version).toBe('1.4.0');
     expect(manifest.description).toBe(
       'Professional AsciiDoc and Markdown workspace with live preview, '
       + 'syntax assistance, link diagnostics, image workflows, and '
@@ -246,6 +266,51 @@ describe('extension manifest', (): void => {
       group: '2_modification@0',
       when: 'editorLangId == markdown || editorLangId == asciidoc',
     });
+  });
+
+  it('contributes AsciiDoc grammar, snippets and editor-only keybindings', async (): Promise<void> => {
+    const manifest = await readManifest();
+
+    expect(manifest.contributes?.languages).toContainEqual(expect.objectContaining({
+      configuration: './language-configuration.json',
+      extensions: ['.adoc', '.asciidoc'],
+      id: 'asciidoc',
+    }));
+    expect(manifest.contributes?.grammars).toEqual([{
+      language: 'asciidoc',
+      path: './syntaxes/asciidoc.tmLanguage.json',
+      scopeName: 'text.asciidoc',
+    }]);
+    expect(manifest.contributes?.snippets).toEqual([{
+      language: 'asciidoc',
+      path: './snippets/asciidoc.json',
+    }]);
+    expect(manifest.contributes?.keybindings).toEqual([
+      {
+        command: 'adocmdForge.formatBold',
+        key: 'ctrl+b',
+        mac: 'cmd+b',
+        when: 'editorTextFocus && editorLangId == asciidoc',
+      },
+      {
+        command: 'adocmdForge.formatItalic',
+        key: 'ctrl+i',
+        mac: 'cmd+i',
+        when: 'editorTextFocus && editorLangId == asciidoc',
+      },
+      {
+        command: 'adocmdForge.formatCode',
+        key: 'ctrl+alt+c',
+        mac: 'cmd+alt+c',
+        when: 'editorTextFocus && editorLangId == asciidoc',
+      },
+      {
+        command: 'adocmdForge.showFormattingPalette',
+        key: 'ctrl+shift+.',
+        mac: 'cmd+shift+.',
+        when: 'editorTextFocus && editorLangId == asciidoc',
+      },
+    ]);
   });
 
   it('uses icons with text tooltips for every title-bar action', async (): Promise<void> => {

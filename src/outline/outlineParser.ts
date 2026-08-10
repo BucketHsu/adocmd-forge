@@ -239,6 +239,7 @@ function addAsciiDocDocumentTitle(
     return;
   }
 
+  const anchor = createAsciiDocAnchor(title);
   const heading: Heading = {
     id: createHeadingId(input.documentUri, sourceLine, 0),
     documentUri: input.documentUri,
@@ -247,9 +248,9 @@ function addAsciiDocDocumentTitle(
     sourceLine,
     line: sourceLine,
     range: createRange(lines, sourceLine),
+    ...(anchor.length > 0 ? { anchor } : {}),
   };
   headings.push(heading);
-  const anchor = createAsciiDocAnchor(title);
   if (anchor.length > 0) {
     anchors.add(anchor);
   }

@@ -14,6 +14,7 @@ import {
   resolveLinkTarget,
   type ResolvedLinkTarget,
 } from './linkPathPolicy';
+import { createAsciiDocImageReferenceSourcePath } from '../language/asciidocAttributes';
 
 export const LINK_DIAGNOSTIC_SOURCE = 'AdocMD Forge';
 
@@ -101,8 +102,16 @@ export class LinkCheckerService {
 
     for (const reference of references) {
       throwIfCancelled(signal);
+      const sourcePath = input.kind === 'asciidoc'
+        && reference.kind === 'image'
+        && input.sourcePath !== undefined
+        ? createAsciiDocImageReferenceSourcePath(
+            input.source,
+            input.sourcePath,
+          )
+        : input.sourcePath;
       const target = resolveLinkTarget(
-        input.sourcePath,
+        sourcePath,
         reference.target,
         input.workspaceRoots ?? [],
       );

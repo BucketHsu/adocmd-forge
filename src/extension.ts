@@ -15,6 +15,7 @@ import {
   type ImageProviderRegistration,
 } from './images/registerImageProviders';
 import { registerAsciiDocLanguageProviders } from './language/registerAsciiDocLanguage';
+import { WorkspaceLanguageService } from './language/workspaceLanguageService';
 import type { RenderResult } from './models/renderResult';
 import {
   registerExportCommands,
@@ -50,6 +51,7 @@ export function activate(context: vscode.ExtensionContext): {
 } {
   const outputChannel = vscode.window.createOutputChannel(OUTPUT_CHANNEL_NAME);
   const commandExecutor = new CommandExecutor(outputChannel);
+  const workspaceLanguageService = new WorkspaceLanguageService(outputChannel);
   const linkOpener = new PreviewLinkOpener(outputChannel);
   const rendererWorkerService = new RendererWorkerService(
     createNodeRendererWorkerFactory({
@@ -74,6 +76,7 @@ export function activate(context: vscode.ExtensionContext): {
       await linkOpener.open(documentUri, href);
     },
     outputChannel,
+    resourceChangeEvent: workspaceLanguageService.onDidChangeResource,
     renderer: (request, signal): Promise<RenderResult> => (
       rendererWorkerService.render(request, signal)
     ),
@@ -81,12 +84,17 @@ export function activate(context: vscode.ExtensionContext): {
 
   const imageProviders = registerImageProviders(commandExecutor);
   const outlineRegistration = registerOutlineProvider(commandExecutor);
-  const diagnosticRegistration = registerLinkDiagnostics(commandExecutor, outputChannel);
+  const diagnosticRegistration = registerLinkDiagnostics(
+    commandExecutor,
+    outputChannel,
+    workspaceLanguageService.onDidChangeResource,
+  );
   context.subscriptions.push(
     outputChannel,
+    workspaceLanguageService,
     previewManager,
     rendererWorkerService,
-    ...registerAsciiDocLanguageProviders(),
+    ...registerAsciiDocLanguageProviders(workspaceLanguageService),
     ...imageProviders.disposables,
     ...outlineRegistration.disposables,
     ...diagnosticRegistration.disposables,

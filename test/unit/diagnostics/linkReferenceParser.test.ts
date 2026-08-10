@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   parseDocumentReferences,
+  parseExplicitAnchorDefinitions,
   parseExplicitAnchors,
 } from '../../../src/diagnostics/linkReferenceParser';
 
@@ -71,6 +72,7 @@ describe('link reference parser', (): void => {
       'image::images/logo.png[Logo]',
       'image:images/inline-logo.png[Inline logo]',
       '<<#intro,Introduction>>',
+      '<<overview>>',
       '----',
       'xref:missing.adoc[Ignored]',
       '----',
@@ -84,6 +86,7 @@ describe('link reference parser', (): void => {
       { kind: 'image', target: 'images/logo.png' },
       { kind: 'image', target: 'images/inline-logo.png' },
       { kind: 'xref', target: '#intro' },
+      { kind: 'xref', target: '#overview' },
     ]);
     expect(references[0]?.range).toEqual({
       start: { line: 0, character: 5 },
@@ -113,6 +116,38 @@ describe('link reference parser', (): void => {
       'chapter-one',
       'styled-anchor',
       'macro-anchor',
+    ]);
+  });
+
+  it('保留 explicit anchor 可供改名的精確範圍', (): void => {
+    const definitions = parseExplicitAnchorDefinitions([
+      '[[chapter-one,Chapter One]]',
+      '[#styled-anchor]',
+      'anchor:macro-anchor[]',
+    ].join('\n'), 'asciidoc');
+
+    expect(definitions).toEqual([
+      {
+        id: 'chapter-one',
+        range: {
+          start: { line: 0, character: 2 },
+          end: { line: 0, character: 13 },
+        },
+      },
+      {
+        id: 'styled-anchor',
+        range: {
+          start: { line: 1, character: 2 },
+          end: { line: 1, character: 15 },
+        },
+      },
+      {
+        id: 'macro-anchor',
+        range: {
+          start: { line: 2, character: 7 },
+          end: { line: 2, character: 19 },
+        },
+      },
     ]);
   });
 });

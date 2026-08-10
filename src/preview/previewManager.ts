@@ -6,7 +6,10 @@ import {
   getContainingDirectoryUri,
   isHostFileSystemUri,
 } from './hostFileSystemUri';
-import { createAllowedRootPaths } from './previewResource';
+import {
+  createAllowedRootPaths,
+  isPathWithinRoot,
+} from './previewResource';
 import {
   PreviewSession,
   type PreviewRenderer,
@@ -14,6 +17,7 @@ import {
 import type { PreviewLayout } from './previewLayout';
 
 const PREVIEW_VIEW_TYPE = 'adocmdForge.preview';
+const DEPENDENCY_REFRESH_DELAY = 100;
 
 export interface PreviewManagerOptions {
   readonly extensionUri: vscode.Uri;
@@ -23,12 +27,17 @@ export interface PreviewManagerOptions {
   ) => Promise<void>;
   readonly outputChannel: vscode.OutputChannel;
   readonly renderer: PreviewRenderer;
+  readonly resourceChangeEvent?: vscode.Event<vscode.Uri>;
 }
 
 export class PreviewManager implements vscode.Disposable {
   private activeSession: PreviewSession | undefined;
   private disposed = false;
   private readonly managerDisposables: vscode.Disposable[] = [];
+  private readonly dependencyRefreshTimers = new Map<
+    string,
+    ReturnType<typeof setTimeout>
+  >();
   private readonly sessions = new Map<string, PreviewSession>();
 
   public constructor(private readonly options: PreviewManagerOptions) {
@@ -61,6 +70,11 @@ export class PreviewManager implements vscode.Disposable {
         }
       }),
     );
+    if (options.resourceChangeEvent !== undefined) {
+      this.managerDisposables.push(options.resourceChangeEvent((uri) => {
+        this.handleDependencyChange(uri);
+      }));
+    }
   }
 
   public async openPreview(resource?: vscode.Uri): Promise<void> {
@@ -173,6 +187,10 @@ export class PreviewManager implements vscode.Disposable {
     for (const disposable of this.managerDisposables.splice(0)) {
       disposable.dispose();
     }
+    for (const timer of this.dependencyRefreshTimers.values()) {
+      clearTimeout(timer);
+    }
+    this.dependencyRefreshTimers.clear();
     for (const session of [...this.sessions.values()]) {
       session.dispose();
     }
@@ -249,6 +267,11 @@ export class PreviewManager implements vscode.Disposable {
 
   private removeSession(session: PreviewSession): void {
     const documentKey = session.documentUri.toString();
+    const timer = this.dependencyRefreshTimers.get(documentKey);
+    if (timer !== undefined) {
+      clearTimeout(timer);
+      this.dependencyRefreshTimers.delete(documentKey);
+    }
     if (this.sessions.get(documentKey) === session) {
       this.sessions.delete(documentKey);
     }
@@ -261,6 +284,44 @@ export class PreviewManager implements vscode.Disposable {
     if (this.disposed) {
       throw new Error('Preview manager has already been disposed.');
     }
+  }
+
+  private handleDependencyChange(uri: vscode.Uri): void {
+    if (this.disposed) {
+      return;
+    }
+    for (const [documentKey, session] of this.sessions) {
+      if (
+        documentKey === uri.toString()
+        || !this.isRelatedResource(session.documentUri, uri)
+      ) {
+        continue;
+      }
+      const previous = this.dependencyRefreshTimers.get(documentKey);
+      if (previous !== undefined) {
+        clearTimeout(previous);
+      }
+      this.dependencyRefreshTimers.set(documentKey, setTimeout((): void => {
+        this.dependencyRefreshTimers.delete(documentKey);
+        session.refresh();
+      }, DEPENDENCY_REFRESH_DELAY));
+    }
+  }
+
+  private isRelatedResource(
+    documentUri: vscode.Uri,
+    resourceUri: vscode.Uri,
+  ): boolean {
+    if (isHostFileSystemUri(documentUri) && isHostFileSystemUri(resourceUri)) {
+      return this.createAllowedStylesheetRootPaths(documentUri).some(
+        (rootPath) => isPathWithinRoot(resourceUri.fsPath, rootPath),
+      );
+    }
+    const documentWorkspace = vscode.workspace.getWorkspaceFolder(documentUri);
+    const resourceWorkspace = vscode.workspace.getWorkspaceFolder(resourceUri);
+    const documentWorkspaceUri = documentWorkspace?.uri.toString();
+    return documentWorkspaceUri !== undefined
+      && documentWorkspaceUri === resourceWorkspace?.uri.toString();
   }
 }
 

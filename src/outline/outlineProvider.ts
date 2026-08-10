@@ -69,7 +69,7 @@ export class OutlineProvider implements vscode.TreeDataProvider<OutlineTreeItem>
   private readonly disposables: vscode.Disposable[] = [];
   private readonly debouncer = new RevisionDebouncer();
   private readonly analysisService: DocumentAnalysisService;
-  private readonly updateDelay: number;
+  private readonly updateDelay: number | undefined;
   private rootItems: readonly OutlineTreeItem[] = [];
   private currentDocumentUri: string | undefined;
   private currentAnalysis: DocumentAnalysis | undefined;
@@ -81,7 +81,9 @@ export class OutlineProvider implements vscode.TreeDataProvider<OutlineTreeItem>
 
   public constructor(options: OutlineProviderOptions = {}) {
     this.analysisService = options.analysisService ?? new DocumentAnalysisService();
-    this.updateDelay = normalizeDelay(options.updateDelay ?? OUTLINE_UPDATE_DELAY);
+    this.updateDelay = options.updateDelay === undefined
+      ? undefined
+      : normalizeDelay(options.updateDelay);
     this.disposables.push(
       vscode.window.onDidChangeActiveTextEditor((editor) => {
         this.setActiveDocument(editor?.document);
@@ -197,7 +199,9 @@ export class OutlineProvider implements vscode.TreeDataProvider<OutlineTreeItem>
     }
 
     const documentUri = document.uri.toString();
-    this.debouncer.schedule(this.updateDelay, (revision): void => {
+    const updateDelay = this.updateDelay
+      ?? getOutlineSettings(document.uri).updateDelay;
+    this.debouncer.schedule(updateDelay, (revision): void => {
       if (
         !this.debouncer.isCurrent(revision)
         || this.currentDocumentUri !== documentUri
@@ -239,9 +243,7 @@ export class OutlineProvider implements vscode.TreeDataProvider<OutlineTreeItem>
 export function registerOutlineProvider(
   commandExecutor: OutlineCommandExecutor,
 ): OutlineRegistration {
-  const provider = new OutlineProvider({
-    updateDelay: getOutlineSettings().updateDelay,
-  });
+  const provider = new OutlineProvider();
   const treeView = vscode.window.createTreeView(OUTLINE_VIEW_ID, {
     treeDataProvider: provider,
     showCollapseAll: true,
