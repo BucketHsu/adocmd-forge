@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.1
+
+- Rewrite the Marketplace README as a product-focused guide without development logs or hard-coded release details.
+- Improve Marketplace categories, keywords, pricing, and gallery metadata.
+- Restrict the VSIX to an explicit allowlist of runtime files, public documentation, licensing information, and the PNG icon.
+
 ## 1.3.0
 
 - Synchronize the preview with the active source-editor line when the caret moves.
