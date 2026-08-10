@@ -10,6 +10,11 @@ export interface DocumentReferenceInput {
   readonly kind: DocumentKind;
 }
 
+export interface ExplicitAnchorDefinition {
+  readonly id: string;
+  readonly range: DocumentRange;
+}
+
 /**
  * 只負責從原始文字找出可驗證的引用，不讀取檔案，也不依賴 VS Code。
  * Range 直接以來源行與字元計算，避免把 HTML 解析結果反推回來源位置。
@@ -57,12 +62,22 @@ export function parseExplicitAnchors(
   source: string,
   kind: DocumentKind,
 ): ReadonlySet<string> {
-  const anchors = new Set<string>();
+  return new Set(
+    parseExplicitAnchorDefinitions(source, kind).map(({ id }) => id),
+  );
+}
+
+/** 取得明確 Anchor 的識別碼及可安全改名的精確來源範圍。 */
+export function parseExplicitAnchorDefinitions(
+  source: string,
+  kind: DocumentKind,
+): readonly ExplicitAnchorDefinition[] {
+  const definitions: ExplicitAnchorDefinition[] = [];
   const lines = source.split(/\r?\n/u);
   let fenced = false;
   let fenceMarker: string | undefined;
 
-  lines.forEach((line): void => {
+  lines.forEach((line, lineNumber): void => {
     const fence = detectFence(line, kind, fenceMarker);
     if (fence !== undefined) {
       if (fenceMarker === undefined) {
@@ -79,13 +94,13 @@ export function parseExplicitAnchors(
     }
 
     if (kind === 'markdown') {
-      parseMarkdownAnchors(line, anchors);
+      parseMarkdownAnchorDefinitions(line, lineNumber, definitions);
     } else {
-      parseAsciiDocAnchors(line, anchors);
+      parseAsciiDocAnchorDefinitions(line, lineNumber, definitions);
     }
   });
 
-  return anchors;
+  return definitions;
 }
 
 function parseMarkdownLine(
@@ -184,50 +199,75 @@ function parseAsciiDocLine(
 
   const shorthandPattern = /<<([^,>\s]+)(?:,[^>]*)?>>/gu;
   for (const match of line.matchAll(shorthandPattern)) {
-    const target = match[1];
-    if (target === undefined) {
+    const rawTarget = match[1];
+    if (rawTarget === undefined) {
       continue;
     }
     const matchIndex = match.index;
-    const targetOffset = line.indexOf(target, matchIndex);
+    const targetOffset = line.indexOf(rawTarget, matchIndex);
     references.push({
       kind: 'xref',
-      target,
-      range: createRange(lineNumber, Math.max(0, targetOffset), target.length),
+      target: rawTarget.includes('#') ? rawTarget : `#${rawTarget}`,
+      range: createRange(
+        lineNumber,
+        Math.max(0, targetOffset),
+        rawTarget.length,
+      ),
     });
   }
 }
 
-function parseMarkdownAnchors(line: string, anchors: Set<string>): void {
+function parseMarkdownAnchorDefinitions(
+  line: string,
+  lineNumber: number,
+  definitions: ExplicitAnchorDefinition[],
+): void {
   const explicitPattern = /\{#([^}\s]+)\}/gu;
   for (const match of line.matchAll(explicitPattern)) {
     const anchor = match[1];
-    if (anchor !== undefined && anchor.length > 0) {
-      anchors.add(anchor);
-    }
+    addAnchorDefinition(definitions, line, lineNumber, match, anchor);
   }
 }
 
-function parseAsciiDocAnchors(line: string, anchors: Set<string>): void {
+function parseAsciiDocAnchorDefinitions(
+  line: string,
+  lineNumber: number,
+  definitions: ExplicitAnchorDefinition[],
+): void {
   const blockPattern = /\[\[([^,\]\s]+)(?:,[^\]]*)?\]\]/gu;
   const stylePattern = /\[#([^\]\s]+)\]/gu;
   const macroPattern = /\banchor:([^\s\[]+)\s*\[/gu;
 
   for (const match of line.matchAll(blockPattern)) {
-    addAnchor(anchors, match[1]);
+    addAnchorDefinition(definitions, line, lineNumber, match, match[1]);
   }
   for (const match of line.matchAll(stylePattern)) {
-    addAnchor(anchors, match[1]);
+    addAnchorDefinition(definitions, line, lineNumber, match, match[1]);
   }
   for (const match of line.matchAll(macroPattern)) {
-    addAnchor(anchors, match[1]);
+    addAnchorDefinition(definitions, line, lineNumber, match, match[1]);
   }
 }
 
-function addAnchor(anchors: Set<string>, value: string | undefined): void {
-  if (value !== undefined && value.length > 0) {
-    anchors.add(value);
+function addAnchorDefinition(
+  definitions: ExplicitAnchorDefinition[],
+  line: string,
+  lineNumber: number,
+  match: RegExpMatchArray,
+  value: string | undefined,
+): void {
+  if (value === undefined || value.length === 0) {
+    return;
   }
+  const character = line.indexOf(value, match.index);
+  definitions.push({
+    id: value,
+    range: createRange(
+      lineNumber,
+      Math.max(0, character),
+      value.length,
+    ),
+  });
 }
 
 function detectFence(

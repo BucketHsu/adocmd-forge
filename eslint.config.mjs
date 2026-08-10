@@ -26,7 +26,7 @@ export default tseslint.config(
     files: [
       'src/**/*.ts',
       'test/**/*.ts',
-      'vitest.config.ts',
+      'vitest.config.mts',
     ],
     extends: [
       ...tseslint.configs.strictTypeChecked,

@@ -140,9 +140,13 @@ export async function activateExtensionTest(): Promise<void> {
 
   await verifyAsciiDocLanguageProviders(extensionExports);
   await verifyFormattingCommands();
-  await vscode.window.showTextDocument(document);
+  await verifyWorkspaceLanguageProviders(extensionExports);
   await verifyHtmlExports();
-  await vscode.window.showTextDocument(document);
+  const previewDocument = await vscode.workspace.openTextDocument({
+    content: '# Preview integration\n\n## Child',
+    language: 'markdown',
+  });
+  await vscode.window.showTextDocument(previewDocument);
 
   await vscode.commands.executeCommand(OPEN_PREVIEW_COMMAND);
   await waitUntilPreviewTabCount(1);
@@ -250,7 +254,7 @@ async function verifyHtmlExports(): Promise<void> {
       }
     }
   } finally {
-    vscode.workspace.updateWorkspaceFolders(0, 1);
+    await removeWorkspaceFolder(root);
     await vscode.workspace.fs.delete(root, { recursive: true, useTrash: false });
   }
 }
@@ -327,6 +331,305 @@ async function verifyAsciiDocLanguageProviders(
     )),
     'AsciiDoc completion leaked into Markdown.',
   );
+}
+
+async function verifyWorkspaceLanguageProviders(
+  extensionExports: ExtensionExports,
+): Promise<void> {
+  const root = vscode.Uri.joinPath(
+    vscode.Uri.file(os.tmpdir()),
+    `adocmd-forge-language-${String(process.pid)}-${String(Date.now())}-${randomUUID()}`,
+  );
+  const guideUri = vscode.Uri.joinPath(root, 'guide.adoc');
+  const chapterUri = vscode.Uri.joinPath(root, 'chapter.adoc');
+  await vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(root, 'images'));
+  await vscode.workspace.fs.writeFile(chapterUri, new TextEncoder().encode([
+    '= Chapter',
+    '[[details]]',
+    '== Details',
+    'xref:#details[Self]',
+  ].join('\n')));
+  await vscode.workspace.fs.writeFile(guideUri, new TextEncoder().encode([
+    '= Guide',
+    ':imagesdir: images',
+    '',
+    '[[intro]]',
+    '== Intro',
+    '',
+    'xref:chapter.adoc#detials[Details]',
+    'xref:chapter.adoc#det',
+    'include::chapte.adoc[]',
+    'include::chap',
+    'include::generated',
+    'image::lo',
+  ].join('\n')));
+  await vscode.workspace.fs.writeFile(
+    vscode.Uri.joinPath(root, 'images', 'logo.png'),
+    new Uint8Array([0x89, 0x50, 0x4e, 0x47]),
+  );
+  const added = vscode.workspace.updateWorkspaceFolders(0, 0, {
+    name: 'AdocMD Forge Language Integration',
+    uri: root,
+  });
+  assert.equal(added, true, 'Could not add the language integration workspace.');
+
+  try {
+    const chapterDocument = await vscode.workspace.openTextDocument(chapterUri);
+    await vscode.window.showTextDocument(chapterDocument);
+    const guideDocument = await vscode.workspace.openTextDocument(guideUri);
+    await vscode.window.showTextDocument(guideDocument);
+
+    const symbols = await vscode.commands.executeCommand<
+      readonly (vscode.DocumentSymbol | vscode.SymbolInformation)[]
+    >('vscode.executeDocumentSymbolProvider', guideUri);
+    assert.deepEqual(
+      symbols.map(({ name }) => name),
+      ['Guide'],
+      'Native AsciiDoc document symbols were not registered.',
+    );
+    const guideSymbol = symbols[0];
+    if (guideSymbol === undefined || !('children' in guideSymbol)) {
+      assert.fail('The root symbol was not a hierarchical DocumentSymbol.');
+    }
+    assert.deepEqual(
+      guideSymbol.children.map(({ name }) => name),
+      ['Intro'],
+    );
+
+    const foldingRanges = await vscode.commands.executeCommand<
+      readonly vscode.FoldingRange[]
+    >('vscode.executeFoldingRangeProvider', guideUri);
+    assert.ok(
+      foldingRanges.some(({ start }) => start === 4),
+      'AsciiDoc section folding was not provided.',
+    );
+
+    await assertCompletion(guideDocument, 'xref:chapter.adoc#det', 'details');
+    await assertCompletion(guideDocument, 'include::chap', 'chapter.adoc');
+    await assertCompletion(guideDocument, 'image::lo', 'logo.png');
+    await vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(root, 'dist'));
+    await vscode.workspace.fs.writeFile(
+      vscode.Uri.joinPath(root, 'dist', 'generated.adoc'),
+      new TextEncoder().encode('= Generated output'),
+    );
+    await delay(250);
+    await assertNoCompletion(
+      guideDocument,
+      'include::generated',
+      'dist/generated.adoc',
+    );
+
+    await vscode.commands.executeCommand(VALIDATE_LINKS_COMMAND);
+    const missingAnchor = extensionExports.diagnostics.provider
+      .getDiagnostics(guideUri)
+      .find(({ code }) => code === 'missing-anchor');
+    const missingFile = extensionExports.diagnostics.provider
+      .getDiagnostics(guideUri)
+      .find(({ code }) => code === 'missing-file');
+    assert.ok(missingAnchor, 'The missing Anchor diagnostic was not produced.');
+    assert.ok(missingFile, 'The missing file diagnostic was not produced.');
+    const actions = await vscode.commands.executeCommand<
+      readonly (vscode.CodeAction | vscode.Command)[]
+    >(
+      'vscode.executeCodeActionProvider',
+      guideUri,
+      missingAnchor.range,
+      vscode.CodeActionKind.QuickFix.value,
+    );
+    const anchorFix = actions.find((action): action is vscode.CodeAction => (
+      action instanceof vscode.CodeAction
+      && action.title === '將 Anchor 改為 #details'
+      && action.edit !== undefined
+    ));
+    assert.ok(anchorFix?.edit, 'The missing Anchor Quick Fix was not offered.');
+    const pathActions = await vscode.commands.executeCommand<
+      readonly (vscode.CodeAction | vscode.Command)[]
+    >(
+      'vscode.executeCodeActionProvider',
+      guideUri,
+      missingFile.range,
+      vscode.CodeActionKind.QuickFix.value,
+    );
+    const pathFix = pathActions.find((action): action is vscode.CodeAction => (
+      action instanceof vscode.CodeAction
+      && action.title === '將路徑改為 chapter.adoc'
+      && action.edit !== undefined
+    ));
+    assert.ok(pathFix?.edit, 'The missing path Quick Fix was not offered.');
+    assert.equal(await vscode.workspace.applyEdit(pathFix.edit), true);
+    assert.equal(await vscode.workspace.applyEdit(anchorFix.edit), true);
+    await delay(200);
+    assert.ok(guideDocument.getText().includes(
+      'xref:chapter.adoc#details[Details]',
+    ));
+    assert.ok(guideDocument.getText().includes('include::chapter.adoc[]'));
+
+    const definitionPosition = positionInside(
+      guideDocument,
+      'xref:chapter.adoc#details[Details]',
+      'details',
+    );
+    const definitions = await vscode.commands.executeCommand<
+      readonly vscode.Location[]
+    >(
+      'vscode.executeDefinitionProvider',
+      guideUri,
+      definitionPosition,
+    );
+    assert.ok(definitions.some(({ range, uri }) => (
+      uri.toString() === chapterUri.toString() && range.start.line === 1
+    )), 'Go to Definition did not resolve the cross-file Anchor.');
+
+    const documentLinks = await vscode.commands.executeCommand<
+      readonly vscode.DocumentLink[]
+    >('vscode.executeLinkProvider', guideUri);
+    assert.ok(documentLinks.some(({ target }) => (
+      target?.with({ fragment: '' }).toString() === chapterUri.toString()
+      && target.fragment === 'details'
+    )), 'Document links did not include the resolved cross-file Anchor.');
+
+    const references = await vscode.commands.executeCommand<
+      readonly vscode.Location[]
+    >(
+      'vscode.executeReferenceProvider',
+      chapterUri,
+      new vscode.Position(1, 3),
+    );
+    assert.ok(references.some(({ uri }) => uri.toString() === guideUri.toString()),
+      'Find References did not return the guide xref.');
+
+    const renameEdit = await vscode.commands.executeCommand<vscode.WorkspaceEdit>(
+      'vscode.executeDocumentRenameProvider',
+      chapterUri,
+      new vscode.Position(1, 3),
+      'details-renamed',
+    );
+    assert.ok(renameEdit, 'The explicit Anchor rename provider returned no edit.');
+    assert.equal(await vscode.workspace.applyEdit(renameEdit), true);
+    assert.ok(chapterDocument.getText().includes('[[details-renamed]]'));
+    assert.ok(chapterDocument.getText().includes('xref:#details-renamed[Self]'));
+    assert.ok(guideDocument.getText().includes(
+      'xref:chapter.adoc#details-renamed[Details]',
+    ));
+
+    await chapterDocument.save();
+    await guideDocument.save();
+  } finally {
+    await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+    await removeWorkspaceFolder(root);
+    await vscode.workspace.fs.delete(root, { recursive: true, useTrash: false });
+  }
+}
+
+async function removeWorkspaceFolder(root: vscode.Uri): Promise<void> {
+  const folderIndex = vscode.workspace.workspaceFolders?.findIndex(
+    ({ uri }) => uri.toString() === root.toString(),
+  ) ?? -1;
+  if (folderIndex < 0) {
+    return;
+  }
+  let removalSubscription: vscode.Disposable | undefined;
+  const removalEvent = new Promise<void>((resolve) => {
+    removalSubscription = vscode.workspace.onDidChangeWorkspaceFolders(
+      ({ removed }) => {
+        if (removed.some(({ uri }) => uri.toString() === root.toString())) {
+          resolve();
+        }
+      },
+    );
+  });
+  try {
+    assert.equal(
+      vscode.workspace.updateWorkspaceFolders(folderIndex, 1),
+      true,
+      `Could not remove integration workspace「${root.toString()}」.`,
+    );
+    await Promise.race([
+      removalEvent,
+      delay(5_000).then(() => {
+        throw new Error(
+          `Workspace removal event timed out for「${root.toString()}」.`,
+        );
+      }),
+    ]);
+  } finally {
+    removalSubscription?.dispose();
+  }
+  const timeoutAt = Date.now() + 5_000;
+  while (
+    vscode.workspace.workspaceFolders?.some(
+      ({ uri }) => uri.toString() === root.toString(),
+    ) === true
+    && Date.now() < timeoutAt
+  ) {
+    await delay(25);
+  }
+  assert.equal(
+    vscode.workspace.workspaceFolders?.some(
+      ({ uri }) => uri.toString() === root.toString(),
+    ) ?? false,
+    false,
+    `Integration workspace「${root.toString()}」was not removed in time.`,
+  );
+  // VS Code rejects another workspace mutation while removal listeners are
+  // still unwinding, even though workspaceFolders already reflects the change.
+  await delay(50);
+}
+
+async function assertCompletion(
+  document: vscode.TextDocument,
+  lineText: string,
+  expectedLabel: string,
+): Promise<void> {
+  const line = findLine(document, lineText);
+  const completionList = await vscode.commands.executeCommand<
+    vscode.CompletionList
+  >(
+    'vscode.executeCompletionItemProvider',
+    document.uri,
+    new vscode.Position(line, lineText.length),
+  );
+  assert.ok(completionList.items.some(({ label }) => (
+    getCompletionLabel(label) === expectedLabel
+  )), `Completion「${expectedLabel}」was not offered for「${lineText}」.`);
+}
+
+async function assertNoCompletion(
+  document: vscode.TextDocument,
+  lineText: string,
+  unexpectedLabel: string,
+): Promise<void> {
+  const line = findLine(document, lineText);
+  const completionList = await vscode.commands.executeCommand<
+    vscode.CompletionList
+  >(
+    'vscode.executeCompletionItemProvider',
+    document.uri,
+    new vscode.Position(line, lineText.length),
+  );
+  assert.ok(!completionList.items.some(({ label }) => (
+    getCompletionLabel(label) === unexpectedLabel
+  )), `Excluded completion「${unexpectedLabel}」was offered for「${lineText}」.`);
+}
+
+function positionInside(
+  document: vscode.TextDocument,
+  lineText: string,
+  needle: string,
+): vscode.Position {
+  const line = findLine(document, lineText);
+  const character = lineText.indexOf(needle);
+  assert.ok(character >= 0, `Could not find「${needle}」in「${lineText}」.`);
+  return new vscode.Position(line, character + 1);
+}
+
+function findLine(document: vscode.TextDocument, lineText: string): number {
+  for (let line = 0; line < document.lineCount; line += 1) {
+    if (document.lineAt(line).text === lineText) {
+      return line;
+    }
+  }
+  assert.fail(`Could not find integration line「${lineText}」.`);
 }
 
 function getCompletionLabel(label: string | vscode.CompletionItemLabel): string {

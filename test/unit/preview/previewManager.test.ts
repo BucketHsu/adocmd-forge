@@ -130,6 +130,7 @@ const editorSelectionEvent = new FakeEvent<{
 }>();
 const configurationEvent = new FakeEvent<unknown>();
 const trustEvent = new FakeEvent<void>();
+const dependencyEvent = new FakeEvent<FakeUri>();
 const sessionInstances: FakePreviewSession[] = [];
 
 class FakePreviewSession {
@@ -260,6 +261,7 @@ function createManager(): InstanceType<typeof PreviewManagerClass> {
     extensionUri: createFileUri('/extension') as unknown as vscode.Uri,
     openLink: (): Promise<void> => Promise.resolve(),
     outputChannel: {} as vscode.OutputChannel,
+    resourceChangeEvent: dependencyEvent.event as unknown as vscode.Event<vscode.Uri>,
     renderer: (): Promise<{
       readonly html: string;
       readonly lineCount: number;
@@ -302,6 +304,7 @@ describe('PreviewManager', (): void => {
     editorSelectionEvent.clear();
     configurationEvent.clear();
     trustEvent.clear();
+    dependencyEvent.clear();
     sessionInstances.splice(0);
     fakeWorkspace.getWorkspaceFolder.mockClear();
     fakeWorkspace.openTextDocument.mockReset();
@@ -316,6 +319,7 @@ describe('PreviewManager', (): void => {
 
   afterEach((): void => {
     manager?.dispose();
+    vi.useRealTimers();
   });
 
   it('routes document, viewport, caret, configuration and trust events', async (): Promise<void> => {
@@ -505,6 +509,36 @@ describe('PreviewManager', (): void => {
     second.activate();
     await previewManager.refreshPreview();
     expect(second.refresh).toHaveBeenCalledOnce();
+  });
+
+  it('debounces related include, image and stylesheet changes', async (): Promise<void> => {
+    vi.useFakeTimers();
+    const previewManager = createManager();
+    workspaceFolder = {
+      uri: createFileUri('/workspace'),
+    };
+    const documentUri = createFileUri('/workspace/docs/guide.adoc');
+    const session = await openDocumentPreview(
+      previewManager,
+      createDocument(documentUri, 'asciidoc', documentUri.fsPath),
+    );
+
+    dependencyEvent.fire(createFileUri('/workspace/styles/colony.css'));
+    dependencyEvent.fire(createFileUri('/workspace/partials/header.adoc'));
+    vi.advanceTimersByTime(99);
+    expect(session.refresh).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(session.refresh).toHaveBeenCalledOnce();
+
+    dependencyEvent.fire(documentUri);
+    dependencyEvent.fire(createFileUri('/outside/unrelated.css'));
+    vi.advanceTimersByTime(100);
+    expect(session.refresh).toHaveBeenCalledOnce();
+
+    session.close();
+    dependencyEvent.fire(createFileUri('/workspace/images/new.png'));
+    vi.advanceTimersByTime(100);
+    expect(session.refresh).toHaveBeenCalledOnce();
   });
 
   it('disposes sessions and rejects later operations idempotently', async (): Promise<void> => {

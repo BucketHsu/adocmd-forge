@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.0
+
+- Add native AsciiDoc syntax highlighting, snippets, keyboard shortcuts, document symbols, breadcrumbs, and folding ranges.
+- Add workspace-aware completion for xrefs, anchors, includes, and images, including `imagesdir` path handling.
+- Add Go to Definition, document links, Find All References, and safe cross-file rename for explicit AsciiDoc anchors.
+- Add Problems Panel Quick Fixes for misspelled local paths and anchors.
+- Refresh diagnostics and open previews when referenced documents, stylesheets, images, or includes change.
+- Highlight the current source block in the preview while keeping caret and scroll synchronization loop-safe.
+- Keep the live workspace index bounded and exclude dependency, build, coverage, artifact, Git, and test-output directories.
+
 ## 1.3.1
 
 - Rewrite the Marketplace README as a product-focused guide without development logs or hard-coded release details.

@@ -7,7 +7,12 @@ import {
   it,
   vi,
 } from 'vitest';
-import type { DiagnosticCollection, OutputChannel } from 'vscode';
+import type {
+  DiagnosticCollection,
+  Event,
+  OutputChannel,
+  Uri,
+} from 'vscode';
 
 type Listener<T> = (value: T) => void;
 
@@ -129,7 +134,13 @@ function asDiagnosticCollection(
 const activeEditorEmitter = new FakeEventEmitter<unknown>();
 const documentChangeEmitter = new FakeEventEmitter<{ readonly document: FakeDocument }>();
 const documentCloseEmitter = new FakeEventEmitter<FakeDocument>();
+const resourceChangeEmitter = new FakeEventEmitter<FakeUri>();
 const registeredCommands = new Map<string, (...args: unknown[]) => unknown>();
+const getConfiguration = vi.fn(
+  (): { get: (key: string, fallback: unknown) => unknown } => ({
+    get: (_key: string, fallback: unknown): unknown => fallback,
+  }),
+);
 const fakeFileSystem = {
   stat: vi.fn().mockResolvedValue({ type: 1 }),
   readFile: vi.fn().mockResolvedValue(new TextEncoder().encode('# Target\n')),
@@ -144,9 +155,7 @@ const fakeWorkspace = {
   onDidChangeTextDocument: documentChangeEmitter.event,
   onDidCloseTextDocument: documentCloseEmitter.event,
   fs: fakeFileSystem,
-  getConfiguration: (): { get: (key: string, fallback: unknown) => unknown } => ({
-    get: (_key: string, fallback: unknown): unknown => fallback,
-  }),
+  getConfiguration,
 };
 
 vi.mock('vscode', () => ({
@@ -201,7 +210,9 @@ describe('LinkDiagnosticProvider', (): void => {
     activeEditorEmitter.dispose();
     documentChangeEmitter.dispose();
     documentCloseEmitter.dispose();
+    resourceChangeEmitter.dispose();
     registeredCommands.clear();
+    getConfiguration.mockClear();
     fakeWindow.activeTextEditor = undefined;
     fakeWorkspace.isTrusted = true;
     fakeWorkspace.workspaceFolders = [];
@@ -299,6 +310,46 @@ describe('LinkDiagnosticProvider', (): void => {
 
     documentChangeEmitter.fire({ document: second });
     provider.dispose();
+    vi.runAllTimers();
+    expect(serviceCheck).toHaveBeenCalledTimes(2);
+  });
+
+  it('相依檔案變更時重新檢查目前文件，但忽略目前文件自己的事件', async (): Promise<void> => {
+    const document = new FakeDocument(
+      'xref:chapter.adoc#intro[]',
+      'asciidoc',
+      'file:///workspace/main.adoc',
+      'file',
+      '/workspace/main.adoc',
+    );
+    fakeWindow.activeTextEditor = { document };
+    const provider = new ProviderClass({
+      updateDelay: 50,
+      collection: asDiagnosticCollection(new FakeDiagnosticCollection()),
+      resourceChangeEvent: resourceChangeEmitter.event as unknown as Event<Uri>,
+      service: { check: serviceCheck } as never,
+    });
+    vi.advanceTimersByTime(50);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(serviceCheck).toHaveBeenCalledOnce();
+
+    resourceChangeEmitter.fire(document.uri);
+    vi.advanceTimersByTime(50);
+    expect(serviceCheck).toHaveBeenCalledOnce();
+
+    resourceChangeEmitter.fire(new FakeUri(
+      'file:///workspace/chapter.adoc',
+      'file',
+      '/workspace/chapter.adoc',
+    ));
+    vi.advanceTimersByTime(50);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(serviceCheck).toHaveBeenCalledTimes(2);
+
+    provider.dispose();
+    resourceChangeEmitter.fire(new FakeUri('file:///workspace/other.adoc'));
     vi.runAllTimers();
     expect(serviceCheck).toHaveBeenCalledTimes(2);
   });
@@ -429,6 +480,7 @@ describe('LinkDiagnosticProvider', (): void => {
       },
     };
     const registration = registerFunction(commandExecutor);
+    expect(getConfiguration).toHaveBeenCalledWith('adocmdForge', document.uri);
     await registeredCommands.get('adocmdForge.validateLinks')?.();
 
     expect(fakeFileSystem.stat).toHaveBeenCalledWith(

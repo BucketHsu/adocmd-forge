@@ -22,6 +22,8 @@ const expectedPackageFiles = new Set([
   'images/icon.png',
   'language-configuration.json',
   'package.json',
+  'snippets/asciidoc.json',
+  'syntaxes/asciidoc.tmLanguage.json',
 ]);
 
 await withPackagedReadme(projectDirectory, async () => {

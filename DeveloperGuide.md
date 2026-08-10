@@ -87,6 +87,10 @@ Bug 修正必須先加入能重現問題的 regression test，並確認測試在
 
 新增語法時，先更新 `src/language/asciidocSyntax.ts` 的目錄，再由補全、Hover 與語法說明共用該資料。補全必須新增對應的游標前綴測試，Hover 必須測試 Range 與非語法文字，避免在一般段落顯示大量無關項目。
 
+`syntaxes/asciidoc.tmLanguage.json` 是 VS Code 原生語法醒目提示來源，`snippets/asciidoc.json` 是編輯器 Snippet 來源。兩者都會直接封裝進 VSIX，新增或改名時必須同步更新 manifest、`scripts/package-list.mjs` 與 manifest／資產測試。TextMate grammar 中 raw 或 literal block 的規則必須早於一般行內規則。
+
+`AsciiDocDocumentProvider` 由 `documentStructure.ts` 的純資料結果建立 Document Symbol 與 Folding Range。符號層級、Range 與選取 Range 必須同時以單元測試及 `vscode.executeDocumentSymbolProvider`／`vscode.executeFoldingRangeProvider` 整合測試驗證。
+
 `AdocMD Forge: Open AsciiDoc Syntax Guide` 會開啟可編輯的 untitled AsciiDoc 說明文件；它不寫入工作區，也不需要檔案權限。
 
 AsciiDoc 預覽在受信任且已儲存的文件中使用 renderer worker 內的單次 IncludeProcessor registry。來源文件目錄與 Extension Host 傳入的 workspace roots 會先經 `realpath` 邊界檢查，再由 `SecureIncludeResolver` 解析相對 `include::`；未受信任 workspace、絕對／外部 URI、workspace 外路徑、symbolic link 逸出、循環與超過深度的 include 都不會讀取。`lines`、`tag` 與 `tags` 由 `selectIncludeContent` 套用，問題會寫入 renderer message 與 Output Channel。每次 render 都建立獨立 registry，不共享其他文件的 include 狀態。
@@ -128,7 +132,22 @@ Mock 只用於明確的外部邊界。不要 mock 被測模組內部實作細節
 
 `OutlineProvider` 只維護目前 active editor。文件切換、文件修改與文件關閉都會更新或清除節點；修改事件由 `adocmdForge.outline.updateDelay` debounce。所有 Event、Timer、TreeView 與 Command registration 都由 Extension context 統一 dispose。
 
-若文件沒有標題，Outline View 顯示空狀態；目前版本不建立全工作區多文件樹，Link Checker 與匯出仍只處理目前 active editor。
+若文件沒有標題，Outline View 顯示空狀態；Explorer 不建立全工作區多文件樹，Link Checker 與匯出仍只處理目前 active editor。這不影響下節的工作區語意索引。
+
+### 10.1 工作區語意索引與 Provider
+
+`WorkspaceDocumentIndex` 是不匯入 VS Code 的核心，集中保存文件分析、明確與自動 anchor、引用及解析結果。`WorkspaceLanguageService` 負責受信任工作區內的檔案目錄、批次初始化、開啟文件覆蓋、FileSystemWatcher、debounce、generation 與 dispose；Completion、Definition、Document Link、References、Rename 及 Quick Fix 共用這個 service，不得各自重新掃描工作區。
+
+新增或修改語意 Provider 時至少驗證：
+
+- `xref`、`include::`、`image::` 的游標情境與取代 Range。
+- 同文件及跨文件 anchor、標題產生 anchor 與 `:imagesdir:` 路徑。
+- Definition、Document Link 與 References 的目標 URI 及 Range。
+- Rename 僅接受明確 anchor，會拒絕無效名稱、自動 anchor 與同文件碰撞，並以單一 `WorkspaceEdit` 更新所有已索引引用。
+- `missing-file`、`missing-anchor` Quick Fix 只對本擴充套件 Diagnostic 生效，保留原本 query／fragment，且不提供不會改變文件的候選。
+- 未受信任工作區、取消、初始掃描與監看事件的排除目錄、10,000 筆索引硬上限、workspace folder 切換、過期 generation、資源刪除與完整 dispose。
+
+工作區資源事件同時供 Link Checker 與 PreviewManager 使用。相依文件、CSS、圖片或 include 變更時需 debounce，來源文件自身的編輯事件不得造成額外重複渲染。
 
 ## 11. HTML 匯出
 
@@ -148,7 +167,7 @@ Renderer 先以既有 worker 產生安全 HTML，再由 export service 執行資
 
 整合測試放在 `test/integration/suite/`。`suite/index.ts` 匯出 `run()`，由 `@vscode/test-electron` 在 VS Code 1.97.2 中呼叫。
 
-整合測試採具名的非同步測試清單，依序在同一個 Extension Host 執行。這可直接存取 `vscode` 模組，並避免目前 Mocha 相依樹尚無安全升級路徑的已知弱點。
+整合測試採具名的非同步測試清單，依序在同一個 Extension Host 執行。這可直接存取 `vscode` 模組，並避免目前 Mocha 相依樹尚無安全升級路徑的已知弱點。Runner 每次建立獨立的暫存 `--user-data-dir` 與空白基底 workspace，並於結束後清除，避免使用者日常設定、工作區備份或移除最後一個測試資料夾所造成的視窗重新載入影響結果。
 
 每個測試必須：
 
@@ -175,6 +194,8 @@ Webview runtime 與 Extension Host 是不同信任邊界。
 - 樣式使用 VS Code theme token，並驗證高對比模式。
 - Preview Webview 不提供工具列或 command bridge，只接收預覽內容與捲動同步訊息；格式命令由 Quick Pick 浮動面板或來源編輯器右鍵選單執行，版面、重新整理、語法說明與匯出命令則由來源編輯器標題列執行。
 - `PreviewManager` 集中監聽來源編輯器的 selection 與 visible-range 事件；`PreviewSession` 優先以 selection active line 定位 Preview，純視窗捲動則使用可見範圍起始行，兩者共用相同 sequence 與去重流程。
+- Preview runtime 會移除上一個 `adocmd-forge-current-source` 標記，再標示最接近目前來源行的區塊；遇到 AsciiDoc section wrapper 時只標示直接標題，避免整個章節背景被改變。
+- `WorkspaceLanguageService.onDidChangeResource` 觸發相依預覽更新；PreviewManager 必須對資源事件 debounce，並在 dispose 時清除所有 pending timer。
 
 ## 13.1 浮動格式面板與 PDF
 

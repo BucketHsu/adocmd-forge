@@ -19,6 +19,7 @@ export interface LinkDiagnosticProviderOptions {
   readonly collection?: vscode.DiagnosticCollection;
   readonly fileSystem?: LinkCheckFileSystem;
   readonly outputChannel?: vscode.OutputChannel;
+  readonly resourceChangeEvent?: vscode.Event<vscode.Uri>;
 }
 
 export interface LinkDiagnosticRegistration {
@@ -35,7 +36,7 @@ export class LinkDiagnosticProvider implements vscode.Disposable {
   public readonly collection: vscode.DiagnosticCollection;
   private readonly service: LinkCheckerService;
   private readonly outputChannel: vscode.OutputChannel | undefined;
-  private readonly updateDelay: number;
+  private readonly updateDelay: number | undefined;
   private readonly subscriptions: vscode.Disposable[] = [];
   private timer: ReturnType<typeof setTimeout> | undefined;
   private controller: AbortController | undefined;
@@ -49,7 +50,9 @@ export class LinkDiagnosticProvider implements vscode.Disposable {
     this.service = options.service
       ?? new LinkCheckerService(options.fileSystem ?? new VscodeLinkCheckFileSystem());
     this.outputChannel = options.outputChannel;
-    this.updateDelay = normalizeDelay(options.updateDelay ?? 150);
+    this.updateDelay = options.updateDelay === undefined
+      ? undefined
+      : normalizeDelay(options.updateDelay);
     this.subscriptions.push(
       vscode.window.onDidChangeActiveTextEditor((editor) => {
         this.schedule(editor?.document);
@@ -66,6 +69,17 @@ export class LinkDiagnosticProvider implements vscode.Disposable {
         }
       }),
     );
+    if (options.resourceChangeEvent !== undefined) {
+      this.subscriptions.push(options.resourceChangeEvent((uri) => {
+        const activeDocument = vscode.window.activeTextEditor?.document;
+        if (
+          activeDocument !== undefined
+          && activeDocument.uri.toString() !== uri.toString()
+        ) {
+          this.schedule(activeDocument);
+        }
+      }));
+    }
     this.schedule(vscode.window.activeTextEditor?.document);
   }
 
@@ -120,6 +134,8 @@ export class LinkDiagnosticProvider implements vscode.Disposable {
 
     this.collection.delete(document.uri);
     const revision = ++this.revision;
+    const updateDelay = this.updateDelay
+      ?? getLinkCheckerSettings(document.uri).updateDelay;
     this.timer = setTimeout((): void => {
       this.timer = undefined;
       if (this.disposed || revision !== this.revision) {
@@ -127,7 +143,7 @@ export class LinkDiagnosticProvider implements vscode.Disposable {
       }
       this.controller = new AbortController();
       void this.analyze(document, revision, this.controller.signal);
-    }, this.updateDelay);
+    }, updateDelay);
   }
 
   private async analyze(
@@ -186,10 +202,11 @@ export function registerLinkDiagnostics(
     run(commandTitle: string, action: () => Promise<void>): Promise<void>;
   },
   outputChannel?: vscode.OutputChannel,
+  resourceChangeEvent?: vscode.Event<vscode.Uri>,
 ): LinkDiagnosticRegistration {
   const provider = new LinkDiagnosticProvider({
-    updateDelay: getLinkCheckerSettings().updateDelay,
     ...(outputChannel === undefined ? {} : { outputChannel }),
+    ...(resourceChangeEvent === undefined ? {} : { resourceChangeEvent }),
   });
   const command = vscode.commands.registerCommand(
     VALIDATE_LINKS_COMMAND,

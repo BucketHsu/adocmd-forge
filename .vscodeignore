@@ -18,5 +18,5 @@ test/**
 .gitignore
 eslint.config.mjs
 tsconfig*.json
-vitest.config.ts
+vitest.config.mts
 media/**

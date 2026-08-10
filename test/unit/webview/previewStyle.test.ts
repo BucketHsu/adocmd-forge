@@ -30,6 +30,13 @@ describe('preview stylesheet', (): void => {
       /#preview-viewport\s*\{[^}]*padding:\s*clamp\(1rem, 3vw, 2\.5rem\)/u,
     );
   });
+
+  it('visibly marks the source block selected in the editor', async (): Promise<void> => {
+    const stylesheet = await readPreviewStylesheet();
+
+    expect(stylesheet).toContain('.adocmd-forge-current-source');
+    expect(stylesheet).toContain('var(--vscode-editorCursor-foreground)');
+  });
 });
 
 async function readPreviewStylesheet(): Promise<string> {
