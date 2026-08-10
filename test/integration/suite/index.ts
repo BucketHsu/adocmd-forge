@@ -27,6 +27,7 @@ export async function run(): Promise<void> {
   }
 
   if (failures.length > 0) {
+    process.stderr.write(`Extension integration failures:\n${failures.join('\n\n')}\n`);
     throw new Error(failures.join('\n\n'));
   }
 

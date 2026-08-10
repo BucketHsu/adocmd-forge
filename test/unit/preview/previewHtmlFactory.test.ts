@@ -18,6 +18,9 @@ describe('buildPreviewHtml', (): void => {
     expect(html).toContain("script-src 'nonce-valid-nonce'");
     expect(html).toContain('id="preview-content"');
     expect(html).toContain('id="preview-status"');
+    expect(html).toContain('id="preview-viewport"');
+    expect(html).not.toContain('id="preview-toolbar"');
+    expect(html).not.toContain('data-toolbar-action');
     expect(html).not.toContain('<style>');
     expect(html).not.toContain('<script>');
     expect(html).toContain('type="module"');

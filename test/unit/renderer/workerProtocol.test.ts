@@ -26,6 +26,7 @@ describe('isRenderRequest', () => {
       kind: 'asciidoc',
       source: '= 標題',
       sourcePath: 'D:\\docs\\guide.adoc',
+      allowedIncludeRootPaths: ['D:\\docs'],
     },
     {
       allowLocalIncludes: false,
@@ -67,6 +68,11 @@ describe('isRenderRequest', () => {
       kind: 'markdown',
       source: '內容',
       sourcePath: null,
+    },
+    {
+      kind: 'asciidoc',
+      source: '= 標題',
+      allowedIncludeRootPaths: ['D:\\docs', 42],
     },
     {
       injected: true,
@@ -180,6 +186,7 @@ describe('isRenderResult', () => {
           sourceLine: 2,
         },
       ],
+      stylesheets: ['/workspace/stylesheets/colony.css'],
       title: '文件',
     },
   ])('接受有效 RenderResult', (result) => {
@@ -218,6 +225,16 @@ describe('isRenderResult', () => {
       html: '',
       lineCount: 1,
       title: undefined,
+    },
+    {
+      html: '',
+      lineCount: 1,
+      stylesheets: [''],
+    },
+    {
+      html: '',
+      lineCount: 1,
+      stylesheets: {},
     },
     {
       html: '',
@@ -269,6 +286,15 @@ describe('isRenderResult', () => {
     expect(isRenderResult({
       ...MINIMAL_RENDER_RESULT,
       messages,
+    })).toBe(false);
+  });
+
+  it('拒絕稀疏的 stylesheets 陣列', () => {
+    const stylesheets = new Array(1);
+
+    expect(isRenderResult({
+      ...MINIMAL_RENDER_RESULT,
+      stylesheets,
     })).toBe(false);
   });
 });

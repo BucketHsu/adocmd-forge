@@ -3,6 +3,7 @@ export interface RenderPreviewMessage {
   readonly revision: number;
   readonly html: string;
   readonly lineCount: number;
+  readonly stylesheets?: readonly string[];
 }
 
 export interface ScrollToSourceLineMessage {
@@ -31,6 +32,12 @@ export interface PreviewRenderedMessage {
   readonly revision: number;
 }
 
+export interface PreviewStylesheetStatusMessage {
+  readonly type: 'stylesheetStatus';
+  readonly href: string;
+  readonly status: 'loaded' | 'error';
+}
+
 export interface PreviewScrollMessage {
   readonly type: 'scroll';
   readonly sourceLine: number;
@@ -45,6 +52,7 @@ export interface PreviewOpenLinkMessage {
 export type WebviewToExtensionMessage =
   | PreviewReadyMessage
   | PreviewRenderedMessage
+  | PreviewStylesheetStatusMessage
   | PreviewScrollMessage
   | PreviewOpenLinkMessage;
 
@@ -58,7 +66,12 @@ const DANGEROUS_LINK_SCHEMES = new Set([
 ]);
 const LINK_SCHEME_PATTERN = /^([a-z][a-z\d+.-]*):/iu;
 const LINK_CONTROL_CHARACTER_PATTERN = /[\u0000-\u001F\u007F]/u;
-
+const WEBVIEW_STYLESHEET_SCHEMES = new Set([
+  'vscode-resource',
+  'vscode-webview',
+  'vscode-webview-resource',
+]);
+const WEBVIEW_RESOURCE_HOST_PATTERN = /^[a-z][a-z\d+.-]*\.vscode-resource\.vscode-cdn\.net$/iu;
 function isMessageRecord(value: unknown): value is MessageRecord {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     return false;
@@ -97,6 +110,92 @@ function isSafeLinkHref(value: unknown): value is string {
   return scheme === undefined || !DANGEROUS_LINK_SCHEMES.has(scheme);
 }
 
+function isSafeStylesheetUri(value: unknown): value is string {
+  if (
+    typeof value !== 'string'
+    || value.length === 0
+    || value !== value.trim()
+    || LINK_CONTROL_CHARACTER_PATTERN.test(value)
+  ) {
+    return false;
+  }
+
+  const scheme = LINK_SCHEME_PATTERN.exec(value)?.[1]?.toLowerCase();
+  if (scheme === undefined) {
+    return false;
+  }
+  if (WEBVIEW_STYLESHEET_SCHEMES.has(scheme)) {
+    return true;
+  }
+  if (scheme !== 'https') {
+    return false;
+  }
+
+  try {
+    const uri = new URL(value);
+    const hostname = decodeURIComponent(uri.hostname);
+    return uri.protocol === 'https:'
+      && WEBVIEW_RESOURCE_HOST_PATTERN.test(hostname)
+      && uri.username.length === 0
+      && uri.password.length === 0
+      && uri.port.length === 0
+      && uri.search.length === 0
+      && uri.hash.length === 0
+      && uri.pathname.startsWith('/');
+  } catch {
+    return false;
+  }
+}
+
+function isStylesheetUriArray(value: unknown): value is readonly string[] {
+  if (
+    !Array.isArray(value)
+    || Reflect.getPrototypeOf(value) !== Array.prototype
+  ) {
+    return false;
+  }
+
+  const lengthDescriptor = Reflect.getOwnPropertyDescriptor(value, 'length');
+  if (
+    lengthDescriptor === undefined
+    || !Object.hasOwn(lengthDescriptor, 'value')
+    || typeof lengthDescriptor.value !== 'number'
+  ) {
+    return false;
+  }
+
+  const length = lengthDescriptor.value;
+  const ownKeys = Reflect.ownKeys(value);
+  if (ownKeys.length !== length + 1) {
+    return false;
+  }
+
+  for (let index = 0; index < length; index += 1) {
+    const descriptor = Reflect.getOwnPropertyDescriptor(
+      value,
+      String(index),
+    );
+    if (
+      descriptor === undefined
+      || !descriptor.enumerable
+      || !Object.hasOwn(descriptor, 'value')
+      || !isSafeStylesheetUri(descriptor.value)
+    ) {
+      return false;
+    }
+  }
+
+  return ownKeys.every((key) => (
+    key === 'length'
+    || (
+      typeof key === 'string'
+      && /^(?:0|[1-9]\d*)$/u.test(key)
+      && Number(key) < length
+      && String(Number(key)) === key
+    )
+  ));
+}
+
 /**
  * 在訊息進入 Webview runtime 前驗證其結構。
  *
@@ -112,15 +211,28 @@ export function isExtensionToWebviewMessage(
 
     switch (value.type) {
       case 'render':
-        return hasExactKeys(value, [
-          'type',
-          'revision',
-          'html',
-          'lineCount',
-        ])
+        return (
+          hasExactKeys(value, [
+            'type',
+            'revision',
+            'html',
+            'lineCount',
+          ])
+          || hasExactKeys(value, [
+            'type',
+            'revision',
+            'html',
+            'lineCount',
+            'stylesheets',
+          ])
+        )
           && isNonNegativeSafeInteger(value.revision)
           && typeof value.html === 'string'
-          && isNonNegativeSafeInteger(value.lineCount);
+          && isNonNegativeSafeInteger(value.lineCount)
+          && (
+            !Object.hasOwn(value, 'stylesheets')
+            || isStylesheetUriArray(value.stylesheets)
+          );
 
       case 'scrollToSourceLine':
         return hasExactKeys(value, [
@@ -171,6 +283,15 @@ export function isWebviewToExtensionMessage(
           'revision',
         ])
           && isNonNegativeSafeInteger(value.revision);
+
+      case 'stylesheetStatus':
+        return hasExactKeys(value, [
+          'type',
+          'href',
+          'status',
+        ])
+          && isSafeStylesheetUri(value.href)
+          && (value.status === 'loaded' || value.status === 'error');
 
       case 'scroll':
         return hasExactKeys(value, [

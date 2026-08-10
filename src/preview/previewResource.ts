@@ -91,19 +91,66 @@ export function resolvePreviewImage(
     : { kind: 'rejected' };
 }
 
+/**
+ * 將 renderer 提供的 stylesheet 候選路徑限制在允許的本機根目錄內。
+ *
+ * 實體檔案與 symlink 邊界由 PreviewSession 以 realpath 再驗證；此函式
+ * 先拒絕相對路徑、URI、控制字元及非 CSS 副檔名，避免把任意值交給 URI
+ * 轉換或 Webview。
+ */
+export function resolvePreviewStylesheet(
+  allowedRootPaths: readonly string[],
+  stylesheetPath: string,
+): string | undefined {
+  const pathApi = getAbsolutePathApi(stylesheetPath);
+  if (
+    stylesheetPath.length === 0
+    || stylesheetPath !== stylesheetPath.trim()
+    || CONTROL_CHARACTER_PATTERN.test(stylesheetPath)
+    || pathApi?.extname(stylesheetPath).toLowerCase() !== '.css'
+  ) {
+    return undefined;
+  }
+
+  const candidatePath = pathApi.resolve(stylesheetPath);
+  return allowedRootPaths.some(
+    (rootPath) => (
+      pathApi.isAbsolute(rootPath)
+      && isPathWithinRootWith(candidatePath, rootPath, pathApi)
+    ),
+  )
+    ? candidatePath
+    : undefined;
+}
+
 export function isPathWithinRoot(
   candidatePath: string,
   rootPath: string,
 ): boolean {
-  const relativePath = path.relative(
-    path.resolve(rootPath),
-    path.resolve(candidatePath),
+  return isPathWithinRootWith(candidatePath, rootPath, path);
+}
+
+function getAbsolutePathApi(value: string): path.PlatformPath | undefined {
+  if (path.isAbsolute(value)) {
+    return path;
+  }
+  return path.win32.isAbsolute(value) ? path.win32 : undefined;
+}
+
+function isPathWithinRootWith(
+  candidatePath: string,
+  rootPath: string,
+  pathApi: path.PlatformPath,
+): boolean {
+  const relativePath = pathApi.relative(
+    pathApi.resolve(rootPath),
+    pathApi.resolve(candidatePath),
   );
 
   return relativePath === ''
     || (
       relativePath !== '..'
-      && !relativePath.startsWith(`..${path.sep}`)
-      && !path.isAbsolute(relativePath)
+      && !relativePath.startsWith(`..${pathApi.sep}`)
+      && !pathApi.isAbsolute(relativePath)
     );
 }

@@ -32,8 +32,10 @@ export function buildPreviewHtml(resources: PreviewHtmlResources): string {
   <title>AdocMD Forge Preview</title>
 </head>
 <body>
-  <div id="preview-status" role="status" aria-live="polite" hidden></div>
-  <main id="preview-content" aria-label="Document preview"></main>
+  <div id="preview-viewport">
+    <div id="preview-status" role="status" aria-live="polite" hidden></div>
+    <main id="preview-content" aria-label="Document preview"></main>
+  </div>
   <script
     type="module"
     defer

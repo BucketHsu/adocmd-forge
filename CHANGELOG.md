@@ -1,19 +1,37 @@
 # Changelog
 
-本專案的重要變更會記錄於此檔案。
+## 1.3.1
 
-## 0.0.1 - 2026-07-30
+- Rewrite the Marketplace README as a product-focused guide without development logs or hard-coded release details.
+- Improve Marketplace categories, keywords, pricing, and gallery metadata.
+- Restrict the VSIX to an explicit allowlist of runtime files, public documentation, licensing information, and the PNG icon.
 
-### Added
+## 1.3.0
 
-- 新增 `.adoc`、`.asciidoc` 與 `.md` Webview 即時預覽。
-- 新增來源編輯器與預覽畫面雙向同步捲動。
-- 新增 VS Code 深色、淺色與高對比佈景主題支援。
-- 新增受信任工作區、本機資源、遠端圖片與連結安全限制。
-- 新增 AsciiDoc 安全 include 處理。
-- 新增單元測試與 VS Code Extension Host 整合測試。
-- 新增 AsciiDoc 與 Marketplace Markdown README。
+- Synchronize the preview with the active source-editor line when the caret moves.
+- Keep caret navigation, source scrolling, and preview scrolling on the same loop-safe synchronization flow.
+- Restore the current caret position after opening or refreshing a preview.
 
-### Fixed
+## 1.2.0–1.2.9
 
-- 修正 Asciidoctor 訊息或 AST 區塊缺少來源位置時，預覽會因讀取 `getLineNumber` 而失敗的問題。
+- Add a floating formatting palette and source, split, and preview-only layouts.
+- Add HTML, standalone HTML, embedded HTML, and Asciidoctor PDF export.
+- Support Windows RubyGems installations of `asciidoctor-pdf`.
+- Resolve relative PDF themes and font directories from the source document directory.
+- Load local AsciiDoc stylesheets from safe document and workspace paths.
+- Add secure nested AsciiDoc includes with line and tag selection.
+- Improve title-bar actions, preview spacing, and export destination handling.
+
+## 1.1.0
+
+- Add source-editor formatting commands for AsciiDoc and Markdown.
+- Add document layout commands and PDF export configuration.
+- Add local AsciiDoc stylesheet support.
+
+## 1.0.0
+
+- Add live AsciiDoc and Markdown preview with synchronized scrolling and VS Code theme support.
+- Add AsciiDoc completion, Hover help, and a Traditional Chinese syntax guide.
+- Add image drag, paste, import, and automatic image syntax insertion.
+- Add document Outline navigation, local link diagnostics, and Problems Panel integration.
+- Add HTML export and workspace security boundaries.

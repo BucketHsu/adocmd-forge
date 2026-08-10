@@ -5,6 +5,7 @@ import { sanitizeRenderedHtml } from './htmlSanitizer';
 export interface RenderedFragment {
   readonly html: string;
   readonly messages?: readonly RenderMessage[];
+  readonly stylesheets?: readonly string[];
   readonly title?: string;
 }
 
@@ -20,6 +21,9 @@ export function finalizeRenderedDocument(
     lineCount: countSourceLines(source),
     ...(rendered.messages === undefined ? {} : {
       messages: rendered.messages,
+    }),
+    ...(rendered.stylesheets === undefined ? {} : {
+      stylesheets: rendered.stylesheets,
     }),
     ...(rendered.title === undefined ? {} : {
       title: rendered.title,

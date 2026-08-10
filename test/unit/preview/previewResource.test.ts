@@ -6,6 +6,7 @@ import {
   createAllowedRootPaths,
   isPathWithinRoot,
   resolvePreviewImage,
+  resolvePreviewStylesheet,
 } from '../../../src/preview/previewResource';
 
 describe('resolvePreviewImage', () => {
@@ -60,6 +61,43 @@ describe('createAllowedRootPaths', () => {
     )).toEqual([
       workspaceRoot,
     ]);
+  });
+});
+
+describe('resolvePreviewStylesheet', () => {
+  const workspaceRoot = path.resolve('workspace');
+
+  it('accepts an absolute CSS path inside an allowed root', () => {
+    const stylesheetPath = path.join(
+      workspaceRoot,
+      'stylesheets',
+      'colony.css',
+    );
+
+    expect(resolvePreviewStylesheet([workspaceRoot], stylesheetPath))
+      .toBe(stylesheetPath);
+  });
+
+  it('accepts a Windows drive path without treating the drive as a URI scheme', () => {
+    const windowsRoot = String.raw`D:\Project\NTPCLandFx\ntpclandfx`;
+    const stylesheetPath = String.raw`D:\Project\NTPCLandFx\ntpclandfx\docs\stylesheets\colony.css`;
+
+    expect(resolvePreviewStylesheet([windowsRoot], stylesheetPath))
+      .toBe(stylesheetPath);
+    expect(resolvePreviewStylesheet([
+      String.raw`D:\Project\OtherWorkspace`,
+    ], stylesheetPath)).toBeUndefined();
+  });
+
+  it.each([
+    path.join(workspaceRoot, 'stylesheets', 'colony.scss'),
+    path.join(path.dirname(workspaceRoot), 'stylesheets', 'colony.css'),
+    'stylesheets/colony.css',
+    'https://example.com/colony.css',
+    `${path.join(workspaceRoot, 'stylesheets', 'colony.css')}\u0000`,
+  ])('rejects an unsafe stylesheet path %s', (stylesheetPath) => {
+    expect(resolvePreviewStylesheet([workspaceRoot], stylesheetPath))
+      .toBeUndefined();
   });
 });
 

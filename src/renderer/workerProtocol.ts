@@ -46,6 +46,7 @@ const RENDER_REQUEST_REQUIRED_KEYS = [
 ] as const;
 const RENDER_REQUEST_OPTIONAL_KEYS = [
   'allowLocalIncludes',
+  'allowedIncludeRootPaths',
   'sourcePath',
 ] as const;
 const RENDER_RESULT_REQUIRED_KEYS = [
@@ -54,6 +55,7 @@ const RENDER_RESULT_REQUIRED_KEYS = [
 ] as const;
 const RENDER_RESULT_OPTIONAL_KEYS = [
   'messages',
+  'stylesheets',
   'title',
 ] as const;
 const RENDER_MESSAGE_REQUIRED_KEYS = [
@@ -186,6 +188,9 @@ function isRenderRequestValue(value: unknown): value is RenderRequest {
   ) && (
     !Object.hasOwn(properties, 'sourcePath')
     || typeof properties.sourcePath === 'string'
+  ) && (
+    !Object.hasOwn(properties, 'allowedIncludeRootPaths')
+    || isStringArray(properties.allowedIncludeRootPaths)
   );
 }
 
@@ -203,12 +208,68 @@ function isRenderResultValue(value: unknown): value is RenderResult {
       Object.hasOwn(properties, 'title')
       && typeof properties.title !== 'string'
     )
+    || (
+      Object.hasOwn(properties, 'stylesheets')
+      && !isStylesheetPathArray(properties.stylesheets)
+    )
   ) {
     return false;
   }
 
   return !Object.hasOwn(properties, 'messages')
     || isRenderMessageArray(properties.messages);
+}
+
+function isStylesheetPathArray(value: unknown): value is readonly string[] {
+  return isStringArray(value);
+}
+
+function isStringArray(value: unknown): value is readonly string[] {
+  if (
+    !Array.isArray(value)
+    || Reflect.getPrototypeOf(value) !== Array.prototype
+  ) {
+    return false;
+  }
+
+  const lengthDescriptor = Reflect.getOwnPropertyDescriptor(value, 'length');
+  if (
+    lengthDescriptor === undefined
+    || !Object.hasOwn(lengthDescriptor, 'value')
+    || typeof lengthDescriptor.value !== 'number'
+  ) {
+    return false;
+  }
+
+  const length = lengthDescriptor.value;
+  const ownKeys = Reflect.ownKeys(value);
+  if (ownKeys.length !== length + 1) {
+    return false;
+  }
+
+  for (let index = 0; index < length; index += 1) {
+    const descriptor = Reflect.getOwnPropertyDescriptor(
+      value,
+      String(index),
+    );
+    if (
+      descriptor === undefined
+      || !descriptor.enumerable
+      || !Object.hasOwn(descriptor, 'value')
+      || typeof descriptor.value !== 'string'
+      || descriptor.value.length === 0
+    ) {
+      return false;
+    }
+  }
+
+  return ownKeys.every((key) => (
+    key === 'length'
+    || (
+      typeof key === 'string'
+      && isCanonicalArrayIndex(key, length)
+    )
+  ));
 }
 
 function isRenderMessageValue(value: unknown): value is RenderMessage {

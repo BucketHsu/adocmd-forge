@@ -18,6 +18,11 @@ describe('isExtensionToWebviewMessage', () => {
       revision: Number.MAX_SAFE_INTEGER,
       html: '<h1 data-source-line="0">文件</h1>',
       lineCount: Number.MAX_SAFE_INTEGER,
+      stylesheets: [
+        'vscode-webview://workspace/stylesheets/colony.css',
+        'https://file+.vscode-resource.vscode-cdn.net/workspace/stylesheets/colony.css',
+        'https://file%2B.vscode-resource.vscode-cdn.net/workspace/stylesheets/colony.css',
+      ],
     },
     {
       type: 'scrollToSourceLine',
@@ -64,6 +69,38 @@ describe('isExtensionToWebviewMessage', () => {
       revision: 1,
       html: '',
       lineCount: Number.POSITIVE_INFINITY,
+    },
+    {
+      type: 'render',
+      revision: 1,
+      html: '',
+      lineCount: 1,
+      stylesheets: ['https://example.com/colony.css'],
+    },
+    {
+      type: 'render',
+      revision: 1,
+      html: '',
+      lineCount: 1,
+      stylesheets: [
+        'https://vscode-resource.vscode-cdn.net/workspace/stylesheets/colony.css',
+      ],
+    },
+    {
+      type: 'render',
+      revision: 1,
+      html: '',
+      lineCount: 1,
+      stylesheets: [
+        'https://file+.vscode-resource.vscode-cdn.net.evil.example/colony.css',
+      ],
+    },
+    {
+      type: 'render',
+      revision: 1,
+      html: '',
+      lineCount: 1,
+      stylesheets: ['vscode-webview://safe.css', ''],
     },
     {
       type: 'render',
@@ -140,6 +177,11 @@ describe('isWebviewToExtensionMessage', () => {
       revision: Number.MAX_SAFE_INTEGER,
     },
     {
+      type: 'stylesheetStatus',
+      href: 'https://file%2B.vscode-resource.vscode-cdn.net/workspace/stylesheets/colony.css',
+      status: 'loaded',
+    },
+    {
       type: 'scroll',
       sourceLine: 0,
       sequence: 0,
@@ -168,6 +210,16 @@ describe('isWebviewToExtensionMessage', () => {
     {
       type: 'rendered',
       revision: -1,
+    },
+    {
+      type: 'stylesheetStatus',
+      href: 'https://file%2B.vscode-resource.vscode-cdn.net/workspace/stylesheets/colony.css',
+      status: 'pending',
+    },
+    {
+      type: 'stylesheetStatus',
+      href: 'https://example.com/colony.css',
+      status: 'loaded',
     },
     {
       type: 'scroll',

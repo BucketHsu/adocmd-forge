@@ -44,10 +44,15 @@ body {
   min-width: 0;
   min-height: 100vh;
   margin: 0;
-  padding: clamp(1rem, 3vw, 2.5rem);
+  padding: 0;
   overflow-wrap: anywhere;
   color: var(--vscode-foreground);
   background: var(--vscode-editor-background);
+}
+
+#preview-viewport {
+  min-height: 100vh;
+  padding: clamp(1rem, 3vw, 2.5rem);
 }
 
 #preview-content {

@@ -14,6 +14,7 @@ import {
 } from './hostFileSystemUri';
 import { createPreviewTitle, resolveDocumentKind } from './previewDocument';
 import { createPreviewHtml } from './previewHtmlFactory';
+import type { PreviewLayout } from './previewLayout';
 import {
   isWebviewToExtensionMessage,
   type ExtensionToWebviewMessage,
@@ -22,6 +23,7 @@ import {
 import {
   isPathWithinRoot,
   resolvePreviewImage,
+  resolvePreviewStylesheet,
 } from './previewResource';
 import { formatRenderMessageForLog } from './renderMessageLog';
 import { WebviewDeliveryState } from './webviewDeliveryState';
@@ -33,6 +35,7 @@ export type PreviewRenderer = (
 
 export interface PreviewSessionOptions {
   readonly allowedResourceRootPaths: readonly string[];
+  readonly allowedStylesheetRootPaths: readonly string[];
   readonly documentUri: vscode.Uri;
   readonly extensionUri: vscode.Uri;
   readonly onActivate: (session: PreviewSession) => void;
@@ -54,6 +57,7 @@ export interface PreviewSessionOptions {
  */
 export class PreviewSession implements vscode.Disposable {
   private allowedResourceRootPaths: readonly string[];
+  private allowedStylesheetRootPaths: readonly string[];
   private activeRenderController: AbortController | undefined;
   private disposed = false;
   private lastEditorSourceLine: number | undefined;
@@ -68,6 +72,7 @@ export class PreviewSession implements vscode.Disposable {
 
   public constructor(private readonly options: PreviewSessionOptions) {
     this.allowedResourceRootPaths = options.allowedResourceRootPaths;
+    this.allowedStylesheetRootPaths = options.allowedStylesheetRootPaths;
     this.documentUri = options.documentUri;
     this.panel = options.panel;
 
@@ -101,6 +106,19 @@ export class PreviewSession implements vscode.Disposable {
     this.scheduleRender(0);
   }
 
+  public revealLayout(layout: PreviewLayout): void {
+    if (this.disposed || layout === 'source') {
+      return;
+    }
+
+    this.panel.reveal(
+      layout === 'split'
+        ? vscode.ViewColumn.Beside
+        : vscode.ViewColumn.Active,
+      layout === 'split',
+    );
+  }
+
   public handleDocumentChange(): void {
     const { updateDelay } = getPreviewSettings(this.documentUri);
     this.scheduleRender(updateDelay);
@@ -121,9 +139,11 @@ export class PreviewSession implements vscode.Disposable {
 
   public updateResourceRoots(
     allowedResourceRootPaths: readonly string[],
+    allowedStylesheetRootPaths: readonly string[],
     localResourceRoots: readonly vscode.Uri[],
   ): void {
     this.allowedResourceRootPaths = allowedResourceRootPaths;
+    this.allowedStylesheetRootPaths = allowedStylesheetRootPaths;
     this.panel.webview.options = {
       ...this.panel.webview.options,
       localResourceRoots,
@@ -133,6 +153,21 @@ export class PreviewSession implements vscode.Disposable {
   }
 
   public handleEditorScroll(editor: vscode.TextEditor): void {
+    this.syncEditorSourceLine(editor, editor.visibleRanges[0]?.start.line);
+  }
+
+  public handleEditorSelection(editor: vscode.TextEditor): void {
+    this.syncEditorSourceLine(editor, editor.selection.active.line);
+  }
+
+  public dispose(): void {
+    this.disposeSession(true);
+  }
+
+  private syncEditorSourceLine(
+    editor: vscode.TextEditor,
+    sourceLine: number | undefined,
+  ): void {
     if (
       this.disposed
       || !this.webviewState.isReady
@@ -143,7 +178,6 @@ export class PreviewSession implements vscode.Disposable {
       return;
     }
 
-    const sourceLine = editor.visibleRanges[0]?.start.line;
     if (sourceLine === undefined) {
       return;
     }
@@ -163,10 +197,6 @@ export class PreviewSession implements vscode.Disposable {
       line: sourceLine,
       sequence: pendingSequence ?? this.createSequence(),
     });
-  }
-
-  public dispose(): void {
-    this.disposeSession(true);
   }
 
   private scheduleRender(delay: number): void {
@@ -204,6 +234,7 @@ export class PreviewSession implements vscode.Disposable {
       const request: RenderRequest = isHostFileSystemUri(document.uri)
         ? {
             allowLocalIncludes: vscode.workspace.isTrusted,
+            allowedIncludeRootPaths: this.allowedResourceRootPaths,
             kind,
             source: document.getText(),
             sourcePath: document.uri.fsPath,
@@ -228,11 +259,27 @@ export class PreviewSession implements vscode.Disposable {
         result.html,
         request.sourcePath,
       );
+      const stylesheets = this.resolveStylesheetSources(
+        result.stylesheets,
+        request.sourcePath,
+      );
+      if (
+        result.stylesheets !== undefined
+        && result.stylesheets.length > 0
+        && stylesheets.length === 0
+      ) {
+        this.options.outputChannel.appendLine(
+          `[${new Date().toISOString()}] Preview stylesheet skipped for `
+          + `${this.getDocumentLogLabel()} (workspaceTrusted=`
+          + `${String(vscode.workspace.isTrusted)}).`,
+        );
+      }
       this.postMessage({
         type: 'render',
         revision: requestedRevision,
         html,
         lineCount: result.lineCount,
+        ...(stylesheets.length > 0 ? { stylesheets } : {}),
       });
       this.syncCurrentEditor();
     } catch (error) {
@@ -275,17 +322,7 @@ export class PreviewSession implements vscode.Disposable {
     sourceFilePath: string | undefined,
   ): string {
     const allowRemoteImages = this.canLoadRemoteImages();
-    const physicalRootPaths = this.allowedResourceRootPaths.flatMap(
-      (rootPath) => {
-        try {
-          return [
-            realpathSync(rootPath),
-          ];
-        } catch {
-          return [];
-        }
-      },
-    );
+    const physicalRootPaths = this.getPhysicalRootPaths();
     const webviewResourceScheme = this.panel.webview.asWebviewUri(
       this.options.extensionUri,
     ).scheme;
@@ -318,6 +355,17 @@ export class PreviewSession implements vscode.Disposable {
             }
           }
           if (resolution.kind === 'local') {
+            if (!vscode.workspace.isTrusted) {
+              const safeAttributes = {
+                ...attributes,
+              };
+              delete safeAttributes.src;
+              return {
+                tagName,
+                attribs: safeAttributes,
+              };
+            }
+
             const physicalImagePath = this.resolvePhysicalImagePath(
               resolution.path,
               physicalRootPaths,
@@ -381,6 +429,94 @@ export class PreviewSession implements vscode.Disposable {
     }
   }
 
+  private resolveStylesheetSources(
+    stylesheetPaths: readonly string[] | undefined,
+    sourceFilePath: string | undefined,
+  ): readonly string[] {
+    if (
+      stylesheetPaths === undefined
+      || stylesheetPaths.length === 0
+      || sourceFilePath === undefined
+    ) {
+      return [];
+    }
+
+    const physicalRootPaths = this.getPhysicalStylesheetRootPaths();
+    const sources: string[] = [];
+    const seen = new Set<string>();
+    for (const stylesheetPath of stylesheetPaths) {
+      const requestedPath = resolvePreviewStylesheet(
+        this.allowedStylesheetRootPaths,
+        stylesheetPath,
+      );
+      if (requestedPath === undefined) {
+        continue;
+      }
+
+      const physicalStylesheetPath = this.resolvePhysicalStylesheetPath(
+        requestedPath,
+        physicalRootPaths,
+      );
+      if (physicalStylesheetPath === undefined) {
+        continue;
+      }
+
+      const source = this.panel.webview.asWebviewUri(
+        createHostFileSystemUri(
+          this.documentUri,
+          physicalStylesheetPath,
+        ),
+      ).toString();
+      if (!seen.has(source)) {
+        seen.add(source);
+        sources.push(source);
+      }
+    }
+
+    return sources;
+  }
+
+  private resolvePhysicalStylesheetPath(
+    requestedPath: string,
+    physicalRootPaths: readonly string[],
+  ): string | undefined {
+    try {
+      const physicalStylesheetPath = realpathSync(requestedPath);
+      if (
+        !statSync(physicalStylesheetPath).isFile()
+        || !physicalRootPaths.some(
+          (rootPath) => isPathWithinRoot(physicalStylesheetPath, rootPath),
+        )
+      ) {
+        return undefined;
+      }
+
+      return physicalStylesheetPath;
+    } catch {
+      return undefined;
+    }
+  }
+
+  private getPhysicalRootPaths(): readonly string[] {
+    return this.allowedResourceRootPaths.flatMap((rootPath) => {
+      try {
+        return [realpathSync(rootPath)];
+      } catch {
+        return [];
+      }
+    });
+  }
+
+  private getPhysicalStylesheetRootPaths(): readonly string[] {
+    return this.allowedStylesheetRootPaths.flatMap((rootPath) => {
+      try {
+        return [realpathSync(rootPath)];
+      } catch {
+        return [];
+      }
+    });
+  }
+
   private async handleWebviewMessage(message: unknown): Promise<void> {
     if (this.disposed || !isWebviewToExtensionMessage(message)) {
       return;
@@ -395,6 +531,14 @@ export class PreviewSession implements vscode.Disposable {
       case 'rendered':
         break;
 
+      case 'stylesheetStatus':
+        this.options.outputChannel.appendLine(
+          `[${new Date().toISOString()}] Preview stylesheet `
+          + `${message.status} for ${this.getDocumentLogLabel()}: `
+          + message.href,
+        );
+        break;
+
       case 'scroll':
         this.revealSourceLine(message);
         break;
@@ -402,6 +546,7 @@ export class PreviewSession implements vscode.Disposable {
       case 'openLink':
         await this.options.openLink(this.documentUri, message.href);
         break;
+
     }
   }
 
@@ -466,7 +611,7 @@ export class PreviewSession implements vscode.Disposable {
       ({ document }) => document.uri.toString() === this.documentUri.toString(),
     );
     if (editor !== undefined) {
-      this.handleEditorScroll(editor);
+      this.handleEditorSelection(editor);
     }
   }
 

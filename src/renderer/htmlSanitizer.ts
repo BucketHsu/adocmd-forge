@@ -116,6 +116,11 @@ export const DEFAULT_ALLOWED_HTML_SCHEMES: readonly string[] = [
 
 export interface SanitizeRenderedHtmlOptions {
   /**
+   * 允許匯出流程放入由已讀取本機圖片 bytes 產生的 data URI。
+   * 一般 Preview 與一般 renderer 不得開啟此選項。
+   */
+  readonly allowDataImages?: boolean;
+  /**
    * 額外允許的 Webview 圖片 URI scheme，僅套用於 `img[src]`。
    *
    * 危險 scheme 與格式不合法的值一律忽略，不會放寬連結規則。
@@ -150,6 +155,7 @@ export function sanitizeRenderedHtml(
     allowedSchemesByTag: {
       img: [
         'https',
+        ...(options.allowDataImages === true ? ['data'] : []),
         ...getSafeAdditionalImageSchemes(options.additionalImageSchemes),
       ],
     },

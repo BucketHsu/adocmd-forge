@@ -1,9 +1,14 @@
 .github/**
 .vscode/**
 .vscode-test/**
+Architecture.md
+CONTRIBUTING.md
+DeveloperGuide.md
+README.adoc
 artifacts/**
 coverage/**
 dist/test/**
+images/icon.ico
 node_modules/**
 scripts/**
 src/**
@@ -14,5 +19,4 @@ test/**
 eslint.config.mjs
 tsconfig*.json
 vitest.config.ts
-images/icon.ico
 media/**

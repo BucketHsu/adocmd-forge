@@ -20,10 +20,11 @@ try {
     extensionTestsPath,
     launchArgs: [
       '--disable-extensions',
+      '--disable-gpu',
       '--skip-release-notes',
       '--skip-welcome',
     ],
-    version: '1.96.2',
+    version: '1.97.2',
   });
 } catch (error) {
   const message = error instanceof Error ? error.message : String(error);

@@ -11,6 +11,7 @@ import {
   PreviewSession,
   type PreviewRenderer,
 } from './previewSession';
+import type { PreviewLayout } from './previewLayout';
 
 const PREVIEW_VIEW_TYPE = 'adocmdForge.preview';
 
@@ -40,6 +41,11 @@ export class PreviewManager implements vscode.Disposable {
           .get(textEditor.document.uri.toString())
           ?.handleEditorScroll(textEditor);
       }),
+      vscode.window.onDidChangeTextEditorSelection(({ textEditor }) => {
+        this.sessions
+          .get(textEditor.document.uri.toString())
+          ?.handleEditorSelection(textEditor);
+      }),
       vscode.workspace.onDidChangeConfiguration((event) => {
         for (const session of this.sessions.values()) {
           session.handleConfigurationChange(event);
@@ -49,6 +55,7 @@ export class PreviewManager implements vscode.Disposable {
         for (const session of this.sessions.values()) {
           session.updateResourceRoots(
             this.createAllowedRootPaths(session.documentUri),
+            this.createAllowedStylesheetRootPaths(session.documentUri),
             this.createResourceRoots(session.documentUri),
           );
         }
@@ -96,6 +103,9 @@ export class PreviewManager implements vscode.Disposable {
 
     const session = new PreviewSession({
       allowedResourceRootPaths: this.createAllowedRootPaths(document.uri),
+      allowedStylesheetRootPaths: this.createAllowedStylesheetRootPaths(
+        document.uri,
+      ),
       documentUri: document.uri,
       extensionUri: this.options.extensionUri,
       onActivate: (activatedSession): void => {
@@ -127,6 +137,31 @@ export class PreviewManager implements vscode.Disposable {
     }
 
     session.refresh();
+  }
+
+  public async setLayout(layout: PreviewLayout): Promise<void> {
+    this.ensureNotDisposed();
+    const session = this.activeSession;
+    if (layout === 'source') {
+      if (session === undefined) {
+        return;
+      }
+
+      const documentUri = session.documentUri;
+      session.dispose();
+      await vscode.window.showTextDocument(documentUri, {
+        preview: false,
+      });
+      return;
+    }
+
+    if (session === undefined) {
+      await this.openPreview();
+      this.activeSession?.revealLayout(layout);
+      return;
+    }
+
+    session.revealLayout(layout);
   }
 
   public dispose(): void {
@@ -166,10 +201,6 @@ export class PreviewManager implements vscode.Disposable {
     const roots = [
       vscode.Uri.joinPath(this.options.extensionUri, 'dist', 'media'),
     ];
-    if (!vscode.workspace.isTrusted) {
-      return roots;
-    }
-
     const workspaceFolder = vscode.workspace.getWorkspaceFolder(documentUri);
     if (workspaceFolder !== undefined) {
       roots.push(workspaceFolder.uri);
@@ -195,6 +226,21 @@ export class PreviewManager implements vscode.Disposable {
           workspaceFolder.uri.fsPath,
         ]
       : [];
+    return createAllowedRootPaths(
+      isHostFileSystemUri(documentUri) ? documentUri.fsPath : undefined,
+      workspaceRootPaths,
+    );
+  }
+
+  private createAllowedStylesheetRootPaths(documentUri: vscode.Uri): string[] {
+    const workspaceFolder = vscode.workspace.getWorkspaceFolder(documentUri);
+    const workspaceRootPaths = (
+      workspaceFolder !== undefined
+      && isHostFileSystemUri(workspaceFolder.uri)
+    )
+      ? [workspaceFolder.uri.fsPath]
+      : [];
+
     return createAllowedRootPaths(
       isHostFileSystemUri(documentUri) ? documentUri.fsPath : undefined,
       workspaceRootPaths,

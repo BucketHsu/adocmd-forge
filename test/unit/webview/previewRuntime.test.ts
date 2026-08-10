@@ -102,6 +102,60 @@ describe('PreviewRuntime', (): void => {
     harness.runtime.dispose();
   });
 
+  it('loads document stylesheets after each render and removes stale links', (): void => {
+    const harness = createRuntimeHarness();
+    harness.runtime.start();
+
+    sendExtensionMessage({
+      type: 'render',
+      revision: 1,
+      html: '<p data-source-line="0">Styled</p>',
+      lineCount: 1,
+      stylesheets: [
+        'https://file%2B.vscode-resource.vscode-cdn.net/workspace/stylesheets/colony.css',
+        'https://file%2B.vscode-resource.vscode-cdn.net/workspace/stylesheets/colony.css',
+      ],
+    });
+
+    let stylesheetLinks = document.head.querySelectorAll(
+      'link[data-adocmd-forge-document-stylesheet]',
+    );
+    expect(stylesheetLinks).toHaveLength(1);
+    expect(stylesheetLinks[0]?.getAttribute('rel')).toBe('stylesheet');
+    expect(stylesheetLinks[0]?.getAttribute('href')).toBe(
+      'https://file%2B.vscode-resource.vscode-cdn.net/workspace/stylesheets/colony.css',
+    );
+    stylesheetLinks[0]?.dispatchEvent(new Event('load'));
+    expect(harness.postedMessages).toContainEqual({
+      type: 'stylesheetStatus',
+      href: 'https://file%2B.vscode-resource.vscode-cdn.net/workspace/stylesheets/colony.css',
+      status: 'loaded',
+    });
+
+    sendExtensionMessage({
+      type: 'render',
+      revision: 2,
+      html: '<p data-source-line="0">Updated</p>',
+      lineCount: 1,
+      stylesheets: [
+        'vscode-webview://workspace/stylesheets/other.css',
+      ],
+    });
+
+    stylesheetLinks = document.head.querySelectorAll(
+      'link[data-adocmd-forge-document-stylesheet]',
+    );
+    expect(stylesheetLinks).toHaveLength(1);
+    expect(stylesheetLinks[0]?.getAttribute('href')).toBe(
+      'vscode-webview://workspace/stylesheets/other.css',
+    );
+
+    harness.runtime.dispose();
+    expect(document.head.querySelectorAll(
+      'link[data-adocmd-forge-document-stylesheet]',
+    )).toHaveLength(0);
+  });
+
   it('sends #Lx to the Extension Host but handles a normal anchor locally', (): void => {
     const harness = createRuntimeHarness();
     harness.runtime.start();
@@ -499,7 +553,12 @@ function createRuntimeHarness(
   return {
     contentElement,
     postedMessages,
-    runtime: new PreviewRuntime(api, contentElement, statusElement, state),
+    runtime: new PreviewRuntime(
+      api,
+      contentElement,
+      statusElement,
+      state,
+    ),
     savedStates,
   };
 }
