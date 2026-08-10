@@ -6,7 +6,7 @@
 
 ## 2. 產品範圍
 
-AdocMD Forge 是 VS Code 文件工作台。1.3.0 正式版支援：
+AdocMD Forge 是 VS Code 文件工作台，目前支援：
 
 - AsciiDoc：`.adoc`、`.asciidoc`
 - Markdown：`.md`
@@ -20,7 +20,7 @@ AdocMD Forge 是 VS Code 文件工作台。1.3.0 正式版支援：
 - HTML、Standalone HTML 與 Embedded HTML 匯出；三種模式共用 Renderer 與 Sanitizer
 - AsciiDoc 的本機 `asciidoctor-pdf` PDF 匯出命令整合
 
-1.3.0 發行關卡由自動化測試、Extension Host 整合測試與 VSIX 檢查驗證；實際上架 Marketplace 仍需 Publisher 憑證與上架操作。
+發行關卡由自動化測試、Extension Host 整合測試、VSIX 白名單檢查與隔離安裝驗證；實際上架 Marketplace 仍需 Publisher 憑證與上架操作。
 
 DOCX、多人協作、雲端儲存與自訂 Asciidoctor extension 不屬於目前規劃範圍。
 
@@ -313,7 +313,7 @@ VS Code 1.97 以上另註冊 `DocumentPasteEditProvider`，接收 `image/*`、`f
 - 涉及路徑的值在使用時再次驗證，不信任 manifest schema 即已足夠。
 - 無法在執行期間真正生效的選項不得公開。
 
-1.3.0 目前公開設定：
+目前公開設定：
 
 - `adocmdForge.outline.updateDelay`：預設 150 毫秒，範圍 50 至 2000 毫秒。
 - `adocmdForge.diagnostics.updateDelay`：預設 150 毫秒，範圍 50 至 2000 毫秒；Diagnostics 會在設定的延遲後重新檢查目前文件。
@@ -388,9 +388,10 @@ HTML 匯出不新增公開設定；目的地一律由儲存對話框或命令傳
 
 ## 20. 發行與版本
 
-- 0.1.0 採 MIT License，Publisher 依目前 Git origin 與既有參考專案使用 `BucketHsu`。
-- `package.json`、lockfile、README、CHANGELOG、Git tag 與 VSIX 檔名必須使用相同版本。
+- 專案採 MIT License，Publisher 為 `BucketHsu`。
+- `package.json`、lockfile、CHANGELOG、Git tag 與 VSIX 檔名必須使用相同版本；Marketplace README 不寫死版本號。
 - CI 使用 `npm ci`，不得以未鎖定依賴產出正式 VSIX。
+- VSIX 只封裝明確白名單內的執行檔與公開 Marketplace 文件，不封裝內部架構、開發指南或 README 的 AsciiDoc 來源。
 - VSIX 必須保留必要第三方授權資訊，不以 `.vscodeignore` 排除授權檔。
 - Marketplace icon 使用 PNG，不使用 SVG。
 - 自動發行憑證不得寫入 repository 或 VSIX。

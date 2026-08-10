@@ -27,10 +27,15 @@ interface PackageManifest {
   readonly engines?: {
     readonly vscode?: string;
   };
+  readonly galleryBanner?: {
+    readonly color?: string;
+    readonly theme?: string;
+  };
   readonly keywords?: readonly string[];
   readonly main?: string;
   readonly name?: string;
   readonly publisher?: string;
+  readonly pricing?: string;
   readonly version?: string;
 }
 
@@ -48,19 +53,31 @@ describe('extension manifest', (): void => {
     expect(manifest.publisher).toBe('BucketHsu');
     expect(manifest.version).toBe('1.3.0');
     expect(manifest.description).toBe(
-      'Secure live preview for AsciiDoc and Markdown with synchronized '
-      + 'scrolling and VS Code theme support.',
+      'Professional AsciiDoc and Markdown workspace with live preview, '
+      + 'syntax assistance, link diagnostics, image workflows, and '
+      + 'HTML/PDF export.',
     );
     expect(manifest.categories).toEqual([
-      'Other',
+      'Programming Languages',
       'Visualization',
+      'Formatters',
     ]);
     expect(manifest.keywords).toEqual([
       'asciidoc',
+      'asciidoctor',
       'markdown',
       'preview',
       'documentation',
+      'docs',
+      'html',
+      'pdf',
+      'link checker',
     ]);
+    expect(manifest.galleryBanner).toEqual({
+      color: '#073B78',
+      theme: 'dark',
+    });
+    expect(manifest.pricing).toBe('Free');
     expect(manifest.engines?.vscode).toBe('^1.97.0');
     expect(manifest.main).toBe('./dist/extension.js');
   });

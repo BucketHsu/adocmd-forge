@@ -1,155 +1,207 @@
 = AdocMD Forge
-:toc: left
-:toclevels: 3
+:showtitle:
 :sectanchors:
 :source-highlighter: highlight.js
 :imagesdir:
 
 image::images/icon.png[AdocMD Forge,128,128]
 
-AdocMD Forge 是提供 AsciiDoc 與 Markdown 撰寫體驗的 VS Code 擴充套件。
-`1.3.0` 是可安裝的文件工作台版本，除了安全的即時預覽、游標定位與雙向同步捲動、AsciiDoc 語法輔助及圖片工作流，也提供目前文件的 Outline 標題樹、點擊跳轉、本機引用診斷、HTML／PDF 匯出與浮動格式面板。
+AdocMD Forge 是為 AsciiDoc 與 Markdown 打造的 VS Code 文件工作台，整合即時預覽、游標定位、語法輔助、圖片處理、文件導覽、連結檢查與 HTML／PDF 匯出。
 
-圖片貼上使用 VS Code 1.97 以上的 `DocumentPasteEditProvider`。只有在 VS Code 與作業系統將剪貼簿圖片以 `image/*` 或 `files` DataTransfer 提供給擴充套件時，才會攔截並處理圖片；若平台未提供二進位剪貼簿資料，請改用拖曳或 `Copy Image` 指令。
-
-== 支援格式
-
-* AsciiDoc：`.adoc`、`.asciidoc`
-* Markdown：`.md`
-
-== 1.3.0 功能
+== 功能特色
 
 === 即時預覽
 
-* 使用 Asciidoctor.js 產生 AsciiDoc 預覽。
-* 使用 markdown-it 產生 Markdown 預覽。
-* 編輯文件後自動更新，不需要重新開啟預覽。
-* 同一份來源文件只會開啟一個 Preview Panel。
+* 支援 `.adoc`、`.asciidoc` 與 `.md`。
+* 編輯後自動更新，不需要重新開啟預覽。
+* 點選或移動來源編輯器游標時，預覽會跟隨目前行定位。
 * 支援來源編輯器與預覽畫面的雙向同步捲動。
-* 在來源編輯器點選某一行，或以鍵盤移動游標時，預覽會捲動到該行所屬的最近可渲染段落；首次開啟與重新渲染後也會以目前游標行定位。
-* 自動套用 VS Code 深色、淺色與高對比佈景主題。
-* 支援預覽中的本機圖片與相對連結。
-* 在受信任工作區中支援安全範圍內的 AsciiDoc `include::`。
-* Open Preview 會依來源文件位置套用已儲存文件的 `:stylesheet:` 與 `:stylesdir:` 宣告的本機 `.css`；例如 `:stylesheet: ../stylesheets/colony.css`。未受信任工作區仍可套用位於工作區範圍內的 CSS，但 include、圖片與連結等其他本機資源仍受信任狀態限制。
-* `Show Formatting Palette` 使用 VS Code Quick Pick 顯示浮動格式面板，提供粗體、斜體、注目、等寬、刪除線、上標與下標，不在來源編輯器右上角常駐七個格式按鈕。
-* 選取文字後可從右鍵選單開啟浮動格式面板或直接套用個別格式；有選取文字時包覆內容，沒有選取文字時插入成對標記並將游標放在中間。
-* Preview Webview 不顯示工具列；版面切換、重新整理、語法說明、HTML 與 PDF 匯出維持由來源編輯器標題列操作。
-* 來源編輯器與 Outline 標題列操作使用 VS Code Codicon，滑鼠停留時以命令標題顯示功能說明，不占用右上角的文字寬度。
-* Preview 使用獨立外層內距，文件 stylesheet 即使設定 `body { padding: 0 }`，內容也不會貼齊面板邊緣。
-* 可切換僅文字、文字／預覽分割與僅預覽版面。
+* 支援僅來源、來源與預覽分割、僅預覽三種版面。
+* 自動配合 VS Code 深色、淺色與高對比佈景主題。
+* AsciiDoc 預覽可載入工作區範圍內的 `:stylesheet:`、`:stylesdir:`、圖片與 `include::`。
 
-=== 安全性
+=== 編輯與語法輔助
 
-* AsciiDoc 與 Markdown 產出的 HTML 均會經過消毒。
-* Webview 使用 Content Security Policy 與具型別訊息。
-* 未受信任工作區不讀取本機 include、本機圖片或本機連結。
-* 遠端圖片預設停用，且只允許 HTTPS。
-* 本機資源與連結不得逸出允許的工作區範圍。
+* 浮動格式面板提供粗體、斜體、注目、等寬、刪除線、上標與下標。
+* 選取文字後可從右鍵選單直接套用格式。
+* AsciiDoc 提供標題、清單、表格、區塊、連結、xref、anchor、圖片、include、attribute 與 TOC 的補全及 Hover 說明。
+* 內建繁體中文 AsciiDoc 語法指南與可直接使用的範例。
 
-=== AsciiDoc 語法輔助
+=== 圖片工作流程
 
-* 只在 `.adoc` 與 `.asciidoc` 文件啟用語法補全與 Hover。
-* 支援標題、段落、粗體、斜體、等寬文字、清單與 Checklist。
-* 支援 Source Block、Admonition、表格、link、xref、anchor、image、include、attribute 與 TOC。
-* 補全會依游標所在的語法前綴縮小範圍，不在一般段落文字中顯示無關項目。
-* 提供繁體中文語法說明與可直接執行的範例。
+* 將圖片拖曳或貼入編輯器時，可選擇工作區內的儲存位置。
+* AsciiDoc 自動插入 `image::path[]`，Markdown 自動插入 `![alt](path)`。
+* `Copy Image` 可從檔案選擇器匯入圖片，適用於無法提供二進位剪貼簿資料的平台。
+* 同名檔案會產生新檔名，不會直接覆寫既有圖片。
 
-=== 圖片工作流
+=== Outline 與連結檢查
 
-* 在受信任的工作區中，將圖片拖曳至 AsciiDoc 或 Markdown 編輯器，擴充套件會詢問儲存位置並插入對應語法。
-* 使用作業系統或其他應用程式複製圖片後，在 VS Code 編輯器執行貼上；若 VS Code 取得 `image/*` 或 `files` DataTransfer，會詢問儲存位置並插入對應語法。
-* `Copy Image` 指令會開啟圖片檔案選擇器，適用於剪貼簿無法提供二進位資料的環境。
-* AsciiDoc 會插入 `image::relative/path.png[替代文字]`，Markdown 會插入 `![替代文字](relative/path.png)`。
-* 預設建議在目前文件旁建立 `images/`；同名檔案會產生 `-2`、`-3` 等新檔名，不會靜默覆蓋。
-* 未儲存文件、未受信任工作區、工作區外路徑與不支援格式都會被拒絕，且不插入不完整語法。
+* Explorer 的 Outline 顯示目前文件的標題階層，點選即可跳至來源位置。
+* AsciiDoc 可檢查 `link:`、`xref:`、`<<...>>`、`include::`、圖片與 anchor。
+* Markdown 可檢查連結、圖片、標題 anchor 與自訂 anchor。
+* 找不到的本機目標會顯示於 Problems Panel。
 
-=== Outline 文件導覽
+=== 匯出
 
-* 在 Explorer 的 `Outline` 檢視顯示目前 AsciiDoc 或 Markdown 文件的標題階層。
-* AsciiDoc 使用 Asciidoctor AST 解析文件標題與章節；Markdown 使用 markdown-it token 解析 ATX 與 Setext 標題。
-* 程式碼區塊中的 `#`、`==` 等文字不會被誤判為標題。
-* 點擊標題可跳至來源文件的實際行號；文件修改後會以 debounce 更新。
-* 支援已儲存的 file URI 與 untitled 文件，且切換編輯器時不會保留上一份文件的節點。
-* `AdocMD Forge: Refresh Outline` 可手動重新分析目前文件。
+[cols="2,4",options="header"]
+|===
+|格式
+|用途
 
-=== Link Checker 與 Problems
+|HTML
+|完整 HTML5 文件；本機資源使用相對於輸出檔案的路徑。
 
-* 編輯或切換 AsciiDoc／Markdown 文件後，會以 debounce 檢查目前文件的本機引用。
-* AsciiDoc 支援 `link:`、`xref:`、`<<...>>`、`include::`、inline／block 圖片 macro、`[[anchor]]`、`[#anchor]` 與 `anchor:id[]`。
-* Markdown 支援 inline link、image、heading anchor 與 `{#anchor}`。
-* 會檢查檔案存在、目標是否為檔案、workspace 安全邊界與文件內 anchor；錯誤會顯示於 Problems Panel，Range 指向引用目標。
-* `http(s)`、mailto 與其他外部 URI 不進行網路探測；動態 AsciiDoc 屬性、未受信任 workspace、untitled 文件與 workspace 外路徑不讀取本機檔案。
-* `AdocMD Forge: Validate Links` 可立即重建目前文件的診斷。
+|Standalone HTML
+|完整 HTML5 文件；可讀取的工作區圖片會轉為 data URI，適合單檔交付。
 
-=== HTML 匯出
+|Embedded HTML
+|只輸出可嵌入其他頁面的安全 HTML 片段，不包含完整文件外框。
 
-* `Export HTML` 產生完整 HTML5 文件，CSS 內嵌，工作區內圖片與連結轉為相對於輸出檔案的可攜路徑。
-* `Export Standalone HTML` 產生完整 HTML5 文件，將可讀取的工作區圖片轉成 base64 data URI，方便單獨交付。
-* `Export Embedded HTML` 只輸出經消毒的 body fragment，不包含 `doctype`、`html`、`head` 或 `body` 外框，適合嵌入其他頁面。
-* AsciiDoc 與 Markdown 共用既有 renderer 與 HTML sanitizer；不執行遠端網路讀取。
-* `Export PDF` 透過本機 `asciidoctor-pdf` 產生 PDF；可用 `adocmdForge.export.asciidoctorPdfArguments` 傳入 `-r asciidoctor-diagram`、`-a data-uri`、theme 與字型等參數。
-* Windows 可自動辨識 RubyGems 的 `asciidoctor-pdf.bat`，並改由同一 Ruby `bin` 目錄的 `ruby.exe` 執行 gem 腳本，不需要啟用 shell。
-* PDF CLI 以來源文件目錄為工作目錄，因此 `:pdf-theme: ../pdf-theme.yml` 等相對屬性與在文件目錄手動執行的結果一致；`pdf-fontsdir` 只提供字型搜尋路徑，實際字型仍須在 PDF theme 的 font catalog 與 font-family 中宣告。
-* 匯出目的地由儲存對話框或命令參數明確指定，限制在受信任 workspace 內，不覆蓋來源文件；既有檔案需確認後才覆寫。
+|PDF
+|呼叫本機 `asciidoctor-pdf` 產生 PDF，支援文件內的 theme 與字型設定。
+|===
+
+== 系統需求
+
+* Visual Studio Code 1.97.0 以上。
+* PDF 匯出需另行安裝 Ruby 與 `asciidoctor-pdf`。
+* 使用 PlantUML、Mermaid、Graphviz 等圖表時，需另行安裝 `asciidoctor-diagram` 及對應工具。
+
+== 安裝
+
+=== Visual Studio Marketplace
+
+. 開啟 VS Code 的 Extensions 檢視。
+. 搜尋 `AdocMD Forge`。
+. 確認 Publisher 為 `BucketHsu`，然後選擇 Install。
+
+=== VSIX
+
+也可以從 Extensions 檢視右上角的 `...` 選擇 `Install from VSIX...`，或使用命令列：
+
+[source,bash]
+----
+code --install-extension adocmd-forge-<version>.vsix
+----
+
+== 快速開始
+
+. 開啟 `.adoc`、`.asciidoc` 或 `.md` 文件。
+. 從編輯器標題列選擇 Open Preview，或執行 `AdocMD Forge: Open Preview`。
+. 在來源編輯器點選任一段落，預覽會移動到對應內容。
+. 編輯文件後，預覽會自動更新。
+. 使用 Explorer 的 Outline 導覽標題，或執行 `Validate Links` 檢查本機引用。
+
+== AsciiDoc 樣式表
+
+已儲存的 AsciiDoc 文件可使用標準屬性指定本機 CSS：
+
+[source,adoc]
+----
+:stylesheet: ../stylesheets/colony.css
+----
+
+也可以搭配 `:stylesdir:`：
+
+[source,adoc]
+----
+:stylesdir: ../stylesheets
+:stylesheet: colony.css
+----
+
+CSS 必須實際存在，並位於目前文件或工作區允許的範圍內。載入結果會寫入 Output 面板的 `AdocMD Forge` 頻道。
+
+`pdf-theme`、`pdf-fontsdir` 與 PDF 封面屬性只影響 PDF，不會改變 HTML 預覽樣式。
+
+== PDF 匯出
+
+先安裝 Asciidoctor PDF：
+
+[source,bash]
+----
+gem install asciidoctor-pdf
+----
+
+使用圖表時可再安裝：
+
+[source,bash]
+----
+gem install asciidoctor-diagram
+----
+
+文件可直接宣告 PDF 設定：
+
+[source,adoc]
+----
+:scripts: cjk
+:source-highlighter: rouge
+:pdf-theme: ../pdf-theme.yml
+:pdf-fontsdir: C:/Windows/Fonts
+----
+
+`pdf-fontsdir` 只指定字型搜尋位置；實際使用的字型仍需在 PDF theme 的 `font.catalog` 與 `font-family` 中設定。
+
+若文件使用圖表，可在 `adocmdForge.export.asciidoctorPdfArguments` 加入：
+
+[source,json]
+----
+[
+  "-r",
+  "asciidoctor-diagram"
+]
+----
+
+相對的 `pdf-theme`、`pdf-themesdir` 與 `pdf-fontsdir` 會以來源 `.adoc` 所在目錄解析。
 
 == 指令
 
-[cols="2,3",options="header"]
+[cols="3,5",options="header"]
 |===
 |指令
 |用途
 
-|`AdocMD Forge: Open Preview`
+|`Open Preview`
 |開啟目前 AsciiDoc 或 Markdown 文件的預覽。
 
-|`AdocMD Forge: Refresh Preview`
-|立即重新產生目前文件的預覽。
+|`Refresh Preview`
+|立即重新產生預覽。
 
-|`AdocMD Forge: Source Only`
-|只顯示來源文字編輯器。
+|`Source Only`／`Source and Preview`／`Preview Only`
+|切換來源與預覽版面。
 
-|`AdocMD Forge: Source and Preview`
-|顯示來源與預覽分割畫面。
+|`Show Formatting Palette`
+|開啟浮動文字格式面板。
 
-|`AdocMD Forge: Preview Only`
-|只顯示預覽。
+|`Bold`／`Italic`／`Highlight`／`Inline Code`
+|套用常用文字格式。
 
-|`AdocMD Forge: Bold`／`Italic`／`Highlight`／`Inline Code`
-|對目前選取文字套用格式；沒有選取文字時插入成對標記。
+|`Strike Through`／`Superscript`／`Subscript`
+|套用刪除線、上標或下標。
 
-|`AdocMD Forge: Show Formatting Palette`
-|開啟浮動格式面板，選擇要套用的文字格式。
+|`Open AsciiDoc Syntax Guide`
+|開啟內建繁體中文語法指南。
 
-|`AdocMD Forge: Open AsciiDoc Syntax Guide`
-|開啟內建的 AsciiDoc 語法說明文件。
+|`Copy Image`
+|將圖片複製到工作區並插入圖片語法。
 
-|`AdocMD Forge: Copy Image`
-|選擇本機圖片，複製到工作區安全路徑並插入目前文件的圖片語法。
+|`Refresh Outline`
+|重新分析目前文件的標題階層。
 
-|`AdocMD Forge: Refresh Outline`
-|重新分析目前文件並更新 Explorer 的 Outline。
+|`Validate Links`
+|檢查本機連結與引用並更新 Problems Panel。
 
-|`AdocMD Forge: Validate Links`
-|檢查目前文件的本機引用並更新 Problems Panel。
+|`Export HTML`／`Export Standalone HTML`／`Export Embedded HTML`
+|匯出對應的 HTML 格式。
 
-|`AdocMD Forge: Export HTML`
-|匯出一般完整 HTML5 文件。
-
-|`AdocMD Forge: Export Standalone HTML`
-|匯出含內嵌圖片的獨立 HTML5 文件。
-
-|`AdocMD Forge: Export Embedded HTML`
-|匯出可嵌入的安全 HTML fragment。
-
-|`AdocMD Forge: Export PDF`
+|`Export PDF`
 |使用本機 `asciidoctor-pdf` 匯出 PDF。
 |===
 
-格式操作由 `Show Formatting Palette` 浮動選單與選取文字右鍵選單提供；預覽版面、重新整理、語法說明與匯出按鈕位於來源編輯器標題列。Preview Webview 只顯示產生後的文件內容。
+命令面板中的完整名稱均以 `AdocMD Forge:` 開頭。
 
 == 設定
 
-[cols="3,1,4",options="header"]
+[cols="3,1,5",options="header"]
 |===
 |設定
 |預設值
@@ -157,7 +209,7 @@ AdocMD Forge 是提供 AsciiDoc 與 Markdown 撰寫體驗的 VS Code 擴充套�
 
 |`adocmdForge.preview.allowRemoteImages`
 |`false`
-|允許預覽載入 HTTPS 遠端圖片；未受信任工作區一律停用。
+|允許受信任工作區的預覽載入 HTTPS 圖片。
 
 |`adocmdForge.preview.openToSide`
 |`true`
@@ -165,159 +217,80 @@ AdocMD Forge 是提供 AsciiDoc 與 Markdown 撰寫體驗的 VS Code 擴充套�
 
 |`adocmdForge.preview.scrollSync`
 |`true`
-|同步來源編輯器與預覽畫面的捲動位置。
+|同步來源游標、編輯器捲動位置與預覽位置。
 
 |`adocmdForge.preview.updateDelay`
 |`200`
-|編輯後更新預覽的延遲毫秒數，可設定為 50 至 2000。
+|編輯後更新預覽的延遲毫秒數。
 
 |`adocmdForge.images.directory`
 |`images`
-|目前文件旁的圖片相對目錄；不可使用絕對路徑或路徑穿越。
+|目前文件旁的預設圖片相對目錄。
 
 |`adocmdForge.images.promptForPath`
 |`true`
-|貼上、拖曳或 `Copy Image` 時是否詢問圖片儲存路徑。
+|匯入圖片前詢問儲存位置。
 
 |`adocmdForge.images.defaultAltText`
 |`filename`
-|圖片替代文字；`filename` 會使用儲存後的檔名，也可以設定固定文字。
+|使用檔名或固定文字作為圖片替代文字。
 
 |`adocmdForge.outline.updateDelay`
 |`150`
-|文件修改後更新 Outline 的延遲毫秒數，可設定為 50 至 2000。
+|文件修改後更新 Outline 的延遲毫秒數。
 
 |`adocmdForge.diagnostics.updateDelay`
 |`150`
-|文件修改後檢查本機引用的延遲毫秒數，可設定為 50 至 2000。
+|文件修改後檢查本機引用的延遲毫秒數。
 
 |`adocmdForge.export.asciidoctorPdfCommand`
 |`asciidoctor-pdf`
-|`Export PDF` 使用的本機指令。
+|PDF 匯出使用的本機指令或完整路徑。
 
 |`adocmdForge.export.asciidoctorPdfArguments`
 |`[]`
-|Asciidoctor PDF 參數陣列；支援 `{source}`、`{destination}`、`{workspace}`。
+|額外的 Asciidoctor PDF 參數；支援 `{source}`、`{destination}` 與 `{workspace}`。
 |===
 
 設定可套用於 User、Workspace 或 Workspace Folder 層級。
 
-== 安裝
+== 安全性與隱私
 
-=== 使用命令列
+* 擴充套件不蒐集遙測資料，也不會主動傳送文件內容。
+* AsciiDoc 與 Markdown 產生的 HTML 會先經過安全處理再顯示於 Webview。
+* 未受信任工作區不讀取本機 include、圖片或連結目標。
+* 遠端圖片預設停用；啟用後也只允許 HTTPS。
+* 圖片、匯出目的地與本機引用均限制於允許的工作區範圍。
+* Link Checker 不會對 HTTP 或 HTTPS 網址發出探測請求。
 
-[source,bash]
-----
-code --install-extension artifacts/adocmd-forge-1.3.0.vsix
-----
+== 已知限制
 
-=== 使用 VS Code
-
-. 開啟 Extensions 檢視。
-. 選擇右上角的 `...`。
-. 選擇 `Install from VSIX...`。
-. 選取 `adocmd-forge-1.3.0.vsix`。
-
-== 使用方式
-
-. 開啟 `.adoc`、`.asciidoc` 或 `.md` 文件。
-. 開啟 Command Palette。
-. 執行 `AdocMD Forge: Open Preview`。
-. 在來源編輯器點選或移動游標，確認預覽跟隨目前行定位。
-. 編輯文件並確認預覽自動更新。
-. 在空白行輸入語法前綴，或按 `Ctrl+Space`，取得 AsciiDoc 語法補全。
-. 將游標移到常用語法上，查看繁體中文 Hover 說明。
-. 執行 `AdocMD Forge: Open AsciiDoc Syntax Guide`，查看完整語法範例。
-. 將圖片拖曳至文件，或在支援二進位剪貼簿的環境貼上圖片；依提示選擇儲存路徑。
-. 若無法從剪貼簿取得圖片，執行 `AdocMD Forge: Copy Image` 選擇圖片檔案。
-. 在 Explorer 的 `Outline` 檢視查看目前文件標題，點擊節點跳至對應位置。
-
-如需查看執行紀錄，請開啟 `Output` 面板並選擇 `AdocMD Forge`。
-
-== 開發
-
-建議使用 Node.js 22 以上與 VS Code 1.97 以上。
-
-[source,bash]
-----
-npm ci
-npm run verify
-----
-
-使用 VS Code 開啟專案後按 `F5`，即可啟動 Extension Development Host。
-
-常用指令：
-
-[cols="2,3",options="header"]
-|===
-|指令
-|用途
-
-|`npm run build`
-|建立 production bundle。
-
-|`npm run watch`
-|持續監看並重建。
-
-|`npm run typecheck`
-|執行 TypeScript 嚴格型別檢查。
-
-|`npm run lint`
-|執行 ESLint。
-
-|`npm run test:unit`
-|執行單元測試。
-
-|`npm run test:integration`
-|在隔離的 VS Code Extension Host 執行整合測試。
-
-|`npm run verify`
-|執行完整發行前檢查。
-
-|`npm run package:vsix`
-|驗證並建立 VSIX。
-|===
-
-`README.adoc` 是本專案唯一可編輯的 README 來源。`npm run package:list` 與 `npm run package:vsix` 會在執行期間暫時產生 Marketplace 所需的 `README.md`，完成後自動刪除；因此不會在工作樹留下第二份 README。
-
-完整開發說明請參閱 link:DeveloperGuide.md[DeveloperGuide.md]，架構決策請參閱 link:Architecture.md[Architecture.md]。
-
-== 1.3.0 已知限制
-
-HTML 匯出只讀取位於目前受信任 workspace 內的本機圖片；遠端圖片不會由匯出流程發出網路請求，無法讀取的圖片會移除 `src`，保留其替代文字。輸出檔案不可覆蓋來源文件，且使用者取消儲存或覆寫確認時不會寫入檔案。
-
-Outline 第一版只分析目前 active editor，不建立全工作區多文件樹；沒有標題的文件會顯示空狀態。標題節點 ID 由文件 URI、來源行與層級產生，插入行造成行號移動時會建立新的節點狀態。
-
-圖片貼上是否可用取決於 VS Code 版本、作業系統與剪貼簿提供的 DataTransfer。VS Code 1.97 以上會提供 API，但擴充套件無法在未提供 `image/*` 或 `files` 的平台上自行讀取原始二進位剪貼簿。
-
-Link Checker 第一版只驗證本機檔案與文件內 anchor，不執行 HTTP(S) 網路請求；動態 AsciiDoc 屬性因無法安全推算目標而略過。未受信任 workspace、untitled 文件與 workspace 外路徑不會讀取本機檔案。
-
-AsciiDoc Open Preview 只載入已儲存文件宣告、位於 workspace 允許範圍內且實際存在的 `.css` stylesheet；未受信任 workspace 仍可載入這個文件 CSS。PDF 專用的 `:pdf-theme:`、`:pdf-fontsdir:` 與封面／背封面屬性不會改變 HTML Webview 的呈現。
-
-PDF 匯出需要自行安裝 Ruby、`asciidoctor-pdf` 及所需的 diagram／字型元件；擴充套件只負責安全組合參數並執行本機指令，不會下載或內嵌這些外部元件。
-
-VSIX 已完成完整自動化發行前檢查；實際上架 Marketplace 還需要由 Publisher 提供發行憑證並執行上架流程。
+* Outline 目前顯示 active editor 的文件結構，不建立整個工作區的多文件樹。
+* Link Checker 只驗證本機檔案與文件內 anchor，不檢查遠端網址是否可連線。
+* 含動態 AsciiDoc 屬性的路徑若無法安全解析，會略過本機檔案檢查。
+* 圖片貼上取決於 VS Code、作業系統與來源應用程式是否提供 `image/*` 或 `files` DataTransfer；無法取得時請使用拖曳或 `Copy Image`。
+* PDF 匯出依賴本機 Ruby、Asciidoctor PDF、字型與圖表工具；這些元件不包含於擴充套件內。
 
 == 疑難排解
 
 預覽沒有更新::
 執行 `AdocMD Forge: Refresh Preview`，並確認 `adocmdForge.preview.updateDelay` 設定有效。
 
-本機圖片沒有顯示::
-確認工作區已受信任、圖片位於文件或工作區允許範圍內，且路徑大小寫正確。
+游標移動時預覽沒有跟隨::
+確認 `adocmdForge.preview.scrollSync` 為 `true`。空白行或無獨立輸出內容的語法會定位到最近的可顯示段落。
 
-圖片貼上沒有反應::
-確認使用 VS Code 1.97 以上，並確認平台將剪貼簿圖片提供為 `image/*` 或 `files` DataTransfer。若仍無法取得，請使用拖曳或 `AdocMD Forge: Copy Image`。
+本機樣式表沒有套用::
+確認文件已儲存、CSS 副檔名為 `.css`、路徑相對於文件或 `stylesdir` 正確，並查看 Output 面板的 `AdocMD Forge` 頻道。
 
-圖片沒有插入文件::
-確認目前文件已儲存、位於受信任工作區資料夾內，且 `adocmdForge.images.directory` 是安全的相對路徑。
+圖片沒有顯示或插入::
+確認工作區已受信任、文件已儲存，且圖片與目的地位於工作區允許範圍內。
 
-遠端圖片沒有顯示::
-確認工作區已受信任，並將 `adocmdForge.preview.allowRemoteImages` 設為 `true`。只支援 HTTPS 圖片。
+PDF 匯出找不到 `asciidoctor-pdf`::
+先執行 `asciidoctor-pdf --version` 確認命令可用；必要時將完整執行檔路徑填入 `adocmdForge.export.asciidoctorPdfCommand`。
 
-include 沒有載入::
-確認來源文件已儲存於本機檔案系統、工作區已受信任，且 include 目標位於允許範圍內。
+PDF 沒有使用指定字型::
+確認字型檔位於 `pdf-fontsdir`，並在 PDF theme 的 `font.catalog` 與 `font-family` 中引用相同字型名稱。
 
 == 授權
 
-AdocMD Forge 使用 MIT License，詳見 link:LICENSE[LICENSE]。
+AdocMD Forge 依 MIT License 發行，詳見 link:LICENSE[LICENSE]。

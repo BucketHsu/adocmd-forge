@@ -225,14 +225,15 @@ npm run package:vsix
 
 檢查 VSIX 內容：
 
-- 必須包含 `dist/extension.js`、`package.json`、由 `README.adoc` 產生的 Marketplace `readme.md`、`README.adoc`、CHANGELOG、LICENSE、必要媒體與第三方授權。
-- 不得包含 `src/`、`test/`、`.vscode-test/`、coverage、開發設定或完整 `node_modules/`。
+- 必須包含 `dist/extension.js`、`package.json`、由 `README.adoc` 暫時產生的 Marketplace `README.md`、CHANGELOG、LICENSE、PNG 圖示、必要媒體與第三方授權。
+- 不得包含 `README.adoc`、Architecture、DeveloperGuide、CONTRIBUTING、`src/`、`test/`、`.vscode-test/`、coverage、開發設定或完整 `node_modules/`。
+- `package-list.mjs` 使用明確白名單；正式封裝新增檔案時，必須先確認它是執行或 Marketplace 顯示所需內容。
 - 圖示使用 PNG。
 
 安裝測試使用隔離目錄，避免變更開發者日常 VS Code：
 
 ```powershell
-code --extensions-dir .vscode-test/installed-extensions --install-extension artifacts/adocmd-forge-1.3.0.vsix --force
+code --extensions-dir .vscode-test/installed-extensions --install-extension artifacts/adocmd-forge-<version>.vsix --force
 ```
 
 ## 17. 發行
