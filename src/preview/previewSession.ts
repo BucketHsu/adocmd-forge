@@ -18,7 +18,7 @@ import type { PreviewLayout } from './previewLayout';
 import {
   isWebviewToExtensionMessage,
   type ExtensionToWebviewMessage,
-  type PreviewScrollMessage,
+  type PreviewRevealSourceLineMessage,
 } from './previewMessage';
 import {
   isPathWithinRoot,
@@ -539,7 +539,7 @@ export class PreviewSession implements vscode.Disposable {
         );
         break;
 
-      case 'scroll':
+      case 'revealSourceLine':
         this.revealSourceLine(message);
         break;
 
@@ -569,7 +569,7 @@ export class PreviewSession implements vscode.Disposable {
   }
 
   private revealSourceLine(
-    message: PreviewScrollMessage,
+    message: PreviewRevealSourceLineMessage,
   ): void {
     if (!getPreviewSettings(this.documentUri).scrollSync) {
       return;

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.2
+
+- Stop preview-only scrolling from driving the source editor and causing scroll lock loops.
+- Reveal the source editor only when a preview content block is clicked.
+- Rename the internal preview-to-editor message to `revealSourceLine` to make the interaction intent explicit.
+
 ## 1.4.1
 
 - Center the preview block that follows the source-editor caret or selection.

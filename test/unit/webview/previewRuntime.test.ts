@@ -190,12 +190,16 @@ describe('PreviewRuntime', (): void => {
         type: 'openLink',
         href: '#L2',
       },
+      expect.objectContaining({
+        sourceLine: 1,
+        type: 'revealSourceLine',
+      }),
     ]);
     expect(scrollIntoViewMock).toHaveBeenCalledOnce();
     harness.runtime.dispose();
   });
 
-  it('cancels a pending user-scroll report before programmatic scrolling', (): void => {
+  it('does not reveal the editor while preview scrolling is in progress', (): void => {
     vi.useFakeTimers();
     const harness = createRuntimeHarness();
     harness.runtime.start();
@@ -223,7 +227,7 @@ describe('PreviewRuntime', (): void => {
     harness.runtime.dispose();
   });
 
-  it('reports the closest source marker and consumes the matching round-trip sequence', (): void => {
+  it('updates the preview marker while scrolling and reveals the editor on click', (): void => {
     vi.useFakeTimers();
     const harness = createRuntimeHarness();
     harness.runtime.start();
@@ -232,7 +236,7 @@ describe('PreviewRuntime', (): void => {
       revision: 1,
       html: [
         '<p data-source-line="0" data-top="-100">First</p>',
-        '<p data-source-line="5" data-top="20">Second</p>',
+        '<p id="second" data-source-line="5" data-top="20">Second</p>',
       ].join(''),
       lineCount: 6,
     });
@@ -245,24 +249,26 @@ describe('PreviewRuntime', (): void => {
     window.dispatchEvent(new Event('scroll'));
     vi.advanceTimersByTime(80);
 
-    expect(harness.postedMessages).toHaveLength(1);
-    const scrollMessage = harness.postedMessages[0];
-    if (
-      !isWebviewToExtensionMessage(scrollMessage)
-      || scrollMessage.type !== 'scroll'
-    ) {
-      throw new Error('Expected a validated Webview scroll message.');
-    }
-    expect(scrollMessage.sourceLine).toBe(5);
-    expect(harness.savedStates.at(-1)).toEqual({
+    expect(harness.postedMessages).toEqual([]);
+    expect(harness.savedStates.at(-1)).toMatchObject({
       scrollSourceLine: 5,
-      sequence: scrollMessage.sequence,
     });
+
+    clickElement('second');
+    expect(harness.postedMessages).toHaveLength(1);
+    const revealMessage = harness.postedMessages[0];
+    if (
+      !isWebviewToExtensionMessage(revealMessage)
+      || revealMessage.type !== 'revealSourceLine'
+    ) {
+      throw new Error('Expected a validated source reveal message.');
+    }
+    expect(revealMessage.sourceLine).toBe(5);
 
     sendExtensionMessage({
       type: 'scrollToSourceLine',
       line: 5,
-      sequence: scrollMessage.sequence,
+      sequence: revealMessage.sequence,
     });
     expect(scrollIntoViewMock).not.toHaveBeenCalled();
     harness.runtime.dispose();
@@ -306,7 +312,7 @@ describe('PreviewRuntime', (): void => {
     expect(details?.classList.contains('adocmd-forge-current-source')).toBe(false);
   });
 
-  it('keeps programmatic scrolling suppressed until a scroll key signals user intent', (): void => {
+  it('keeps programmatic scrolling from revealing the editor', (): void => {
     vi.useFakeTimers();
     const harness = createRuntimeHarness();
     harness.runtime.start();
@@ -338,12 +344,7 @@ describe('PreviewRuntime', (): void => {
     }));
     window.dispatchEvent(new Event('scroll'));
     vi.advanceTimersByTime(80);
-    expect(harness.postedMessages).toEqual([
-      expect.objectContaining({
-        sourceLine: 0,
-        type: 'scroll',
-      }),
-    ]);
+    expect(harness.postedMessages).toEqual([]);
     harness.runtime.dispose();
   });
 
@@ -424,6 +425,14 @@ describe('PreviewRuntime', (): void => {
         href: 'https://example.com',
         type: 'openLink',
       },
+      expect.objectContaining({
+        sourceLine: 1,
+        type: 'revealSourceLine',
+      }),
+      expect.objectContaining({
+        sourceLine: 2,
+        type: 'revealSourceLine',
+      }),
     ]);
     expect(windowScrollToMock).toHaveBeenCalledOnce();
     expect(scrollIntoViewMock).toHaveBeenCalledTimes(2);

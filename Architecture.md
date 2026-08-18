@@ -10,7 +10,7 @@ AdocMD Forge 是 VS Code 文件工作台，目前支援：
 
 - AsciiDoc：`.adoc`、`.asciidoc`
 - Markdown：`.md`
-- Webview 即時預覽、目前來源區塊標示、雙向同步捲動與 VS Code 深色、淺色、高對比佈景主題
+- Webview 即時預覽、目前來源區塊標示、來源至預覽同步捲動與預覽點擊反向定位，以及 VS Code 深色、淺色、高對比佈景主題
 - 預覽相關的工作區與使用者層級設定
 - 受信任工作區內的安全本機圖片、連結與 AsciiDoc include
 - AsciiDoc TextMate 語法醒目提示、Snippet、快捷鍵、語法補全、Hover 與繁體中文語法說明

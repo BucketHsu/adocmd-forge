@@ -16,7 +16,7 @@ AdocMD Forge 是為 AsciiDoc 與 Markdown 打造的 VS Code 文件工作台，�
 * 編輯後自動更新，不需要重新開啟預覽。
 * 點選或移動來源編輯器游標時，預覽會跟隨目前行定位。
 * 預覽會以細緻外框標示目前來源區塊，並將該區塊置於預覽畫面中央，避免遮擋閱讀內容。
-* 支援來源編輯器與預覽畫面的雙向同步捲動。
+* 來源編輯器游標與捲動會同步定位預覽；預覽區只有在點擊內容時才反向定位編輯器，直接滾動預覽不會拉動編輯器。
 * 支援僅來源、來源與預覽分割、僅預覽三種版面。
 * 自動配合 VS Code 深色、淺色與高對比佈景主題。
 * AsciiDoc 預覽可載入工作區範圍內的 `:stylesheet:`、`:stylesdir:`、圖片與 `include::`。
@@ -255,7 +255,7 @@ gem install asciidoctor-diagram
 
 |`adocmdForge.preview.scrollSync`
 |`true`
-|同步來源游標、編輯器捲動位置與預覽位置。
+|同步來源游標與預覽位置；點擊預覽內容時反向定位來源編輯器，直接滾動預覽不會反向捲動編輯器。
 
 |`adocmdForge.preview.updateDelay`
 |`200`
@@ -317,6 +317,9 @@ gem install asciidoctor-diagram
 
 游標移動時預覽沒有跟隨::
 確認 `adocmdForge.preview.scrollSync` 為 `true`。空白行或無獨立輸出內容的語法會定位到最近的可顯示段落。
+
+預覽滾動時編輯器沒有跟著移動::
+這是預設行為。直接滾動預覽不會反向鎖定編輯器；若要定位來源，請點擊預覽中的文件內容。
 
 本機樣式表沒有套用::
 確認文件已儲存、CSS 副檔名為 `.css`、路徑相對於文件或 `stylesdir` 正確，並查看 Output 面板的 `AdocMD Forge` 頻道。
