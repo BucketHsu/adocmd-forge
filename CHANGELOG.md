@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.1
+
+- Center the preview block that follows the source-editor caret or selection.
+- Replace the current-source preview fill with a subtle outline to keep the document readable.
+- Add `Ctrl+Alt+V` (`Cmd+Alt+V` on macOS) to open the current document preview.
+
 ## 1.4.0
 
 - Add native AsciiDoc syntax highlighting, snippets, keyboard shortcuts, document symbols, breadcrumbs, and folding ranges.

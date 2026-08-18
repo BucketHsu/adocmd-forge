@@ -85,12 +85,8 @@ body {
 
 .adocmd-forge-current-source {
   border-radius: 3px;
-  outline: 2px solid var(--vscode-editorCursor-foreground);
-  outline-offset: 0.25rem;
-  background: var(
-    --vscode-editor-symbolHighlightBackground,
-    var(--vscode-editor-selectionHighlightBackground)
-  );
+  outline: 1px solid var(--vscode-editorCursor-foreground);
+  outline-offset: 0.2rem;
 }
 
 h1,

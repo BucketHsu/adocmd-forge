@@ -36,6 +36,11 @@ describe('preview stylesheet', (): void => {
 
     expect(stylesheet).toContain('.adocmd-forge-current-source');
     expect(stylesheet).toContain('var(--vscode-editorCursor-foreground)');
+    const currentSourceRule = /\.adocmd-forge-current-source\s*\{([^}]*)\}/u.exec(
+      stylesheet,
+    )?.[1] ?? '';
+    expect(currentSourceRule).not.toContain('background:');
+    expect(currentSourceRule).toContain('outline: 1px solid');
   });
 });
 

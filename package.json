@@ -2,7 +2,7 @@
   "name": "adocmd-forge",
   "displayName": "AdocMD Forge",
   "description": "Professional AsciiDoc and Markdown workspace with live preview, syntax assistance, link diagnostics, image workflows, and HTML/PDF export.",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "publisher": "BucketHsu",
   "license": "MIT",
   "icon": "images/icon.png",
@@ -318,6 +318,12 @@
       }
     ],
     "keybindings": [
+      {
+        "command": "adocmdForge.openPreview",
+        "key": "ctrl+alt+v",
+        "mac": "cmd+alt+v",
+        "when": "editorTextFocus && (editorLangId == markdown || editorLangId == asciidoc)"
+      },
       {
         "command": "adocmdForge.formatBold",
         "key": "ctrl+b",

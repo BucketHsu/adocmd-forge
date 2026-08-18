@@ -295,6 +295,10 @@ describe('PreviewRuntime', (): void => {
       line: 5,
       sequence: 999,
     });
+    expect(scrollIntoViewMock).toHaveBeenLastCalledWith({
+      behavior: 'smooth',
+      block: 'center',
+    });
     expect(section?.classList.contains('adocmd-forge-current-source')).toBe(false);
     expect(details?.classList.contains('adocmd-forge-current-source')).toBe(true);
 

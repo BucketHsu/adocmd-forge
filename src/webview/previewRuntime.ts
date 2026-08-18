@@ -407,7 +407,7 @@ export class PreviewRuntime {
     this.beginProgrammaticScroll();
     marker.element.scrollIntoView({
       behavior,
-      block: 'start',
+      block: 'center',
     });
   }
 

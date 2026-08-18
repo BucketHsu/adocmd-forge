@@ -15,7 +15,7 @@ AdocMD Forge 是為 AsciiDoc 與 Markdown 打造的 VS Code 文件工作台，�
 * 支援 `.adoc`、`.asciidoc` 與 `.md`。
 * 編輯後自動更新，不需要重新開啟預覽。
 * 點選或移動來源編輯器游標時，預覽會跟隨目前行定位。
-* 預覽會標示目前來源區塊，方便確認游標所在內容。
+* 預覽會以細緻外框標示目前來源區塊，並將該區塊置於預覽畫面中央，避免遮擋閱讀內容。
 * 支援來源編輯器與預覽畫面的雙向同步捲動。
 * 支援僅來源、來源與預覽分割、僅預覽三種版面。
 * 自動配合 VS Code 深色、淺色與高對比佈景主題。
@@ -37,6 +37,10 @@ AdocMD Forge 是為 AsciiDoc 與 Markdown 打造的 VS Code 文件工作台，�
 |Windows／Linux
 |macOS
 |用途
+
+|`Ctrl+Alt+V`
+|`Cmd+Alt+V`
+|開啟目前文件的預覽
 
 |`Ctrl+B`
 |`Cmd+B`
@@ -121,7 +125,7 @@ code --install-extension adocmd-forge-<version>.vsix
 == 快速開始
 
 . 開啟 `.adoc`、`.asciidoc` 或 `.md` 文件。
-. 從編輯器標題列選擇 Open Preview，或執行 `AdocMD Forge: Open Preview`。
+. 從編輯器標題列選擇 Open Preview、按下 `Ctrl+Alt+V`（macOS 為 `Cmd+Alt+V`），或執行 `AdocMD Forge: Open Preview`。
 . 在來源編輯器點選任一段落，預覽會移動到對應內容。
 . 編輯文件後，預覽會自動更新。
 . 使用 Explorer 的 Outline、`F12` 與 Find All References 導覽文件，或執行 `Validate Links` 檢查本機引用。
