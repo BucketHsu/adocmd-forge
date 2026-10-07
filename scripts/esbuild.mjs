@@ -89,12 +89,24 @@ const webviewOptions = {
   target: 'es2022',
 };
 
+const documentStylesheetOptions = {
+  bundle: true,
+  entryPoints: [
+    path.join(projectDirectory, 'media', 'preview-document.css'),
+  ],
+  legalComments: 'none',
+  logLevel: 'info',
+  minify: !watch,
+  outfile: path.join(outputDirectory, 'media', 'preview-document.css'),
+};
+
 if (watch) {
   const buildContexts = await Promise.all([
     context(extensionOptions),
     context(markdownWorkerOptions),
     context(asciidocWorkerOptions),
     context(webviewOptions),
+    context(documentStylesheetOptions),
   ]);
   await Promise.all(buildContexts.map(
     async (buildContext) => buildContext.watch(),
@@ -105,5 +117,6 @@ if (watch) {
     build(markdownWorkerOptions),
     build(asciidocWorkerOptions),
     build(webviewOptions),
+    build(documentStylesheetOptions),
   ]);
 }

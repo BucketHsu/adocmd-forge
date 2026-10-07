@@ -31,15 +31,46 @@ describe('preview stylesheet', (): void => {
     );
   });
 
+  it('keeps block quotes free of an extension-defined background', async (): Promise<void> => {
+    const stylesheet = await readDocumentStylesheet();
+
+    expect(stylesheet).toMatch(/blockquote\s*\{/u);
+    expect(stylesheet).not.toContain('var(--vscode-textBlockQuote-background)');
+  });
+
+  it('keeps document presentation separate from the preview shell', async (): Promise<void> => {
+    const shellStylesheet = await readPreviewStylesheet();
+    const documentStylesheet = await readDocumentStylesheet();
+
+    expect(shellStylesheet).not.toMatch(/(?:^|\})\s*table\s*\{/u);
+    expect(shellStylesheet).not.toMatch(/(?:^|\})\s*blockquote\s*\{/u);
+    expect(documentStylesheet).toMatch(
+      /table\s*\{[^}]*display:\s*block[^}]*width:\s*max-content/u,
+    );
+  });
+
   it('visibly marks the source block selected in the editor', async (): Promise<void> => {
     const stylesheet = await readPreviewStylesheet();
 
     expect(stylesheet).toContain('.adocmd-forge-current-source');
     expect(stylesheet).toContain('var(--vscode-editorCursor-foreground)');
+    const currentSourceRule = /\.adocmd-forge-current-source\s*\{([^}]*)\}/u.exec(
+      stylesheet,
+    )?.[1] ?? '';
+    expect(currentSourceRule).not.toContain('background:');
+    expect(currentSourceRule).toContain('outline: 1px solid');
   });
 });
 
 async function readPreviewStylesheet(): Promise<string> {
   const stylesheetUrl = new URL('../../../media/preview.css', import.meta.url);
+  return readFile(stylesheetUrl, 'utf8');
+}
+
+async function readDocumentStylesheet(): Promise<string> {
+  const stylesheetUrl = new URL(
+    '../../../media/preview-document.css',
+    import.meta.url,
+  );
   return readFile(stylesheetUrl, 'utf8');
 }

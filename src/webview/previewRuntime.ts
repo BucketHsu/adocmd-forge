@@ -33,6 +33,8 @@ const STATUS_ELEMENT_ID = 'preview-status';
 const SOURCE_LINE_ATTRIBUTE = 'data-source-line';
 const SOURCE_LINE_PATTERN = /^(?:0|[1-9]\d*)$/u;
 const CURRENT_SOURCE_CLASS = 'adocmd-forge-current-source';
+const DEFAULT_DOCUMENT_STYLESHEET_ID = 'adocmd-forge-default-document-stylesheet';
+const DOCUMENT_STYLESHEET_CLASS = 'adocmd-forge-has-document-stylesheet';
 const DOCUMENT_STYLESHEET_ATTRIBUTE = 'data-adocmd-forge-document-stylesheet';
 const SCROLL_THROTTLE_MILLISECONDS = 80;
 const PROGRAMMATIC_SCROLL_IDLE_MILLISECONDS = 180;
@@ -145,7 +147,7 @@ export class PreviewRuntime {
       passive: true,
     });
     window.addEventListener('keydown', this.handleKeyDown);
-    this.contentElement.addEventListener('click', this.handleLinkClick);
+    this.contentElement.addEventListener('click', this.handleContentClick);
 
     this.postMessage({
       type: 'ready',
@@ -165,7 +167,7 @@ export class PreviewRuntime {
     window.removeEventListener('touchstart', this.handleUserScrollIntent);
     window.removeEventListener('pointerdown', this.handleUserScrollIntent);
     window.removeEventListener('keydown', this.handleKeyDown);
-    this.contentElement.removeEventListener('click', this.handleLinkClick);
+    this.contentElement.removeEventListener('click', this.handleContentClick);
     this.clearSourceHighlight();
     this.removeDocumentStylesheets();
     if (this.scrollThrottleTimer !== undefined) {
@@ -198,7 +200,7 @@ export class PreviewRuntime {
     this.scrollThrottleTimer = window.setTimeout(() => {
       this.scrollThrottleTimer = undefined;
       if (!this.isProgrammaticScroll) {
-        this.reportScrollPosition();
+        this.updateScrollPosition();
       }
     }, SCROLL_THROTTLE_MILLISECONDS);
   };
@@ -213,7 +215,7 @@ export class PreviewRuntime {
     }
   };
 
-  private readonly handleLinkClick = (event: MouseEvent): void => {
+  private readonly handleContentClick = (event: MouseEvent): void => {
     const target = event.target;
     if (!(target instanceof Element)) {
       return;
@@ -221,6 +223,7 @@ export class PreviewRuntime {
 
     const link = target.closest<HTMLAnchorElement>('a[href]');
     if (link === null || !this.contentElement.contains(link)) {
+      this.revealSourceLineFromClick(target);
       return;
     }
 
@@ -233,7 +236,8 @@ export class PreviewRuntime {
     if (href.startsWith('#')) {
       const fragment = href.slice(1);
       if (parseSourceLineFragment(fragment) === null) {
-        this.scrollToFragment(fragment);
+        const fragmentTarget = this.scrollToFragment(fragment);
+        this.revealSourceLineFromClick(fragmentTarget ?? link);
         return;
       }
     }
@@ -284,7 +288,10 @@ export class PreviewRuntime {
     this.currentRevision = revision;
     this.currentLineCount = lineCount;
     this.clearSourceHighlight();
-    this.contentElement.innerHTML = html;
+    const documentElement = document.createElement('div');
+    documentElement.id = 'content';
+    documentElement.innerHTML = html;
+    this.contentElement.replaceChildren(documentElement);
     this.updateDocumentStylesheets(stylesheets);
     this.contentElement.removeAttribute('aria-busy');
     this.statusElement.hidden = true;
@@ -331,6 +338,11 @@ export class PreviewRuntime {
       elements.push(element);
     }
     this.documentStylesheetElements = elements;
+    this.contentElement.classList.toggle(
+      DOCUMENT_STYLESHEET_CLASS,
+      elements.length > 0,
+    );
+    this.toggleDefaultDocumentStylesheet(elements.length === 0);
   }
 
   private removeDocumentStylesheets(): void {
@@ -338,6 +350,17 @@ export class PreviewRuntime {
       element.remove();
     }
     this.documentStylesheetElements = [];
+    this.contentElement.classList.remove(DOCUMENT_STYLESHEET_CLASS);
+    this.toggleDefaultDocumentStylesheet(true);
+  }
+
+  private toggleDefaultDocumentStylesheet(enabled: boolean): void {
+    const stylesheet = document.getElementById(
+      DEFAULT_DOCUMENT_STYLESHEET_ID,
+    );
+    if (stylesheet instanceof HTMLLinkElement) {
+      stylesheet.disabled = !enabled;
+    }
   }
 
   private showError(revision: number, message: string): void {
@@ -407,7 +430,7 @@ export class PreviewRuntime {
     this.beginProgrammaticScroll();
     marker.element.scrollIntoView({
       behavior,
-      block: 'start',
+      block: 'center',
     });
   }
 
@@ -446,9 +469,20 @@ export class PreviewRuntime {
       : nextMarker;
   }
 
-  private reportScrollPosition(): void {
+  private updateScrollPosition(): void {
     const marker = this.findClosestViewportMarker();
     if (marker === undefined || marker.sourceLine === this.currentSourceLine) {
+      return;
+    }
+
+    this.currentSourceLine = marker.sourceLine;
+    this.updateSourceHighlight(marker.sourceLine);
+    this.persistState();
+  }
+
+  private revealSourceLineFromClick(element: Element): void {
+    const marker = this.findMarkerForElement(element);
+    if (marker === undefined) {
       return;
     }
 
@@ -458,26 +492,42 @@ export class PreviewRuntime {
     this.trackOutboundSequence(sequence);
     this.persistState();
     this.postMessage({
-      type: 'scroll',
+      type: 'revealSourceLine',
       sourceLine: marker.sourceLine,
       sequence,
     });
   }
 
-  private scrollToFragment(fragment: string): void {
+  private findMarkerForElement(element: Element): SourceMarker | undefined {
+    let current: Element | null = element;
+    while (current !== null && current !== this.contentElement) {
+      const marker = this.markersInDocumentOrder.find(({ element: markerElement }) => (
+        markerElement === current
+      ));
+      if (marker !== undefined) {
+        return marker;
+      }
+      current = current.parentElement;
+    }
+    return undefined;
+  }
+
+  private scrollToFragment(fragment: string): Element | undefined {
     const identifier = decodeFragment(fragment);
     if (identifier.length === 0) {
       window.scrollTo({
         behavior: 'smooth',
         top: 0,
       });
-      return;
+      return undefined;
     }
 
-    document.getElementById(identifier)?.scrollIntoView({
+    const target = document.getElementById(identifier);
+    target?.scrollIntoView({
       behavior: 'smooth',
       block: 'start',
     });
+    return target ?? undefined;
   }
 
   private createSequence(): number {

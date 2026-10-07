@@ -31,6 +31,13 @@ let windowScrollToMock: ReturnType<typeof vi.fn>;
 
 describe('PreviewRuntime', (): void => {
   beforeEach((): void => {
+    document.head.innerHTML = [
+      '<link',
+      '  id="adocmd-forge-default-document-stylesheet"',
+      '  rel="stylesheet"',
+      '  href="vscode-webview://preview-document.css"',
+      '>',
+    ].join('');
     document.body.innerHTML = [
       '<div id="preview-status" hidden></div>',
       '<main id="preview-content"></main>',
@@ -125,6 +132,11 @@ describe('PreviewRuntime', (): void => {
     expect(stylesheetLinks[0]?.getAttribute('href')).toBe(
       'https://file%2B.vscode-resource.vscode-cdn.net/workspace/stylesheets/colony.css',
     );
+    expect(harness.contentElement.classList.contains(
+      'adocmd-forge-has-document-stylesheet',
+    )).toBe(true);
+    expect(getDefaultDocumentStylesheet().disabled).toBe(true);
+    expect(harness.contentElement.querySelector('#content')).not.toBeNull();
     stylesheetLinks[0]?.dispatchEvent(new Event('load'));
     expect(harness.postedMessages).toContainEqual({
       type: 'stylesheetStatus',
@@ -149,6 +161,24 @@ describe('PreviewRuntime', (): void => {
     expect(stylesheetLinks[0]?.getAttribute('href')).toBe(
       'vscode-webview://workspace/stylesheets/other.css',
     );
+    expect(harness.contentElement.classList.contains(
+      'adocmd-forge-has-document-stylesheet',
+    )).toBe(true);
+
+    sendExtensionMessage({
+      type: 'render',
+      revision: 3,
+      html: '<blockquote data-source-line="0">Default theme</blockquote>',
+      lineCount: 1,
+    });
+
+    expect(harness.contentElement.classList.contains(
+      'adocmd-forge-has-document-stylesheet',
+    )).toBe(false);
+    expect(getDefaultDocumentStylesheet().disabled).toBe(false);
+    expect(document.head.querySelectorAll(
+      'link[data-adocmd-forge-document-stylesheet]',
+    )).toHaveLength(0);
 
     harness.runtime.dispose();
     expect(document.head.querySelectorAll(
@@ -190,12 +220,16 @@ describe('PreviewRuntime', (): void => {
         type: 'openLink',
         href: '#L2',
       },
+      expect.objectContaining({
+        sourceLine: 1,
+        type: 'revealSourceLine',
+      }),
     ]);
     expect(scrollIntoViewMock).toHaveBeenCalledOnce();
     harness.runtime.dispose();
   });
 
-  it('cancels a pending user-scroll report before programmatic scrolling', (): void => {
+  it('does not reveal the editor while preview scrolling is in progress', (): void => {
     vi.useFakeTimers();
     const harness = createRuntimeHarness();
     harness.runtime.start();
@@ -223,7 +257,7 @@ describe('PreviewRuntime', (): void => {
     harness.runtime.dispose();
   });
 
-  it('reports the closest source marker and consumes the matching round-trip sequence', (): void => {
+  it('updates the preview marker while scrolling and reveals the editor on click', (): void => {
     vi.useFakeTimers();
     const harness = createRuntimeHarness();
     harness.runtime.start();
@@ -232,7 +266,7 @@ describe('PreviewRuntime', (): void => {
       revision: 1,
       html: [
         '<p data-source-line="0" data-top="-100">First</p>',
-        '<p data-source-line="5" data-top="20">Second</p>',
+        '<p id="second" data-source-line="5" data-top="20">Second</p>',
       ].join(''),
       lineCount: 6,
     });
@@ -245,24 +279,26 @@ describe('PreviewRuntime', (): void => {
     window.dispatchEvent(new Event('scroll'));
     vi.advanceTimersByTime(80);
 
-    expect(harness.postedMessages).toHaveLength(1);
-    const scrollMessage = harness.postedMessages[0];
-    if (
-      !isWebviewToExtensionMessage(scrollMessage)
-      || scrollMessage.type !== 'scroll'
-    ) {
-      throw new Error('Expected a validated Webview scroll message.');
-    }
-    expect(scrollMessage.sourceLine).toBe(5);
-    expect(harness.savedStates.at(-1)).toEqual({
+    expect(harness.postedMessages).toEqual([]);
+    expect(harness.savedStates.at(-1)).toMatchObject({
       scrollSourceLine: 5,
-      sequence: scrollMessage.sequence,
     });
+
+    clickElement('second');
+    expect(harness.postedMessages).toHaveLength(1);
+    const revealMessage = harness.postedMessages[0];
+    if (
+      !isWebviewToExtensionMessage(revealMessage)
+      || revealMessage.type !== 'revealSourceLine'
+    ) {
+      throw new Error('Expected a validated source reveal message.');
+    }
+    expect(revealMessage.sourceLine).toBe(5);
 
     sendExtensionMessage({
       type: 'scrollToSourceLine',
       line: 5,
-      sequence: scrollMessage.sequence,
+      sequence: revealMessage.sequence,
     });
     expect(scrollIntoViewMock).not.toHaveBeenCalled();
     harness.runtime.dispose();
@@ -295,6 +331,10 @@ describe('PreviewRuntime', (): void => {
       line: 5,
       sequence: 999,
     });
+    expect(scrollIntoViewMock).toHaveBeenLastCalledWith({
+      behavior: 'smooth',
+      block: 'center',
+    });
     expect(section?.classList.contains('adocmd-forge-current-source')).toBe(false);
     expect(details?.classList.contains('adocmd-forge-current-source')).toBe(true);
 
@@ -302,7 +342,7 @@ describe('PreviewRuntime', (): void => {
     expect(details?.classList.contains('adocmd-forge-current-source')).toBe(false);
   });
 
-  it('keeps programmatic scrolling suppressed until a scroll key signals user intent', (): void => {
+  it('keeps programmatic scrolling from revealing the editor', (): void => {
     vi.useFakeTimers();
     const harness = createRuntimeHarness();
     harness.runtime.start();
@@ -334,12 +374,7 @@ describe('PreviewRuntime', (): void => {
     }));
     window.dispatchEvent(new Event('scroll'));
     vi.advanceTimersByTime(80);
-    expect(harness.postedMessages).toEqual([
-      expect.objectContaining({
-        sourceLine: 0,
-        type: 'scroll',
-      }),
-    ]);
+    expect(harness.postedMessages).toEqual([]);
     harness.runtime.dispose();
   });
 
@@ -420,6 +455,14 @@ describe('PreviewRuntime', (): void => {
         href: 'https://example.com',
         type: 'openLink',
       },
+      expect.objectContaining({
+        sourceLine: 1,
+        type: 'revealSourceLine',
+      }),
+      expect.objectContaining({
+        sourceLine: 2,
+        type: 'revealSourceLine',
+      }),
     ]);
     expect(windowScrollToMock).toHaveBeenCalledOnce();
     expect(scrollIntoViewMock).toHaveBeenCalledTimes(2);
@@ -601,6 +644,16 @@ function sendExtensionMessage(data: unknown): void {
   window.dispatchEvent(new MessageEvent('message', {
     data,
   }));
+}
+
+function getDefaultDocumentStylesheet(): HTMLLinkElement {
+  const stylesheet = document.getElementById(
+    'adocmd-forge-default-document-stylesheet',
+  );
+  if (!(stylesheet instanceof HTMLLinkElement)) {
+    throw new Error('Default document stylesheet is missing.');
+  }
+  return stylesheet;
 }
 
 function clickElement(identifier: string): void {

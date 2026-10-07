@@ -71,7 +71,7 @@ describe('extension manifest', (): void => {
     expect(manifest.name).toBe('adocmd-forge');
     expect(manifest.displayName).toBe('AdocMD Forge');
     expect(manifest.publisher).toBe('BucketHsu');
-    expect(manifest.version).toBe('1.4.0');
+    expect(manifest.version).toBe('1.4.5');
     expect(manifest.description).toBe(
       'Professional AsciiDoc and Markdown workspace with live preview, '
       + 'syntax assistance, link diagnostics, image workflows, and '
@@ -201,6 +201,12 @@ describe('extension manifest', (): void => {
       type: 'array',
       default: [],
     });
+    expect(
+      manifest.contributes?.configuration?.properties?.['adocmdForge.preview.scrollSync'],
+    ).toMatchObject({
+      type: 'boolean',
+      default: true,
+    });
   });
 
   it('exposes a floating formatting palette and selection context actions', async (): Promise<void> => {
@@ -286,6 +292,12 @@ describe('extension manifest', (): void => {
       path: './snippets/asciidoc.json',
     }]);
     expect(manifest.contributes?.keybindings).toEqual([
+      {
+        command: 'adocmdForge.openPreview',
+        key: 'ctrl+alt+v',
+        mac: 'cmd+alt+v',
+        when: 'editorTextFocus && (editorLangId == markdown || editorLangId == asciidoc)',
+      },
       {
         command: 'adocmdForge.formatBold',
         key: 'ctrl+b',

@@ -7,6 +7,7 @@ describe('buildPreviewHtml', (): void => {
     const html = buildPreviewHtml({
       allowRemoteImages: false,
       cspSource: 'vscode-webview:',
+      documentStyleUri: 'vscode-webview://preview-document.css',
       nonce: 'valid-nonce',
       scriptUri: 'vscode-webview://preview.js',
       styleUri: 'vscode-webview://preview.css',
@@ -17,6 +18,9 @@ describe('buildPreviewHtml', (): void => {
     expect(html).not.toContain('img-src vscode-webview: https:');
     expect(html).toContain("script-src 'nonce-valid-nonce'");
     expect(html).toContain('id="preview-content"');
+    expect(html).toContain('id="content"');
+    expect(html).toContain('id="adocmd-forge-default-document-stylesheet"');
+    expect(html).toContain('href="vscode-webview://preview-document.css"');
     expect(html).toContain('id="preview-status"');
     expect(html).toContain('id="preview-viewport"');
     expect(html).not.toContain('id="preview-toolbar"');
@@ -30,6 +34,7 @@ describe('buildPreviewHtml', (): void => {
     const html = buildPreviewHtml({
       allowRemoteImages: true,
       cspSource: 'vscode-webview:',
+      documentStyleUri: 'vscode-webview://preview-document.css',
       nonce: 'valid-nonce',
       scriptUri: 'vscode-webview://preview.js',
       styleUri: 'vscode-webview://preview.css',

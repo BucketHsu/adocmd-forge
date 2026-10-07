@@ -14,6 +14,7 @@ const expectedPackageFiles = new Set([
   'dist/extension.js',
   'dist/extension.js.LEGAL.txt',
   'dist/media/preview.css',
+  'dist/media/preview-document.css',
   'dist/media/preview.js',
   'dist/workers/asciidocRenderer.js',
   'dist/workers/asciidocRenderer.js.LEGAL.txt',

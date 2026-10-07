@@ -182,7 +182,7 @@ describe('isWebviewToExtensionMessage', () => {
       status: 'loaded',
     },
     {
-      type: 'scroll',
+      type: 'revealSourceLine',
       sourceLine: 0,
       sequence: 0,
     },
@@ -222,12 +222,12 @@ describe('isWebviewToExtensionMessage', () => {
       status: 'loaded',
     },
     {
-      type: 'scroll',
+      type: 'revealSourceLine',
       sourceLine: Number.POSITIVE_INFINITY,
       sequence: 1,
     },
     {
-      type: 'scroll',
+      type: 'revealSourceLine',
       sourceLine: 1,
       sequence: 0.1,
     },

@@ -1,5 +1,32 @@
 # Changelog
 
+## 1.4.5
+
+- Isolate the fallback document theme from local AsciiDoc stylesheets instead of mixing both style systems in one cascade.
+- Restore the standard Asciidoctor `#content` wrapper expected by existing stylesheets.
+- Preserve stylesheet-defined table layout, including `width="100%"`, and quote block presentation.
+
+## 1.4.4
+
+- Remove the extension-defined block quote background so custom document styles and light document canvases cannot inherit a dark VS Code quote fill.
+
+## 1.4.3
+
+- Preserve document-defined block quote colors when a local AsciiDoc stylesheet is active.
+- Keep the VS Code block quote palette as the fallback only when no document stylesheet is loaded.
+
+## 1.4.2
+
+- Stop preview-only scrolling from driving the source editor and causing scroll lock loops.
+- Reveal the source editor only when a preview content block is clicked.
+- Rename the internal preview-to-editor message to `revealSourceLine` to make the interaction intent explicit.
+
+## 1.4.1
+
+- Center the preview block that follows the source-editor caret or selection.
+- Replace the current-source preview fill with a subtle outline to keep the document readable.
+- Add `Ctrl+Alt+V` (`Cmd+Alt+V` on macOS) to open the current document preview.
+
 ## 1.4.0
 
 - Add native AsciiDoc syntax highlighting, snippets, keyboard shortcuts, document symbols, breadcrumbs, and folding ranges.

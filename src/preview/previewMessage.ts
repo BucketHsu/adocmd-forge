@@ -38,8 +38,8 @@ export interface PreviewStylesheetStatusMessage {
   readonly status: 'loaded' | 'error';
 }
 
-export interface PreviewScrollMessage {
-  readonly type: 'scroll';
+export interface PreviewRevealSourceLineMessage {
+  readonly type: 'revealSourceLine';
   readonly sourceLine: number;
   readonly sequence: number;
 }
@@ -53,7 +53,7 @@ export type WebviewToExtensionMessage =
   | PreviewReadyMessage
   | PreviewRenderedMessage
   | PreviewStylesheetStatusMessage
-  | PreviewScrollMessage
+  | PreviewRevealSourceLineMessage
   | PreviewOpenLinkMessage;
 
 type MessageRecord = Readonly<Record<PropertyKey, unknown>>;
@@ -293,7 +293,7 @@ export function isWebviewToExtensionMessage(
           && isSafeStylesheetUri(value.href)
           && (value.status === 'loaded' || value.status === 'error');
 
-      case 'scroll':
+      case 'revealSourceLine':
         return hasExactKeys(value, [
           'type',
           'sourceLine',
