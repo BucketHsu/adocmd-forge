@@ -15,9 +15,18 @@ export function createPreviewHtml(
   const styleUri = webview.asWebviewUri(
     vscode.Uri.joinPath(extensionUri, 'dist', 'media', 'preview.css'),
   );
+  const documentStyleUri = webview.asWebviewUri(
+    vscode.Uri.joinPath(
+      extensionUri,
+      'dist',
+      'media',
+      'preview-document.css',
+    ),
+  );
   return buildPreviewHtml({
     allowRemoteImages,
     cspSource: webview.cspSource,
+    documentStyleUri: documentStyleUri.toString(),
     nonce,
     scriptUri: scriptUri.toString(),
     styleUri: styleUri.toString(),

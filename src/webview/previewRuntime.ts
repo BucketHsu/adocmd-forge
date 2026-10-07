@@ -33,6 +33,8 @@ const STATUS_ELEMENT_ID = 'preview-status';
 const SOURCE_LINE_ATTRIBUTE = 'data-source-line';
 const SOURCE_LINE_PATTERN = /^(?:0|[1-9]\d*)$/u;
 const CURRENT_SOURCE_CLASS = 'adocmd-forge-current-source';
+const DEFAULT_DOCUMENT_STYLESHEET_ID = 'adocmd-forge-default-document-stylesheet';
+const DOCUMENT_STYLESHEET_CLASS = 'adocmd-forge-has-document-stylesheet';
 const DOCUMENT_STYLESHEET_ATTRIBUTE = 'data-adocmd-forge-document-stylesheet';
 const SCROLL_THROTTLE_MILLISECONDS = 80;
 const PROGRAMMATIC_SCROLL_IDLE_MILLISECONDS = 180;
@@ -286,7 +288,10 @@ export class PreviewRuntime {
     this.currentRevision = revision;
     this.currentLineCount = lineCount;
     this.clearSourceHighlight();
-    this.contentElement.innerHTML = html;
+    const documentElement = document.createElement('div');
+    documentElement.id = 'content';
+    documentElement.innerHTML = html;
+    this.contentElement.replaceChildren(documentElement);
     this.updateDocumentStylesheets(stylesheets);
     this.contentElement.removeAttribute('aria-busy');
     this.statusElement.hidden = true;
@@ -333,6 +338,11 @@ export class PreviewRuntime {
       elements.push(element);
     }
     this.documentStylesheetElements = elements;
+    this.contentElement.classList.toggle(
+      DOCUMENT_STYLESHEET_CLASS,
+      elements.length > 0,
+    );
+    this.toggleDefaultDocumentStylesheet(elements.length === 0);
   }
 
   private removeDocumentStylesheets(): void {
@@ -340,6 +350,17 @@ export class PreviewRuntime {
       element.remove();
     }
     this.documentStylesheetElements = [];
+    this.contentElement.classList.remove(DOCUMENT_STYLESHEET_CLASS);
+    this.toggleDefaultDocumentStylesheet(true);
+  }
+
+  private toggleDefaultDocumentStylesheet(enabled: boolean): void {
+    const stylesheet = document.getElementById(
+      DEFAULT_DOCUMENT_STYLESHEET_ID,
+    );
+    if (stylesheet instanceof HTMLLinkElement) {
+      stylesheet.disabled = !enabled;
+    }
   }
 
   private showError(revision: number, message: string): void {

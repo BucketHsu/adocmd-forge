@@ -71,7 +71,7 @@ describe('extension manifest', (): void => {
     expect(manifest.name).toBe('adocmd-forge');
     expect(manifest.displayName).toBe('AdocMD Forge');
     expect(manifest.publisher).toBe('BucketHsu');
-    expect(manifest.version).toBe('1.4.2');
+    expect(manifest.version).toBe('1.4.5');
     expect(manifest.description).toBe(
       'Professional AsciiDoc and Markdown workspace with live preview, '
       + 'syntax assistance, link diagnostics, image workflows, and '

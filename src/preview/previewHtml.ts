@@ -1,6 +1,7 @@
 export interface PreviewHtmlResources {
   readonly allowRemoteImages: boolean;
   readonly cspSource: string;
+  readonly documentStyleUri: string;
   readonly nonce: string;
   readonly scriptUri: string;
   readonly styleUri: string;
@@ -29,12 +30,19 @@ export function buildPreviewHtml(resources: PreviewHtmlResources): string {
   >
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="${escapeAttribute(resources.styleUri)}">
+  <link
+    id="adocmd-forge-default-document-stylesheet"
+    rel="stylesheet"
+    href="${escapeAttribute(resources.documentStyleUri)}"
+  >
   <title>AdocMD Forge Preview</title>
 </head>
 <body>
   <div id="preview-viewport">
     <div id="preview-status" role="status" aria-live="polite" hidden></div>
-    <main id="preview-content" aria-label="Document preview"></main>
+    <main id="preview-content" aria-label="Document preview">
+      <div id="content"></div>
+    </main>
   </div>
   <script
     type="module"

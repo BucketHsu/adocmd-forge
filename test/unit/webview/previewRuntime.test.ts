@@ -31,6 +31,13 @@ let windowScrollToMock: ReturnType<typeof vi.fn>;
 
 describe('PreviewRuntime', (): void => {
   beforeEach((): void => {
+    document.head.innerHTML = [
+      '<link',
+      '  id="adocmd-forge-default-document-stylesheet"',
+      '  rel="stylesheet"',
+      '  href="vscode-webview://preview-document.css"',
+      '>',
+    ].join('');
     document.body.innerHTML = [
       '<div id="preview-status" hidden></div>',
       '<main id="preview-content"></main>',
@@ -125,6 +132,11 @@ describe('PreviewRuntime', (): void => {
     expect(stylesheetLinks[0]?.getAttribute('href')).toBe(
       'https://file%2B.vscode-resource.vscode-cdn.net/workspace/stylesheets/colony.css',
     );
+    expect(harness.contentElement.classList.contains(
+      'adocmd-forge-has-document-stylesheet',
+    )).toBe(true);
+    expect(getDefaultDocumentStylesheet().disabled).toBe(true);
+    expect(harness.contentElement.querySelector('#content')).not.toBeNull();
     stylesheetLinks[0]?.dispatchEvent(new Event('load'));
     expect(harness.postedMessages).toContainEqual({
       type: 'stylesheetStatus',
@@ -149,6 +161,24 @@ describe('PreviewRuntime', (): void => {
     expect(stylesheetLinks[0]?.getAttribute('href')).toBe(
       'vscode-webview://workspace/stylesheets/other.css',
     );
+    expect(harness.contentElement.classList.contains(
+      'adocmd-forge-has-document-stylesheet',
+    )).toBe(true);
+
+    sendExtensionMessage({
+      type: 'render',
+      revision: 3,
+      html: '<blockquote data-source-line="0">Default theme</blockquote>',
+      lineCount: 1,
+    });
+
+    expect(harness.contentElement.classList.contains(
+      'adocmd-forge-has-document-stylesheet',
+    )).toBe(false);
+    expect(getDefaultDocumentStylesheet().disabled).toBe(false);
+    expect(document.head.querySelectorAll(
+      'link[data-adocmd-forge-document-stylesheet]',
+    )).toHaveLength(0);
 
     harness.runtime.dispose();
     expect(document.head.querySelectorAll(
@@ -614,6 +644,16 @@ function sendExtensionMessage(data: unknown): void {
   window.dispatchEvent(new MessageEvent('message', {
     data,
   }));
+}
+
+function getDefaultDocumentStylesheet(): HTMLLinkElement {
+  const stylesheet = document.getElementById(
+    'adocmd-forge-default-document-stylesheet',
+  );
+  if (!(stylesheet instanceof HTMLLinkElement)) {
+    throw new Error('Default document stylesheet is missing.');
+  }
+  return stylesheet;
 }
 
 function clickElement(identifier: string): void {

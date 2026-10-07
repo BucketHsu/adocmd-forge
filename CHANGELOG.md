@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.4.5
+
+- Isolate the fallback document theme from local AsciiDoc stylesheets instead of mixing both style systems in one cascade.
+- Restore the standard Asciidoctor `#content` wrapper expected by existing stylesheets.
+- Preserve stylesheet-defined table layout, including `width="100%"`, and quote block presentation.
+
+## 1.4.4
+
+- Remove the extension-defined block quote background so custom document styles and light document canvases cannot inherit a dark VS Code quote fill.
+
+## 1.4.3
+
+- Preserve document-defined block quote colors when a local AsciiDoc stylesheet is active.
+- Keep the VS Code block quote palette as the fallback only when no document stylesheet is loaded.
+
 ## 1.4.2
 
 - Stop preview-only scrolling from driving the source editor and causing scroll lock loops.
